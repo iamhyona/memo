@@ -1,6 +1,6 @@
 {
-  "name": "memo",
-  "short_name": "memo",
+  "name": "Daily Archive",
+  "short_name": "Daily Archive",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
