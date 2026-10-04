@@ -588,7 +588,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 /* 참고치 밖: 높음 빨강 · 낮음 오렌지 (2026.10.05) */
 .mf.l { background:#ff8a3d; } .mtab td.ml, .lbv b.ml, b.ml { color:#f07a2b; } b.mh { color:#e5484d; }
 .lbar.lo .lbf { background:#ffd3b4; } .lbar.lo .lbd { background:#ff8a3d; }
-.lbar.q { height:20px; border-radius:10px; background:#2fb67c; display:flex; align-items:center; justify-content:center; } .lbar.q span { font-size:11px; font-weight:700; color:#fff; } .lbar.q.bad { background:#e5484d; }
+.lbar.q { background:#c9ecd9; } .lbar.q.bad { background:#f8b4c0; }
 .gfr { margin:2px 4px 0; } .gseg { position:relative; display:flex; gap:2px; height:10px; }
 .gseg i { display:block; border-radius:3px; }
 .gseg .lbd { position:absolute; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:#fff; border:4px solid; box-shadow:0 1px 3px rgba(0,0,0,.25); box-sizing:border-box; }
@@ -802,7 +802,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zh';
+var APP_VER = '20261005zi';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3459,6 +3459,8 @@ function bindLabCat() {
 // 참고치 막대: 가운데 띠 = 참고치, 점 = 내 값 · 벗어나면 빨강(벗어난 만큼 칠함) · 정상 초록 (2026.10.05)
 function labRange(ref) {
   var r = String(ref || '').replace(/[〈＜]/g, '<').replace(/[〉＞]/g, '>').replace(/,/g, ''), m;
+  r = r.replace(/[∼〜～]/g, '~');
+  if (/…/.test(r) && (m = r.match(/(-?\d+(?:\.\d+)?)\s*[~\-–]/))) return { lo: +m[1], hi: null };   // 잘린 참고치 (1.003~1.…)
   if ((m = r.match(/(-?\d+(?:\.\d+)?)\s*[~\-–]\s*(\d+(?:\.\d+)?)/))) return { lo: +m[1], hi: +m[2] };
   if ((m = r.match(/^\s*[<≤]\s*=?\s*(\d+(?:\.\d+)?)/))) return { lo: null, hi: +m[1] };
   if ((m = r.match(/^\s*[>≥]\s*=?\s*(\d+(?:\.\d+)?)/))) return { lo: +m[1], hi: null };
@@ -3478,7 +3480,7 @@ function labBar(l) {
   // 음성/양성 같은 글자 결과: 막대 하나 전체 색 (정상 초록 · 이상 빨강)
   if ((isNaN(v) || /neg|음성|pos|양성/i.test(l.ref || '')) && l.ref && l.val != null && String(l.val).trim() !== '') {
     var bq = !!labFlag(l);
-    return '<div class="lbar q' + (bq ? ' bad' : '') + '"><span>' + (bq ? '이상 · ' : '정상 · ') + esc(String(l.val)) + '</span></div>';
+    return '<div class="lbar q' + (bq ? ' bad' : '') + '"><b class="lbd" style="left:50%"></b></div>';
   }
   if (isNaN(v) || !g) return '';
   var a, b, p;   // 띠 위치(%) · 값 위치(%)
