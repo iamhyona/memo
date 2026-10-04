@@ -556,6 +556,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .kg .kgm { position:absolute; right:6px; bottom:6px; width:26px; height:26px; border:0; border-radius:50%; background:rgba(255,255,255,.7); color:var(--sub); display:flex; align-items:center; justify-content:center; padding:0; } .kg .kgm svg { width:13px; height:13px; }
 small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; letter-spacing:0; }
 .kg.dk .kgt, .kg.dk b, .kg.dk b small, .kg.dk em, .kg.dk em .up, .kg.dk em .dn { color:#fff; } .kg.dk .hico { filter:brightness(0) invert(1); }
+.kc { padding:7px 8px 7px 10px; margin-bottom:6px; border-radius:15px; } .kc .hi { width:31px; height:31px; border-radius:9px; } .kc .hi .hico { width:19px; height:19px; } .kc .m div { font-size:15px; } .kc .kn2 b { font-size:20px; } .kc .kb { width:31px; height:31px; } .kc .kb svg { width:14px; height:14px; }
 .kc.dk { color:#fff; } .kc.dk .kn2 small { color:rgba(255,255,255,.8); }
 </style>
 </head>
@@ -765,7 +766,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x4';
+var APP_VER = '20261005x5';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
