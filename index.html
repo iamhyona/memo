@@ -449,6 +449,8 @@ header .mtabs { overflow-x:auto; overflow-y:hidden; touch-action:pan-x; overscro
 header .mtabs::-webkit-scrollbar { display:none; }
 header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bc3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+.bc4 { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.bc4 .bcd { padding:11px 2px 9px; border-radius:14px; } .bc4 .bcd small { font-size:11px; letter-spacing:-0.02em; } .bc4 .bcd b { font-size:20px; } .bc4 .bcd em { font-size:11px; }
 .bcd { border:1.5px solid transparent; background:var(--chip); border-radius:16px; padding:12px 4px 10px; text-align:center; min-width:0; }
 .bcd.on { background:#fff; border-color:var(--txt); }
 .bcd small { display:block; font-size:12px; color:var(--mute); white-space:nowrap; }
@@ -723,7 +725,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u6';
+var APP_VER = '20261004u7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2486,12 +2488,14 @@ function bdHome() {
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
   var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
-  var wX = bkOf('w'), sX = bkOf('smm'), pX = bkOf('pbf');
-  h += '<div class="card"><div class="ct">요약<small>평균 · 지난 기간 대비</small></div><table class="btab bsum"><tr><th></th><th>측정</th><th>체중</th><th>골격근량</th><th>체지방률</th></tr>' + SP.map(function (p) {
+  // 이번 주 · 이번 달 · 올해: 평균 카드 4칸 (지난 기간 대비)
+  h += SP.map(function (p) {
     var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
-    var cellA = function (xx) { var a1 = avgOf(xx.k, p[1], p[2]), a0 = avgOf(xx.k, p[3], p[4]); return '<td>' + (a1 == null ? '<span class="mute">-</span>' : '<b>' + bfmt(xx, a1) + bU(xx) + '</b><small>' + (a0 == null ? p[5] + ' -' : bDelta(xx, a1, a0)) + '</small>') + '</td>'; };
-    return '<tr><td>' + p[0] + '</td><td>' + n2 + '회</td>' + cellA(wX) + cellA(sX) + cellA(pX) + '</tr>';
-  }).join('') + '</table></div>';
+    return '<div class="card"><div class="ct">' + p[0] + '<small>' + bShort(p[1]) + ' ~ ' + bShort(p[2]) + ' · 측정 ' + n2 + '회 · 평균</small></div><div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
+      var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = avgOf(kk, p[3], p[4]);
+      return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
+    }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">▲▼ ' + p[5] + ' 평균 대비</div></div>';
+  }).join('');
   // 1) 최저 · 최고
   var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
   var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
