@@ -563,6 +563,10 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .wps { display:flex; background:#e5e8eb; border-radius:10px; padding:3px; } .wps button { border:0; background:none; font-size:13px; font-weight:700; color:#8b95a1; padding:6px 13px; border-radius:8px; } .wps button.on { background:#fff; color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.08); }
 .wmt { display:flex; gap:13px; } .wmt button { border:0; background:none; font-size:13.5px; font-weight:700; color:#b0b8c1; padding:6px 0 5px; } .wmt button.on { color:var(--txt); box-shadow:inset 0 -2px 0 var(--txt); }
 .bper td i.ar { font-style:normal; font-size:.8em; margin-right:2px; vertical-align:1px; }
+.ymx { margin-top:4px; } .ymh, .ymr { display:grid; grid-template-columns:76px repeat(12,1fr); gap:2px; align-items:center; }
+.ymh b { font-size:10px; color:var(--faint); text-align:center; font-weight:600; padding-bottom:4px; } .ymh b.cur { color:var(--txt); font-weight:800; }
+.ymr { padding:3px 0; } .ymr .n { display:flex; align-items:center; gap:4px; min-width:0; } .ymr .n em { font-style:normal; font-size:11.5px; letter-spacing:-0.04em; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ymr i { font-style:normal; height:24px; border-radius:5px; background:#f2f4f6; font-size:8.5px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
 </style>
 </head>
 <body>
@@ -771,7 +775,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y3';
+var APP_VER = '20261005y4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1125,21 +1129,31 @@ function renderYear() {
   h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">체크 ' + t.cnt + '회 · 일기 ' +
     S.D.diary.filter(function (x) { return x.d.slice(0, 4) === String(y); }).length + '일 · 사진 ' + S.D.photos.filter(function (p) { return p.d.slice(0, 4) === String(y); }).length + '장' +
     (pt.goal ? diffHtml(t.rate, pt.rate, '작년') : '') + '</div></div>';
-  h += '<div class="card"><div class="ct">월별 달성률</div><div class="mbar">';
+  // 월별 달성률: 전체 또는 습관(카테고리) 하나 골라서 보기 (2026.10.05)
+  var hsY = S.D.habits, sel = hsY.filter(function (x) { return x.id === S.tyh; })[0] || null;
+  var mrate = function (x, m) { var f = y + '-' + pad(m) + '-01', e2 = mEnd(y, m); if (f > TODAY) return null; var r = x ? hstat(x, f, e2) : total(f, e2); return r.goal ? r.rate : null; };
+  h += '<div class="card"><div class="ct">월별 달성률<small>' + (sel ? esc(sel.name) : '전체') + '</small></div>' +
+    (hsY.length ? '<div class="chips bkc"><button data-tyh="" class="' + (sel ? '' : 'on') + '">전체</button>' + hsY.map(function (x) { return '<button data-tyh="' + x.id + '" class="' + (sel && sel.id === x.id ? 'on' : '') + '">' + esc(x.name) + '</button>'; }).join('') + '</div>' : '') + '<div class="mbar">';
   for (var m = 1; m <= 12; m++) {
-    var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), r = f > TODAY ? null : total(f, e);
-    h += '<div class="' + (f.slice(0, 7) === TODAY.slice(0, 7) ? 'cur' : '') + '"><em>' + (r && r.goal ? pct(r.rate) : '') + '</em><i style="height:' + (r && r.goal ? Math.max(2, r.rate * 100) : 2) + '%"></i><span>' + m + '</span></div>';
+    var rr = mrate(sel, m), f = y + '-' + pad(m) + '-01';
+    h += '<div class="' + (f.slice(0, 7) === TODAY.slice(0, 7) ? 'cur' : '') + '"><em>' + (rr != null ? pct(rr) : '') + '</em><i style="height:' + (rr != null ? Math.max(2, rr * 100) : 2) + '%' + (sel ? ';background:' + sel.color : '') + '"></i><span>' + m + '</span></div>';
   }
   h += '</div></div>';
-  h += '<div class="sec">Yearly Report<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
-  if (!S.D.habits.length) h += '<div class="card empty">습관을 추가하면 1년 기록이 쌓여요</div>';
-  S.D.habits.forEach(function (x) {
-    var s = hstat(x, from, to);
-    h += '<div class="yh tapd" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + esc(x.name) + '</span><small>' + s.cnt + '회 · 최장 ' + s.best + '일</small></div>' + yearGrid(x, y);
-  });
+  // 습관별 월 달성률 (표)
+  h += '<div class="card"><div class="ct">습관별 월 달성률<small>' + y + '년 · %</small></div>';
+  if (!hsY.length) h += '<div class="empty">습관을 추가하면 1년 기록이 쌓여요</div>';
+  else h += '<div class="ymx"><div class="ymh"><span></span>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (m) { return '<b' + (y + '-' + pad(m) === TODAY.slice(0, 7) ? ' class="cur"' : '') + '>' + m + '</b>'; }).join('') + '</div>' +
+    hsY.map(function (x) {
+      return '<div class="ymr tapd" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<em>' + esc(x.name) + '</em></span>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (m) {
+        var rr = mrate(x, m);
+        return '<i' + (rr ? ' style="background:' + kMix('#f2f4f6', deep(x.color), Math.max(.18, rr) * .85) + (rr >= .55 ? ';color:#fff' : '') + '"' : rr == null ? ' class="fu"' : '') + '>' + (rr != null ? pct(rr) : '') + '</i>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+  h += '</div>';
   $('#main').innerHTML = h;
   $('#nP').onclick = function () { S.yy--; render(); };
   $('#nN').onclick = function () { S.yy++; render(); };
+  $$('[data-tyh]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.tyh = b.dataset.tyh; render(); window.scrollTo(0, y0); }; });
 }
 
 function sortedPhotos(list) {
