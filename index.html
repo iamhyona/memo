@@ -748,7 +748,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w5';
+var APP_VER = '20261004w6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2416,8 +2416,9 @@ function bSeries(k, from, to) {
 function bLast(k) { var s = bSeries(k); return s.length ? s[s.length - 1] : null; }
 function bPrevVal(r, k) { var s = bSeries(k), p = null; for (var i = 0; i < s.length; i++) { if (s[i].id === r.id) break; p = s[i]; } return p ? p[k] : null; }
 function bAt(k, d) { var s = bSeries(k, null, d); return s.length ? s[s.length - 1] : null; }
-function bWhen(r) { return r.d.slice(2).replace(/-/g, '.') + (r.t ? ' ' + r.t : ''); }
-function bShort(d) { return d.slice(2, 10).replace(/-/g, '.'); }   // 날짜는 항상 yy.mm.dd
+function bWhen(r) { return bShort(r.d) + (r.t ? ' ' + r.t : ''); }
+function bYmd(d) { return d.slice(2, 10).replace(/-/g, '.'); }   // 그래프 축 등: yy.mm.dd
+function bShort(d) { return bYmd(d) + '(' + W[P(d).getDay()] + ')'; }   // 작은 날짜: yy.mm.dd(요일)
 function bDelta(x, v, pv) {
   if (v == null || pv == null) return '<span class="mute">-</span>';
   var m = Math.pow(10, x.dp == null ? 1 : x.dp), d = Math.round((v - pv) * m) / m;
@@ -2512,7 +2513,7 @@ function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); 
 function bAgg(s, k, by) {
   var g = {}, o = [];
   s.forEach(function (r) { var key = by === 'w' ? monOf(r.d) : r.d.slice(0, 7); if (!g[key]) { g[key] = []; o.push(key); } g[key].push(r[k]); });
-  return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bShort(key) : key.slice(2).replace('-', '.') }; });
+  return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bYmd(key) : key.slice(2).replace('-', '.') }; });
 }
 function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
@@ -2525,7 +2526,7 @@ function bdHome() {
   // 이번 주 · 이번 달 · 올해: 평균 카드 4칸 (지난 기간 대비)
   h += SP.map(function (p) {
     var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
-    return '<div class="card"><div class="ct">' + p[0] + '<small>' + bShort(p[1]) + ' ~ ' + bShort(p[2]) + ' · 측정 ' + n2 + '회 · 평균</small></div><div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
+    return '<div class="card"><div class="ct">' + p[0] + '<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회 · 평균</small></div><div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
       var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = avgOf(kk, p[3], p[4]);
       return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
     }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">▲▼ ' + p[5] + ' 평균 대비</div></div>';
@@ -2535,7 +2536,7 @@ function bdHome() {
   var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
   if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
   var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
-  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
+  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bYmd(q.d) }; });
   h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
     bChart(pts, x) + bSum(s, k, x) + '</div>';
@@ -2589,7 +2590,7 @@ function bTopCard(r, day) {
     return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
   }).join('') + '</div>' +
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
-    bChart(s.map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x) + '</div>';
+    bChart(s.map(function (q) { return { v: q[k], l: bYmd(q.d) }; }), x) + '</div>';
 }
 function bdDaily() {
   var day = S.day, L = bList(), recs = L.filter(function (r) { return r.d === day; });
@@ -2607,7 +2608,7 @@ function bdWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), recs = bList().filter(function (r) { return inR(r.d, ws, we); });
   var keys = bKeys(ws, we), k = bCur(keys), x = bkOf(k), s = bSeries(k, ws, we);
   var h = weekNav() + bChips(keys, k);
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
+  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bYmd(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindBody();
 }
@@ -2624,7 +2625,7 @@ function bdMonth() {
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dr ? '<span class="bv" style="color:' + bcol(x) + '">' + bfmt(x, dr[k]) + '</span>' : '') + '</button>';
   }
   h += '</div><div class="legend">' + x.n + ' 측정한 날 · 날짜를 누르면 그날 기록</div></div>';
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
+  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bYmd(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">' + m + '월 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindMonth(); bindBody();
   $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
@@ -2842,6 +2843,8 @@ function wkHome() {
   var R = rng(), all = wList();
   var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
+  h += wAnalysis(all);
+  h += '<div class="sec">운동 종류별 요약</div>';
   var P4 = [['오늘', TODAY, TODAY], ['이번 주', R.ws, R.we], ['이번 달', R.mf, R.mt], ['올해', R.y + '-01-01', R.y + '-12-31']];
   wTypes(all).forEach(function (o) {
     var t = o.n, L = all.filter(function (r) { return (r.type || '기타') === t; }), last = L[L.length - 1];
@@ -2855,7 +2858,7 @@ function wkHome() {
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
   h += '<div class="mini">' + stat('연속 운동', run + '일') + stat('올해', wIn(R.y + '-01-01', R.y + '-12-31').length + '회') + stat('전체', all.length + '회') + '</div>';
-  $('#main').innerHTML = h; bindHome(); bindWk();
+  $('#main').innerHTML = h; bindHome(); bindWk(); bindAnalysis();
 }
 // WORKOUT DAY
 function wCard(r) {
@@ -2919,68 +2922,89 @@ function wCum(cur, prev, endIdx, lbl0, lbl1, k) {
     '<rect x="' + tx + '" y="' + ty + '" width="' + tw + '" height="22" rx="6" fill="#3182F6"/><text x="' + (tx + tw / 2) + '" y="' + (ty + 15) + '" text-anchor="middle" style="fill:#fff;font-weight:800;font-size:11px">총 ' + tag + '</text>' +
     '<text x="' + L + '" y="' + (H - 4) + '">' + lbl0 + '</text><text x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end" style="fill:#3182F6;font-weight:700">' + lbl1 + '</text></svg>';
 }
-// 6개월 심박 범위 (최저~최고) + 이번 달 평균 점
-function wHrChart(t, y, m) {
-  var cols = [], i, W = 320, H = 150, T = 10, B = 22, lo = 60, hi = 200, py = function (v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); };
-  for (i = 5; i >= 0; i--) { var yy = y, mm = m - i; while (mm < 1) { mm += 12; yy--; } var L = wOf(t, yy + '-' + pad(mm) + '-01', mEnd(yy, mm)), a = [], b = []; L.forEach(function (r) { if (r.hr) { a.push(r.hr); b.push(r.hrmax || r.hr); } }); cols.push({ m: mm, mn: a.length ? Math.min.apply(null, a) : null, mx: b.length ? Math.max.apply(null, b) : null, av: a.length ? a.reduce(function (p, q) { return p + q; }, 0) / a.length : null }); }
+// 기간별 심박 범위 (최저~최고) + 평균 점 — cols: [{f, t, lb}] (오래된 → 최근)
+function wHrChart(t, cols) {
+  var W = 320, H = 150, T = 10, B = 22, lo = 60, hi = 200, py = function (v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); };
+  cols = cols.map(function (c) { var L = wOf(t, c.f, c.t), a = [], b = []; L.forEach(function (r) { if (r.hr) { a.push(r.hr); b.push(r.hrmax || r.hr); } }); return { lb: c.lb, mn: a.length ? Math.min.apply(null, a) : null, mx: b.length ? Math.max.apply(null, b) : null, av: a.length ? a.reduce(function (p, q) { return p + q; }, 0) / a.length : null }; });
   var g = [80, 140, 200].map(function (v) { return '<line x1="26" x2="' + W + '" y1="' + py(v) + '" y2="' + py(v) + '" stroke="#f2f4f6"/><text x="0" y="' + (py(v) + 3) + '">' + v + '</text>'; }).join('');
-  var cw = (W - 30) / 6;
+  var n = cols.length, cw = (W - 30) / n;
   g += cols.map(function (c, j) {
-    var x = 30 + cw * j + cw / 2, cur = j === 5, s = '';
-    if (c.mn != null) s += c.mx > c.mn ? '<rect x="' + (x - 5) + '" y="' + py(c.mx) + '" width="10" height="' + Math.max(py(c.mn) - py(c.mx), 4) + '" rx="5" fill="' + (cur ? '#cfe0fd' : '#e5e8eb') + '"/>' : '';
+    var x = 30 + cw * j + cw / 2, cur = j === n - 1, s = '';
+    if (c.mn != null && c.mx > c.mn) s += '<rect x="' + (x - 5) + '" y="' + py(c.mx) + '" width="10" height="' + Math.max(py(c.mn) - py(c.mx), 4) + '" rx="5" fill="' + (cur ? '#cfe0fd' : '#e5e8eb') + '"/>';
     if (c.av != null) s += '<circle cx="' + x + '" cy="' + py(c.av) + '" r="' + (cur ? 5 : 3.5) + '" fill="' + (cur ? '#3182F6' : '#b0b8c1') + '"/>';
-    return s + '<text x="' + x + '" y="' + (H - 4) + '" text-anchor="middle"' + (cur ? ' style="fill:#3182F6;font-weight:700"' : '') + '>' + c.m + '월</text>';
+    return s + '<text x="' + x + '" y="' + (H - 4) + '" text-anchor="middle"' + (cur ? ' style="fill:#3182F6;font-weight:700"' : '') + '>' + c.lb + '</text>';
   }).join('');
-  return { svg: '<svg class="bch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>', cur: cols[5] };
+  return { svg: '<svg class="bch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>', cur: cols[n - 1] };
 }
 function wPaceNum(l, sw) { var v = l.filter(function (r) { return r.dur && r.dist; }).map(function (r) { return r.dur * 60 / (sw ? r.dist * 10 : r.dist); }); return v; }
 function fmtPace(sec, sw) { if (!isFinite(sec)) return '-'; return Math.floor(sec / 60) + "'" + pad(Math.round(sec % 60) % 60) + '"<small>/' + (sw ? '100m' : 'km') + '</small>'; }
-function wkMonth() {
-  var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7);
-  var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1, pf = py + '-' + pad(pm) + '-01', pt = mEnd(py, pm);
-  var types = wTypes(wList()).map(function (o) { return o.n; }), t = S.wt && (S.wt === '전체' || types.indexOf(S.wt) >= 0) ? S.wt : (types[0] || '전체'), sw = isSwim(t), k = S.wmk || 'dist';
-  var nm = t === '전체' ? '운동' : t.replace(/\(.*\)/, '');
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
-  h += '<div class="chips bkc">' + ['전체'].concat(types).map(function (n) { return '<button data-wt="' + esc(n) + '" class="' + (n === t ? 'on' : '') + '">' + esc(n) + '</button>'; }).join('') + '</div>';
-  var cur = wMon(t, y, m), prev = wMon(t, py, pm), l = wOf(t, from, to), pl = wOf(t, pf, pt);
-  // 1) 월간 분석
+// 기간 (주·월·연): off = 0 이번, -1 지난 …
+function wPer(p, off) {
+  if (p === 'w') { var ws = addD(monOf(TODAY), 7 * off), we = addD(ws, 6); return { p: p, f: ws, t: we, n: 7, lb: bYmd(ws).slice(3), nm: off === 0 ? '이번 주' : off === -1 ? '지난주' : bYmd(ws) + '주' }; }
+  if (p === 'y') { var y = +TODAY.slice(0, 4) + off, f = y + '-01-01', t = y + '-12-31'; return { p: p, y: y, f: f, t: t, n: dDiff(f, t) + 1, lb: y + '', nm: off === 0 ? '올해' : off === -1 ? '작년' : y + '년' }; }
+  var yy = +TODAY.slice(0, 4), mm = +TODAY.slice(5, 7) + off; while (mm < 1) { mm += 12; yy--; }
+  var f2 = yy + '-' + pad(mm) + '-01', t2 = mEnd(yy, mm);
+  return { p: p, y: yy, m: mm, f: f2, t: t2, n: +t2.slice(8), lb: mm + '월', nm: off === 0 ? '이번 달' : off === -1 ? '지난달' : mm + '월' };
+}
+function wTot(t, R) {
+  if (R.p === 'm') return wMon(t, R.y, R.m);
+  if (R.p === 'y') { var o = { cnt: 0, dur: 0, kcal: 0, dist: 0 }, imp = 0; for (var m = 1; m <= 12; m++) { var a = wMon(t, R.y, m); ['cnt', 'dur', 'kcal', 'dist'].forEach(function (k) { o[k] += a[k]; }); if (a.imp) imp = 1; } o.imp = imp; return o; }
+  var L = wOf(t, R.f, R.t); return { cnt: L.length, dur: wSum(L, 'dur'), kcal: wSum(L, 'akcal'), dist: wSum(L, 'dist') };
+}
+// WORKOUT 분석 (HOME 위쪽) — 주·월·연 × 거리·횟수·시간·칼로리
+function wAnalysis(all) {
+  var types = wTypes(all).map(function (o) { return o.n; }), t = S.wt && (S.wt === '전체' || types.indexOf(S.wt) >= 0) ? S.wt : (types[0] || '전체');
+  var p = S.wp || 'm', k = S.wmk || 'dist', sw = isSwim(t), nm = t === '전체' ? '운동' : t.replace(/\(.*\)/, '');
+  var C = wPer(p, 0), Pv = wPer(p, -1), cur = wTot(t, C), prev = wTot(t, Pv), l = wOf(t, C.f, C.t), pl = wOf(t, Pv.f, Pv.t);
+  var h = '<div class="chips bkc">' + ['전체'].concat(types).map(function (n) { return '<button data-wt="' + esc(n) + '" class="' + (n === t ? 'on' : '') + '">' + esc(n) + '</button>'; }).join('') + '</div>';
   var word = { dist: '거리는', cnt: '횟수는', dur: '시간은', kcal: '칼로리는' }[k], dv = cur[k] - prev[k];
-  var cmp = !prev[k] && !cur[k] ? '이번 달 기록이 아직 없어요' : !prev[k] ? '지난달엔 기록이 없었어요' : Math.abs(dv) < 1e-9 ? '지난달과 같아요' : '지난달보다 <b class="' + (dv > 0 ? 'wup' : 'wdn') + '">' + wmFmt(k, Math.abs(dv)) + (dv > 0 ? ' 더' : ' 덜') + '</b> 했어요';
-  var days = +to.slice(8), pdays = +pt.slice(8), endIdx = ym === TODAY.slice(0, 7) ? +TODAY.slice(8) - 1 : days - 1;
-  var cumArr = function (L, N, base) { var a = [], s = 0, i; for (i = 0; i < N; i++) { var d = base + pad(i + 1); L.forEach(function (r) { if (r.d === d) s += k === 'cnt' ? 1 : k === 'kcal' ? (r.akcal || 0) : (r[k] || 0); }); a.push(s); } return a; };
-  h += '<div class="card"><div class="ct">' + m + '월 분석<small>' + esc(t) + '</small></div>' + bSeg('data-wmk', WMET, k) +
-    '<div class="wbig">' + m + '월 총 ' + nm + ' ' + word + '<br><b>' + wmFmt(k, cur[k], 1) + '</b></div><p class="wsub">' + cmp + '</p>' +
-    wCum(cumArr(l, days, ym + '-'), cumArr(pl, pdays, pt.slice(0, 8)), endIdx, bShort(from), bShort(to), k) +
-    '<table class="btab wcmp"><tr><th>월</th><th>횟수</th><th>1회 평균</th><th>합계</th></tr>' + [[m, cur, 1], [pm, prev, 0]].map(function (o) {
-      return '<tr><td><i class="wdot" style="background:' + (o[2] ? '#3182F6' : '#c9d1db') + '"></i> ' + o[0] + '월' + (o[1].imp ? '<small class="wd">다른 앱 포함</small>' : '') + '</td><td>' + o[1].cnt + '회</td><td>' + (o[1].cnt && k !== 'cnt' ? wmFmt(k, o[1][k] / o[1].cnt) : '-') + '</td><td>' + wmFmt(k, o[1][k]) + '</td></tr>';
+  var cmp = !prev[k] && !cur[k] ? C.nm + ' 기록이 아직 없어요' : !prev[k] ? Pv.nm + '엔 기록이 없었어요' : Math.abs(dv) < 1e-9 ? Pv.nm + '과 같아요' : Pv.nm + '보다 <b class="' + (dv > 0 ? 'wup' : 'wdn') + '">' + wmFmt(k, Math.abs(dv)) + (dv > 0 ? ' 더' : ' 덜') + '</b> 했어요';
+  var endIdx = Math.min(dDiff(C.f, TODAY), C.n - 1);
+  var cum = function (L, R) { var a = [], s = 0, i; for (i = 0; i < R.n; i++) { var d = addD(R.f, i); L.forEach(function (r) { if (r.d === d) s += k === 'cnt' ? 1 : k === 'kcal' ? (r.akcal || 0) : (r[k] || 0); }); a.push(s); } return a; };
+  h += '<div class="card"><div class="ct">' + C.nm + ' 분석<small>' + bYmd(C.f) + ' ~ ' + bYmd(C.t) + '</small></div>' + bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], p) + bSeg('data-wmk', WMET, k) +
+    '<div class="wbig">' + C.nm + ' 총 ' + nm + ' ' + word + '<br><b>' + wmFmt(k, cur[k], 1) + '</b></div><p class="wsub">' + cmp + '</p>' +
+    wCum(cum(l, C), cum(pl, Pv), endIdx, bYmd(C.f), bYmd(C.t), k) +
+    '<table class="btab wcmp"><tr><th></th><th>횟수</th><th>1회 평균</th><th>합계</th></tr>' + [[C, cur, 1], [Pv, prev, 0]].map(function (o) {
+      return '<tr><td><i class="wdot" style="background:' + (o[2] ? '#3182F6' : '#c9d1db') + '"></i> ' + o[0].nm + (o[1].imp ? '<small class="wd">다른 앱 포함</small>' : '') + '</td><td>' + o[1].cnt + '회</td><td>' + (o[1].cnt && k !== 'cnt' ? wmFmt(k, o[1][k] / o[1].cnt) : '-') + '</td><td>' + wmFmt(k, o[1][k]) + '</td></tr>';
     }).join('') + '</table></div>';
-  // 2) 최근 6개월
-  var vals = [], lb = [], i;
-  for (i = 5; i >= 0; i--) { var yy = y, mm = m - i; while (mm < 1) { mm += 12; yy--; } vals.push(wMon(t, yy, mm)[k]); lb.push(mm + '월'); }
-  h += '<div class="card"><div class="ct">최근 6개월 ' + WMET.filter(function (x) { return x[0] === k; })[0][1] + '</div>' + bars7(vals.map(function (v) { return k === 'dur' ? Math.round(v) : k === 'dist' ? Math.round(v * 10) / 10 : Math.round(v); }), lb, 5, function (v) { return k === 'dur' ? (v >= 60 ? Math.round(v / 60) + '시간' : v + '분') : k === 'dist' ? v + 'km' : v.toLocaleString(); }) + '</div>';
-  // 3) 수영 영법
+  // 최근 12주 · 12개월 · 5년
+  var nb = p === 'y' ? 5 : 12, Rs = [], i; for (i = nb - 1; i >= 0; i--) Rs.push(wPer(p, -i));
+  var vals = Rs.map(function (R) { var v = wTot(t, R)[k]; return k === 'dur' ? Math.round(v) : k === 'dist' ? Math.round(v * 10) / 10 : Math.round(v); });
+  h += '<div class="card"><div class="ct">최근 ' + (p === 'w' ? '12주' : p === 'y' ? '5년' : '12개월') + ' ' + WMET.filter(function (x) { return x[0] === k; })[0][1] + '</div>' +
+    bars7(vals, Rs.map(function (R) { return R.lb; }), nb - 1, function (v) { return k === 'dur' ? (v >= 60 ? Math.round(v / 60) + '시간' : v + '분') : k === 'dist' ? v : v.toLocaleString(); }) + (k === 'dist' ? '<div class="legend" style="justify-content:flex-start">단위 km</div>' : '') + '</div>';
+  // 영법 (수영)
   if (sw) {
     var st = {}, tot = 0; l.forEach(function (r) { var o = wStrokes(r); Object.keys(o).forEach(function (s) { st[s] = (st[s] || 0) + o[s]; tot += o[s]; }); });
     var ks = Object.keys(st).sort(function (a, b) { return st[b] - st[a]; });
-    h += '<div class="card"><div class="ct">' + m + '월 영법<a href="#" data-srp>영법 리포트 ›</a></div>' + (tot ? '<div class="wst">' + ks.map(function (s) { return '<i style="flex:' + st[s] + ';background:' + SCOL[s] + '"></i>'; }).join('') + '</div>' +
+    h += '<div class="card"><div class="ct">' + C.nm + ' 영법<a href="#" data-srp>영법 리포트 ›</a></div>' + (tot ? '<div class="wst">' + ks.map(function (s) { return '<i style="flex:' + st[s] + ';background:' + SCOL[s] + '"></i>'; }).join('') + '</div>' +
       '<p class="wsub" style="margin:10px 0 4px">가장 많이 한 영법은 <b style="color:' + deep(SCOL[ks[0]]) + '">' + ks[0] + '</b>이에요</p><ul class="brow">' + ks.map(function (s) { return '<li><span class="n"><i class="wdot" style="background:' + SCOL[s] + '"></i>' + s + '</span><span class="v"><b>' + st[s].toLocaleString() + '</b><small>m</small></span><span class="d"><span class="mute">' + Math.round(st[s] / tot * 1000) / 10 + '%</span></span></li>'; }).join('') + '</ul>'
-      : '<div class="empty" style="padding:14px 0">이 달 영법 기록이 없어요<br><small>운동 메모에 \'자유형 500m\'처럼 있으면 계산해요</small></div>') + '</div>';
+      : '<div class="empty" style="padding:14px 0">' + C.nm + ' 영법 기록이 없어요<br><small>운동 메모에 \'자유형 500m\'처럼 있으면 계산해요</small></div>') + '</div>';
   }
-  // 4) 심박 · 페이스
-  var hc = wHrChart(t, y, m), pv = wPaceNum(l, sw);
-  h += '<div class="card"><div class="ct">심박 · 페이스</div><div class="st3">' + stat('평균 심박', hc.cur.av != null ? Math.round(hc.cur.av) + '<small class="bu">bpm</small>' : '-') + stat('최대 심박', hc.cur.mx != null ? hc.cur.mx + '<small class="bu">bpm</small>' : '-') +
-    stat(sw ? '최고 페이스' : '최고 페이스', pv.length ? fmtPace(Math.min.apply(null, pv), sw) : '-', pv.length ? '평균 ' + fmtPace(pv.reduce(function (a, b) { return a + b; }, 0) / pv.length, sw).replace(/<[^>]+>/g, '') : '') + '</div>' + hc.svg +
-    '<div class="legend" style="justify-content:flex-start">막대: 그 달 심박 범위 · 점: 평균</div></div>';
-  // 5) 달력 + 목록
-  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
-  var lead = (P(from).getDay() + 6) % 7, d;
-  for (i = 0; i < lead; i++) h += '<button class="out"></button>';
-  for (d = from; d <= to; d = addD(d, 1)) { var dl = wOf(t, d, d); h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dl.length ? '<span class="dts">' + dl.map(function (r) { return '<i style="background:' + deep(wTypeCol(r.type)) + '"></i>'; }).join('') + '</span>' : '') + '</button>'; }
-  h += '</div></div>';
-  h += '<div class="card"><div class="ct">' + m + '월 기록<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow wrows">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
-  $('#main').innerHTML = h; bindMonth(); bindWk();
+  // 심박 · 페이스
+  var hc = wHrChart(t, Rs.slice(-6)), pv = wPaceNum(l, sw);
+  h += '<div class="card"><div class="ct">심박 · 페이스<small>' + C.nm + '</small></div><div class="st3">' + stat('평균 심박', hc.cur.av != null ? Math.round(hc.cur.av) + '<small class="bu">bpm</small>' : '-') + stat('최대 심박', hc.cur.mx != null ? hc.cur.mx + '<small class="bu">bpm</small>' : '-') +
+    stat('최고 페이스', pv.length ? fmtPace(Math.min.apply(null, pv), sw) : '-', pv.length ? '평균 ' + fmtPace(pv.reduce(function (a, b) { return a + b; }, 0) / pv.length, sw).replace(/<[^>]+>/g, '') : '') + '</div>' + hc.svg +
+    '<div class="legend" style="justify-content:flex-start">막대: 심박 범위 · 점: 평균</div></div>';
+  return h;
+}
+function bindAnalysis() {
   $$('[data-wt]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wt = b.dataset.wt; render(); window.scrollTo(0, y0); }; });
   $$('[data-wmk]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wmk = b.dataset.wmk; render(); window.scrollTo(0, y0); }; });
+  $$('[data-wp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wp = b.dataset.wp; render(); window.scrollTo(0, y0); }; });
+}
+// WORKOUT MONTH: 달력 · 종류 · 기록
+function wkMonth() {
+  var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), l = wIn(from, to), i, d;
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
+  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
+  var lead = (P(from).getDay() + 6) % 7;
+  for (i = 0; i < lead; i++) h += '<button class="out"></button>';
+  for (d = from; d <= to; d = addD(d, 1)) { var dl = wIn(d, d); h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dl.length ? '<span class="dts">' + dl.map(function (r) { return '<i style="background:' + deep(wTypeCol(r.type)) + '"></i>'; }).join('') + '</span>' : '') + '</button>'; }
+  h += '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div></div>';
+  h += '<div class="card big1"><small>' + m + '월 운동</small><b>' + l.length + '<span class="pct">회</span></b><div class="sub">' + fmtMin(wSum(l, 'dur')) + ' · 운동한 날 ' + wDays(l) + '일 · 활동 ' + Math.round(wSum(l, 'akcal')) + 'kcal</div></div>';
+  h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
+  h += '<div class="card"><div class="ct">' + m + '월 기록<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow wrows">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
+  $('#main').innerHTML = h; bindMonth(); bindWk();
   $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
 }
 
@@ -3255,7 +3279,7 @@ function labTrend() {
   var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
   return '<div class="card" id="ltrend"><div class="ct">검사 항목 추이<small>' + s.length + '회</small></div><div class="chips bkc">' + its.map(function (n) { return '<button data-lt="' + esc(n) + '" class="' + (n === it ? 'on' : '') + '">' + esc(labKo(n) || n) + '</button>'; }).join('') + '</div>' +
     '<div class="bsel"><span>' + esc(info ? info[1] : it) + '</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
-    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) + '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info ? info[1] : it) + ' 설명 보기 ›</button></div>';
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bYmd(l.d) }; }), x) + '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info ? info[1] : it) + ' 설명 보기 ›</button></div>';
 }
 // MEDICAL HOME
 function mdHome() {
@@ -3323,9 +3347,9 @@ function mdWeek() {
   var ix = its.indexOf(it);
   var h = '<div class="card" id="ltc"><div class="ct"><span class="dpw lsel">' + esc(info ? info[1] : it) + '<select id="ltS" class="dpk" aria-label="검사 항목 선택">' + its.map(function (n) { var k = labKo(n); return '<option value="' + esc(n) + '"' + (n === it ? ' selected' : '') + '>' + esc(k ? k + ' · ' + n : n) + '</option>'; }).join('') + '</select></span><small>' + (ix + 1) + ' / ' + its.length + ' · ' + esc(it) + '</small></div>' +
     '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
-    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bYmd(l.d) }; }), x) +
     '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
-      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + l.d.slice(2).replace(/-/g, '.') + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
+      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + bShort(l.d) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
     }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
   h += '<div class="card"><div class="ct">전체 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div><ul class="brow mlst">' + its.map(function (n) {
     var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
@@ -3576,7 +3600,7 @@ function openLab(id) {
   } else h += '<p class="mnote">이 항목은 아직 설명 사전에 없어요.</p>';
   if (s.length > 1) {
     var dp = s.reduce(function (a, q) { var p = String(labNum(q.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
-    h += '<div class="sub2">지난 결과</div>' + bChart(s.map(function (q) { return { v: labNum(q.val), l: bShort(q.d) }; }), { n: l.item, u: u, dp: Math.min(dp, 3), c: '#e5484d' });
+    h += '<div class="sub2">지난 결과</div>' + bChart(s.map(function (q) { return { v: labNum(q.val), l: bYmd(q.d) }; }), { n: l.item, u: u, dp: Math.min(dp, 3), c: '#e5484d' });
   }
   h += '<p class="mnote">일반적인 설명이에요. 결과 해석과 치료는 담당 의사와 상의해 주세요.</p>';
   $('#lbB').innerHTML = h; openBs('#lb');
