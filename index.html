@@ -488,7 +488,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .btab th:first-child, .btab td:first-child { text-align:left; }
 .btab td:first-child { font-weight:500; color:var(--sub); } .btab td small { color:var(--faint); }
 .btab tr[data-bd], .btab tr[data-bm] { cursor:pointer; }
-.wtc .wbig b { color:var(--wc); } .wtc .mbar i { background:var(--wl); } .wtc .mbar div.cur i { background:var(--wc); } .wtc .mbar div.cur em { color:var(--wc); } .wtch { margin:-4px 0 14px; } .wct .wib { width:26px; height:26px; border-radius:8px; } .wct .wib .hico { width:15px; height:15px; } .wn2 .dt { margin-left:0 !important; }
+.wtc .wbig b, .wtc .wsub b.wup, .wtc .wsub b.wdn { color:var(--wc); } .wtc .mbar i { background:var(--wl); } .wtc .mbar div.cur i { background:var(--wc); } .wtc .mbar div.cur em { color:var(--wc); } .wtch { margin:-4px 0 14px; } .wct .wib { width:26px; height:26px; border-radius:8px; } .wct .wib .hico { width:15px; height:15px; } .wn2 .dt { margin-left:0 !important; }
 .wbig { font-size:22px; font-weight:800; line-height:1.35; letter-spacing:-0.02em; margin:6px 2px 4px; } .wbig b { color:#3182F6; font-size:30px; } .wbig b small { font-size:.6em; margin-left:1px; }
 .wsub { font-size:13.5px; color:var(--sub); margin:0 2px 10px; } .wsub b.wup { color:#F04452; } .wsub b.wdn { color:#3182F6; }
 .wcmp { margin-top:14px; } .wcmp td { font-size:13.5px; } .wcmp td small.wd { display:block; font-size:10.5px; color:var(--faint); font-weight:500; }
@@ -804,7 +804,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zo';
+var APP_VER = '20261005zp';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
