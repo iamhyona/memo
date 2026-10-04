@@ -500,6 +500,8 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 #bbDrop small { font-weight:500; font-size:12px; }
 .f input[type=time] { color:var(--txt); text-align:left; line-height:22px; }
 /* WORKOUT · MEDICAL (2026.10.04) */
+.wtab td { font-size:13px; } .wtab td[colspan] { text-align:center; }
+.brow .n:has(.wnm) { flex-direction:column; align-items:flex-start; gap:2px; min-width:0; } .wnm { display:flex; align-items:center; gap:7px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; } .brow .n:has(.wnm) .dt { margin-left:16px; }
 .wdot { width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; align-self:center; }
 .wct { display:flex; align-items:center; gap:8px; min-width:0; } .wct small { font-size:13px; color:var(--mute); font-weight:500; }
 .mk2 { font-size:11px; font-weight:700; color:var(--sub); background:var(--chip); border-radius:6px; padding:2px 6px; flex:none; align-self:center; }
@@ -732,7 +734,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v7';
+var APP_VER = '20261004v8';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2799,7 +2801,7 @@ function wTypeList(l) {
 }
 function wDays(l) { var m = {}; l.forEach(function (r) { m[r.d] = 1; }); return Object.keys(m).length; }
 function wRow(r, showDate) {
-  return '<li class="tap" data-bd="' + r.d + '"><span class="n"><i class="wdot" style="background:' + deep(wTypeCol(r.type)) + '"></i>' + esc(r.type || '운동') + (showDate ? '<small class="dt">' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small>' : r.t ? '<small class="dt">' + r.t + '</small>' : '') + '</span>' +
+  return '<li class="tap" data-bd="' + r.d + '"><span class="n"><span class="wnm"><i class="wdot" style="background:' + deep(wTypeCol(r.type)) + '"></i>' + esc(r.type || '운동') + '</span>' + (showDate ? '<small class="dt">' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small>' : r.t ? '<small class="dt">' + r.t + '</small>' : '') + '</span>' +
     '<span class="v"><b>' + fmtMin(r.dur) + '</b></span><span class="d">' + (r.akcal != null ? '<span class="mute">' + wfmt(wkOf('akcal'), r.akcal) + 'kcal</span>' : '') + '</span></li>';
 }
 function wChips(cur) { return '<div class="chips bkc">' + WK.map(function (x) { return '<button data-wk="' + x.k + '" class="' + (x.k === cur ? 'on' : '') + '">' + x.n + '</button>'; }).join('') + '</div>'; }
@@ -2809,19 +2811,23 @@ function bindWk() {
   $$('[data-we]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openWorkout(b.dataset.we); }; });
   if ($('#wAdd')) $('#wAdd').onclick = function () { openWorkout(null, S.day); };
 }
-// WORKOUT HOME
+// WORKOUT HOME: 운동 종류별 요약 (오늘 · 이번 주 · 이번 달 · 올해) — 2026.10.04
+function wDist(t, km) { if (!km) return '-'; return /수영/.test(t || '') ? Math.round(km * 1000).toLocaleString() + '<small class="u">m</small>' : wfmt({ dp: km >= 100 ? 0 : 2 }, km) + '<small class="u">km</small>'; }
+function wHr(l) { var s = 0, w = 0; l.forEach(function (r) { if (r.hr) { var k = r.dur || 1; s += r.hr * k; w += k; } }); return w ? Math.round(s / w) + '<small class="u">bpm</small>' : '-'; }
 function wkHome() {
-  var R = rng(), w = wIn(R.ws, R.we), pw = wIn(R.pws, R.pwe), m = wIn(R.mf, R.mt), pm = wIn(R.pmf, R.pmt), all = wList();
+  var R = rng(), all = wList();
   var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
-  var wv = weekDays(R.ws).map(function (d) { return Math.round(wSum(wIn(d, d), 'dur')); });
-  h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">자세히 ›</a></div><div class="st3">' +
-    stat('운동', w.length + '회', delta(w.length, pw.length, '회')) + stat('시간', fmtMin(wSum(w, 'dur')), '지난주 ' + fmtMin(wSum(pw, 'dur'))) + stat('활동 칼로리', Math.round(wSum(w, 'akcal')) + '<small class="bu">kcal</small>', '운동한 날 ' + wDays(w) + '/7') + '</div>' +
-    bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '<div class="legend" style="justify-content:flex-start">막대: 그날 운동 시간(분)</div></div>';
-  h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">리뷰 ›</a></div><div class="st3">' +
-    stat('운동', m.length + '회', delta(m.length, pm.length, '회')) + stat('시간', fmtMin(wSum(m, 'dur')), '지난달 ' + fmtMin(wSum(pm, 'dur'))) + stat('운동한 날', wDays(m) + '일') + '</div>' +
-    '<div class="sub2">운동 종류</div>' + wTypeList(m) + '</div>';
-  h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
+  var P4 = [['오늘', TODAY, TODAY], ['이번 주', R.ws, R.we], ['이번 달', R.mf, R.mt], ['올해', R.y + '-01-01', R.y + '-12-31']];
+  wTypes(all).forEach(function (o) {
+    var t = o.n, L = all.filter(function (r) { return (r.type || '기타') === t; }), last = L[L.length - 1];
+    h += '<div class="card"><div class="ct"><span class="wct"><i class="wdot" style="background:' + deep(wTypeCol(t)) + '"></i>' + esc(t) + '</span><small>최근 ' + bShort(last.d) + ' · 전체 ' + L.length + '회</small></div>' +
+      '<table class="btab bper wtab"><tr><th></th><th>횟수</th><th>시간</th><th>거리</th><th>평균심박</th></tr>' + P4.map(function (p) {
+        var l = L.filter(function (r) { return inR(r.d, p[1], p[2]); });
+        return '<tr><td>' + p[0] + '</td>' + (l.length ? '<td>' + l.length + '<small class="u">회</small></td><td>' + fmtMin(wSum(l, 'dur')) + '</td><td>' + wDist(t, wSum(l, 'dist')) + '</td><td>' + wHr(l) + '</td>' : '<td colspan="4"><span class="mute">-</span></td>') + '</tr>';
+      }).join('') + '</table></div>';
+  });
+  h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
   h += '<div class="mini">' + stat('연속 운동', run + '일') + stat('올해', wIn(R.y + '-01-01', R.y + '-12-31').length + '회') + stat('전체', all.length + '회') + '</div>';
