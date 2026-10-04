@@ -783,7 +783,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005z9';
+var APP_VER = '20261005za';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3371,6 +3371,42 @@ function vRow(v) {
     '<span class="d">' + (ls.length ? '<span class="mute">검사 ' + ls.length + '</span>' + (bad ? '<i class="mf h">' + bad + '</i>' : '') : '') + '</span></li>';
 }
 function labName(l) { var x = labInfo(l.item, l.val, l.ref); return x ? '<b class="lk">' + esc(x[1]) + '</b><small class="le">' + esc(l.item) + '</small>' : '<b class="lk">' + esc(l.item) + '</b>'; }
+// 검사 항목 분류 (단추 + 좌우 스와이프) — 2026.10.05
+var LAB_CATS = [['bad', '참고치 밖'], ['all', '전체'], ['kid', '신장'], ['imm', '루푸스·면역'], ['uri', '소변'], ['cbc', '혈액'], ['ele', '전해질'], ['met', '간·대사'], ['etc', '기타']];
+function labCat(item) {
+  var x = labInfo(item), n = (x ? x[0] : item) + ' ' + item;
+  if (/urine|\(u|소변|요|pc ratio|dysmorphic|specific gravity|urobilinogen|leukocyte esterase|nitrite|ketone|bacteria|color|clarity|cast|epithel|crystal/i.test(n)) return 'uri';
+  if (/creatinine|egfr|bun|urea|uric|cystatin|β2|beta2/i.test(n)) return 'kid';
+  if (/dsdna|anti|ana\b|c3|c4|immunoglobulin|igg|iga|igm|esr|crp|complement|ch50|rf\b|lupus|aps|cardiolipin/i.test(n)) return 'imm';
+  if (/hemoglobin|hematocrit|rbc|wbc|platelet|plt|lymph|neutro|anc|mono|eosin|baso|mcv|mch|rdw|mpv|pdw|pct|reticul|seg/i.test(n)) return 'cbc';
+  if (/alkaline|alp\b/i.test(n)) return 'met';
+  if (/sodium|potassium|chloride|calcium|phosph|magnesium|tco2|co2|bicarb|^na\b|^k\b|^cl\b/i.test(n)) return 'ele';
+  if (/ast|alt|got|gpt|alkaline|alp|gtp|ggt|bilirubin|ldh|cpk|ck\b|glucose|hba1c|cholesterol|ldl|hdl|triglyceride|albumin|protein|vitamin|iron|tibc|ferritin|amylase|lipase|tsh|t4|t3/i.test(n)) return 'met';
+  return 'etc';
+}
+function labCatBox(ls) {
+  var cnt = {}; LAB_CATS.forEach(function (c) { cnt[c[0]] = 0; });
+  ls.forEach(function (l) { cnt.all++; cnt[labCat(l.item)]++; if (labFlag(l)) cnt.bad++; });
+  var cats = LAB_CATS.filter(function (c) { return cnt[c[0]] || c[0] === 'all' || c[0] === 'bad'; }), cur = S.mlc && cnt[S.mlc] != null && cats.some(function (c) { return c[0] === S.mlc; }) ? S.mlc : (cnt.bad ? 'bad' : 'all');
+  var sh = ls.filter(function (l) { return cur === 'all' || (cur === 'bad' ? labFlag(l) : labCat(l.item) === cur); });
+  return '<div class="chips bkc mlc" style="margin-top:14px">' + cats.map(function (c) { return '<button data-mlc="' + c[0] + '" class="' + (c[0] === cur ? 'on' : '') + '">' + c[1] + ' ' + cnt[c[0]] + '</button>'; }).join('') + '</div>' +
+    '<div id="mlcBox">' + (sh.length ? labTable(sh) : '<p class="mnote">' + (cur === 'bad' ? '모든 항목이 참고치 안이에요' : '이 분류의 검사가 없어요') + '</p>') + '</div>' +
+    '<div class="legend" style="justify-content:flex-start;margin-top:8px">좌우로 밀어 분류 넘기기 · 항목을 누르면 설명</div>';
+}
+function bindLabCat() {
+  var go = function (c) { var y0 = window.scrollY; S.mlc = c; render(); window.scrollTo(0, y0); };
+  $$('[data-mlc]').forEach(function (b) { b.onclick = function () { go(b.dataset.mlc); }; });
+  var box = $('#mlcBox'); if (!box) return;
+  var x0 = null, y0 = null;
+  box.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  box.addEventListener('touchend', function (e) {
+    if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    var bs = $$('[data-mlc]'), i = bs.findIndex(function (b) { return b.classList.contains('on'); }), j = i + (dx < 0 ? 1 : -1);
+    if (j >= 0 && j < bs.length) go(bs[j].dataset.mlc);
+  });
+  var on = $('.mlc button.on'); if (on && on.scrollIntoView) { var p = on.parentNode; p.scrollLeft = on.offsetLeft - p.offsetWidth / 2 + on.offsetWidth / 2; }
+}
 function labTable(ls) {
   return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.slice().sort(labSort).map(function (l) {
     var f = labFlag(l), x = labInfo(l.item, l.val, l.ref), u = l.unit || (x ? x[2] : '');
@@ -3418,10 +3454,10 @@ function mdHome() {
     var ls = [].concat.apply([], gv.map(function (v) { return labsOf(v.id); })), bad = ls.filter(function (l) { return labFlag(l); });
     h += '<div class="card"><div class="ct">최근 혈액검사<a href="#" data-bd="' + d0 + '">' + bShort(d0) + (d0 !== lv.d ? '~' + bShort(lv.d) : '') + ' ›</a></div>' +
       '<div class="st3">' + stat('검사 항목', ls.length + '개') + stat('참고치 밖', '<span class="' + (bad.length ? 'dn' : '') + '">' + bad.length + '개</span>') + stat('병원', esc(hs.join(', ') || '-')) + '</div>' +
-      (bad.length ? '<div class="sub2">참고치를 벗어난 항목</div>' + labTable(bad) : '<p class="mnote">모든 항목이 참고치 안이에요</p>') + '</div>';
+      labCatBox(ls) + '</div>';
   }
   h += '<div class="card"><div class="ct">최근 방문<small>전체 ' + vs.length + '회</small></div><ul class="brow">' + vs.slice(-6).reverse().map(vRow).join('') + '</ul></div>';
-  $('#main').innerHTML = h; bindHome(); bindMd();
+  $('#main').innerHTML = h; bindHome(); bindMd(); bindLabCat();
 }
 // MEDICAL DAY
 function vCard(v) {
