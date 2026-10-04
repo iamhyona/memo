@@ -427,9 +427,9 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 /* BODY (2026.10.04) */
 header .mtabs button { font-size:12.5px; letter-spacing:.02em; }
 /* 탭이 많아져서 옆으로 밀기 (2026.10.04) */
-header .mtabs { overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; max-width:560px; }
+header .mtabs { overflow-x:auto; overflow-y:hidden; touch-action:pan-x; overscroll-behavior:contain; scrollbar-width:none; -webkit-overflow-scrolling:touch; max-width:560px; }
 header .mtabs::-webkit-scrollbar { display:none; }
-header .mtabs button { flex:none; padding:12px 13px 10px; }
+header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bc3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
 .bcd { border:1.5px solid transparent; background:var(--chip); border-radius:16px; padding:12px 4px 10px; text-align:center; min-width:0; }
 .bcd.on { background:#fff; border-color:var(--txt); }
@@ -704,7 +704,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t5';
+var APP_VER = '20261004t6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
