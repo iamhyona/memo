@@ -770,7 +770,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y1';
+var APP_VER = '20261005y2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1242,36 +1242,40 @@ function goMode(mode, view) { S.mode = mode; S.view = view || 'home'; ls.set('me
 // TRACKER HOME
 function trHome() {
   var hs = S.D.habits, R = rng(), n = hs.filter(function (x) { return on(TODAY, x.id); }).length;
-  var h = '<div class="hm"><small>TRACKER</small><b>' + mdw(TODAY) + '</b></div>';
+  var h = '';
   // 오늘
   h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + hs.length + ' 완료 ›</a></div>' +
     (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk dico">' + hs.map(function (x) {
       return '<button data-h="' + x.id + '" aria-label="' + esc(x.name) + '" title="' + esc(x.name) + '" class="' + (on(TODAY, x.id) ? 'on' : '') + '"' + (on(TODAY, x.id) ? ' style="background:' + x.color + '"' : '') + '>' + hIco(x, 'hico') + '</button>';
     }).join('') + '</div>' : '<div class="empty">+ 버튼으로 습관을 추가해 보세요</div>') + '</div>';
   if (!hs.length) { $('#main').innerHTML = h; return bindHome(); }
-  // 이번 주
-  var tw = total(R.ws, R.we), pw = total(R.pws, R.pwe), dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
-  var wv = weekDays(R.ws).map(function (d) { return hs.filter(function (x) { return on(d, x.id); }).length; });
-  h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">자세히 ›</a></div><div class="st3">' +
-    stat('달성률', pct(tw.rate) + '%', '지난 주 ' + pct(pw.rate) + '%') + stat('체크', tw.cnt + '회', delta(tw.cnt, pw.cnt, '회')) + stat('목표 달성', dn + '/' + hs.length) + '</div>' +
-    bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '</div>';
-  // 이번 달
-  var tm = total(R.mf, R.mt), pm = total(R.pmf, R.pmt), days = 0;
-  for (var d = R.mf; d <= R.mt && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
-  var top = hs.map(function (x) { var s = hstat(x, R.mf, R.mt); return { n: x.name, v: s.cnt, t: s.cnt + '회 · <b>' + pct(s.rate) + '%</b>', c: x.color, ico: hIco(x, 'hico sm'), h: x.id }; })
-    .sort(function (a, b) { return b.v - a.v; });
-  h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">리뷰 ›</a></div><div class="st3">' +
-    stat('달성률', pct(tm.rate) + '%', '지난 달 ' + pct(pm.rate) + '%') + stat('체크', tm.cnt + '회', delta(tm.cnt, pm.cnt, '회')) + stat('기록한 날', days + '일') + '</div>' +
-    '<div class="sub2">많이 한 습관</div>' + hlist(top.slice(0, 5)) + '</div>';
-  // 연속 기록
-  var st = hs.map(function (x) { return { x: x, s: streak(x.id) }; }).filter(function (o) { return o.s > 0; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 5);
-  h += '<div class="card"><div class="ct">연속 기록</div>' + (st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: o.x.color, ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">오늘부터 연속 기록을 시작해 보세요</div>') + '</div>';
-  // 부족한 습관
-  var low = hs.map(function (x) { var c = weekCnt(x, R.ws); return { x: x, c: c, left: x.target - c }; }).filter(function (o) { return o.left > 0; }).sort(function (a, b) { return b.left - a.left; }).slice(0, 4);
-  if (low.length) h += '<div class="card"><div class="ct">이번 주 남은 목표</div><ul class="leg lows">' + low.map(function (o) {
-    return '<li class="tapd" data-h="' + o.x.id + '">' + hIco(o.x, 'hico sm') + '<span class="n">' + esc(o.x.name) + '</span><span class="v">' + o.c + '/' + o.x.target + ' · ' + o.left + '회 남음</span></li>';
-  }).join('') + '</ul></div>';
+  // 요약: 주 · 월 · 연 단추 (2026.10.05)
+  var sp = S.tsp || 'w', yx = R.y, days = 0, d;
+  var PP = { w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: [R.m + '월', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: [yx + '년', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'] }[sp];
+  var tc = total(PP[1], PP[2]), tp = total(PP[3], PP[4]);
+  for (d = PP[1]; d <= PP[2] && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
+  var dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
+  h += '<div class="card"><div class="ct">' + PP[0] + ' 요약<a href="#" data-go="' + ({ w: 'week', m: 'month', y: 'year' }[sp]) + '">자세히 ›</a></div>' + bSeg('data-tsp', [['w', '주'], ['m', '월'], ['y', '연']], sp) + '<div class="st3">' +
+    stat('달성률', pct(tc.rate) + '%', PP[5] + ' ' + pct(tp.rate) + '%') + stat('체크', tc.cnt + '회', delta(tc.cnt, tp.cnt, '회')) + (sp === 'w' ? stat('목표 달성', dn + '/' + hs.length) : stat('기록한 날', days + '일')) + '</div>' +
+    (sp === 'w' ? bars7(weekDays(R.ws).map(function (d2) { return hs.filter(function (x) { return on(d2, x.id); }).length; }), weekLabels(R.ws), todayIdx(R.ws)) : '') + '</div>';
+  // 습관별: 많이 한 습관 · 연속 기록 · 남은 목표 (속단추)
+  var tl = S.tlt || 'top', lst = '';
+  if (tl === 'top') {
+    var top = hs.map(function (x) { var s2 = hstat(x, PP[1], PP[2]); return { n: x.name, v: s2.cnt, t: s2.cnt + '회 · <b>' + pct(s2.rate) + '%</b>', c: x.color, ico: hIco(x, 'hico sm'), h: x.id }; }).sort(function (a, b) { return b.v - a.v; });
+    lst = top.some(function (o) { return o.v; }) ? hlist(top) : '<div class="empty">' + PP[0] + ' 체크한 습관이 없어요</div>';
+  } else if (tl === 'run') {
+    var st = hs.map(function (x) { return { x: x, s: streak(x.id) }; }).filter(function (o) { return o.s > 0; }).sort(function (a, b) { return b.s - a.s; });
+    lst = st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: o.x.color, ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">오늘부터 연속 기록을 시작해 보세요</div>';
+  } else {
+    var low = hs.map(function (x) { var c = weekCnt(x, R.ws); return { x: x, c: c, left: x.target - c }; }).filter(function (o) { return o.left > 0; }).sort(function (a, b) { return b.left - a.left; });
+    lst = low.length ? '<ul class="leg lows">' + low.map(function (o) {
+      return '<li class="tapd" data-h="' + o.x.id + '">' + hIco(o.x, 'hico sm') + '<span class="n">' + esc(o.x.name) + '</span><span class="v">' + o.c + '/' + o.x.target + ' · ' + o.left + '회 남음</span></li>';
+    }).join('') + '</ul>' : '<div class="empty">이번 주 목표를 모두 채웠어요</div>';
+  }
+  h += '<div class="card"><div class="ct">습관별<small>' + (tl === 'top' ? PP[0] : tl === 'run' ? '오늘까지' : '이번 주') + '</small></div>' + bSeg('data-tlt', [['top', '많이 한 습관'], ['run', '연속 기록'], ['low', '남은 목표']], tl) + lst + '</div>';
   $('#main').innerHTML = h; bindHome();
+  $$('[data-tsp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.tsp = b.dataset.tsp; render(); window.scrollTo(0, y0); }; });
+  $$('[data-tlt]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.tlt = b.dataset.tlt; render(); window.scrollTo(0, y0); }; });
 }
 // FEED HOME
 function fdHome() {
