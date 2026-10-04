@@ -567,6 +567,11 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .ymh b { font-size:10px; color:var(--faint); text-align:center; font-weight:600; padding-bottom:4px; } .ymh b.cur { color:var(--txt); font-weight:800; }
 .ymr { padding:3px 0; } .ymr .n { display:flex; align-items:center; gap:4px; min-width:0; } .ymr .n em { font-style:normal; font-size:11.5px; letter-spacing:-0.04em; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ymr i { font-style:normal; height:24px; border-radius:5px; background:#f2f4f6; font-size:8.5px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
+.kgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.kgrid2 .kc { margin:0; padding:8px 6px 8px 8px; gap:6px; border-radius:14px; min-width:0; }
+.kgrid2 .kc .hi { width:28px; height:28px; border-radius:8px; } .kgrid2 .kc .hi .hico { width:17px; height:17px; }
+.kgrid2 .kc .m div { font-size:14px; } .kgrid2 .kn2 { min-width:0; } .kgrid2 .kc .kn2 b { font-size:18px; }
+.kgrid2 .kc .kplus { display:none; } .kgrid2 .kc .kb { width:26px; height:26px; } .kgrid2 .kc .kb svg { width:12px; height:12px; }
 </style>
 </head>
 <body>
@@ -775,7 +780,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y4';
+var APP_VER = '20261005y5';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2282,7 +2287,7 @@ function ctDaily() {
   var ks = S.D.counters, day = S.day, n = kdayOk(day);
   var h = dayNav();
   if (!ks.length) h += '<div class="card empty">아직 횟수 항목이 없어요<br>오른쪽 아래 + 버튼으로 물 마시기, 양치처럼<br>하루에 여러 번 하는 일을 추가해 보세요</div>';
-  h += ks.map(function (x) { return kcard(x, day); }).join('');
+  if (ks.length) h += '<div class="kgrid2">' + ks.map(function (x) { return kcard(x, day); }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">카드를 누르면 +1 · − 로 빼기</div>';
   $('#main').innerHTML = h;
   bindDay(); bindKc(day);
 }
