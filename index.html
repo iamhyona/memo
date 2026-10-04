@@ -64,12 +64,12 @@ header { position:sticky; top:0; z-index:10; background:var(--bg); padding:calc(
 .pg.ig { gap:2px; border-radius:0; margin:0 -16px 12px; }
 .pg.ig button { aspect-ratio:3/4; background:#e5e8eb; }
 .f1 { margin:0 -16px 18px; background:#fff; }
-.f1 .fi { border:0; padding:0; display:block; width:100%; background:#e5e8eb; min-height:120px; }
+.f1 .fi { border:0; padding:0; display:block; width:100%; background:#fff; min-height:120px; }
 .f1 .fi img { width:100%; height:auto; display:block; }
 .f1 .fm { padding:10px 16px 14px; } .f1 .fcat { font-size:12px; font-weight:700; color:var(--sub); background:var(--chip); border-radius:999px; padding:3px 9px; }
 .f1 .fm p { margin:8px 0 0; font-size:15px; line-height:1.5; white-space:pre-wrap; }
 .pg button .mul { position:absolute; top:7px; right:7px; width:18px; height:18px; filter:drop-shadow(0 0 2px rgba(0,0,0,.4)); }
-.car { position:relative; background:#e5e8eb; }
+.car { position:relative; background:#fff; }
 .cs { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
 .cs::-webkit-scrollbar { display:none; }
 .cs .fi { flex:0 0 100%; scroll-snap-align:start; scroll-snap-stop:always; }
@@ -323,7 +323,7 @@ textarea.dx { width:100%; border:0; background:var(--chip); border-radius:14px; 
 .pdrop .pp { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-top:12px; }
 .pdrop .pp:empty { display:none; }
 .pdrop .pp img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
-.pvi { width:100%; border-radius:16px; display:block; background:var(--chip); min-height:200px; max-height:62vh; object-fit:contain; }
+.pvi { width:100%; border-radius:16px; display:block; background:#fff; min-height:200px; max-height:62vh; object-fit:contain; }
 .pvm { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:14px; color:var(--mute); font-weight:600; }
 .pvm b { color:var(--txt); }
 .pvt { margin:10px 2px 0; font-size:15px; line-height:1.6; white-space:pre-wrap; }
@@ -496,7 +496,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004j';
+var APP_VER = '20261004k';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
