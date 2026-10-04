@@ -558,6 +558,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .kg.dk .kgt, .kg.dk b, .kg.dk b small, .kg.dk em, .kg.dk em .up, .kg.dk em .dn { color:#fff; } .kg.dk .hico { filter:brightness(0) invert(1); }
 .kc { padding:7px 8px 7px 10px; margin-bottom:6px; border-radius:15px; } .kc .hi { width:31px; height:31px; border-radius:9px; } .kc .hi .hico { width:19px; height:19px; } .kc .m div { font-size:15px; } .kc .kn2 b { font-size:20px; } .kc .kb { width:31px; height:31px; } .kc .kb svg { width:14px; height:14px; }
 .kc.dk { color:#fff; } .kc.dk .kn2 small { color:rgba(255,255,255,.8); }
+.wctl { padding-top:14px; padding-bottom:14px; } .wctl .seg3 { margin:0; } .wctl .seg3 + .seg3 { margin-top:8px; }
 </style>
 </head>
 <body>
@@ -766,7 +767,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x5';
+var APP_VER = '20261005x6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2885,19 +2886,9 @@ function wDist(t, km) { if (!km) return '-'; return /수영/.test(t || '') ? Mat
 function wHr(l) { var s = 0, w = 0; l.forEach(function (r) { if (r.hr) { var k = r.dur || 1; s += r.hr * k; w += k; } }); return w ? Math.round(s / w) + '<small class="u">bpm</small>' : '-'; }
 function wkHome() {
   var R = rng(), all = wList();
-  var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
+  var h = '';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
   h += wAnalysis(all);
-  h += '<div class="sec">운동 종류별 요약</div>';
-  var P4 = [['오늘', TODAY, TODAY], ['이번 주', R.ws, R.we], ['이번 달', R.mf, R.mt], ['올해', R.y + '-01-01', R.y + '-12-31']];
-  wTypes(all).forEach(function (o) {
-    var t = o.n, L = all.filter(function (r) { return (r.type || '기타') === t; }), last = L[L.length - 1];
-    h += '<div class="card"><div class="ct"><span class="wct"><i class="wdot" style="background:' + deep(wTypeCol(t)) + '"></i>' + esc(t) + '</span><small>최근 ' + bShort(last.d) + ' · 전체 ' + L.length + '회</small></div>' +
-      '<table class="btab bper wtab"><tr><th></th><th>횟수</th><th>시간</th><th>거리</th><th>평균심박</th></tr>' + P4.map(function (p) {
-        var l = L.filter(function (r) { return inR(r.d, p[1], p[2]); });
-        return '<tr><td>' + p[0] + '</td>' + (l.length ? '<td>' + l.length + '<small class="u">회</small></td><td>' + fmtMin(wSum(l, 'dur')) + '</td><td>' + wDist(t, wSum(l, 'dist')) + '</td><td>' + wHr(l) + '</td>' : '<td colspan="4"><span class="mute">-</span></td>') + '</tr>';
-      }).join('') + '</table>' + (isSwim(t) ? '<button class="bmore" data-srp>영법 리포트 ›</button>' : '') + '</div>';
-  });
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
@@ -2996,39 +2987,43 @@ function wTot(t, R) {
   var L = wOf(t, R.f, R.t); return { cnt: L.length, dur: wSum(L, 'dur'), kcal: wSum(L, 'akcal'), dist: wSum(L, 'dist') };
 }
 // WORKOUT 분석 (HOME 위쪽) — 주·월·연 × 거리·횟수·시간·칼로리
+// WORKOUT HOME 분석: 운동 종류별 카드 (주·월·연 · 항목 단추는 위에서 한 번에) — 2026.10.05
 function wAnalysis(all) {
-  var types = wTypes(all).map(function (o) { return o.n; }), t = S.wt && (S.wt === '전체' || types.indexOf(S.wt) >= 0) ? S.wt : (types[0] || '전체');
-  var p = S.wp || 'm', k = S.wmk || 'dist', sw = isSwim(t), nm = t === '전체' ? '운동' : t.replace(/\(.*\)/, '');
+  var types = wTypes(all).map(function (o) { return o.n; }), p = S.wp || 'm', k = S.wmk || 'dist';
+  var h = '<div class="card wctl">' + bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], p) + bSeg('data-wmk', WMET, k) + '</div>';
+  types.forEach(function (t) { h += wTypeCard(t, p, k); });
+  return h;
+}
+function wTypeCard(t, p, k) {
+  var sw = isSwim(t), nm = t.replace(/\(.*\)/, '');
   var C = wPer(p, 0), Pv = wPer(p, -1), cur = wTot(t, C), prev = wTot(t, Pv), l = wOf(t, C.f, C.t), pl = wOf(t, Pv.f, Pv.t);
-  var h = '<div class="chips bkc">' + ['전체'].concat(types).map(function (n) { return '<button data-wt="' + esc(n) + '" class="' + (n === t ? 'on' : '') + '">' + esc(n) + '</button>'; }).join('') + '</div>';
   var word = { dist: '거리는', cnt: '횟수는', dur: '시간은', kcal: '칼로리는' }[k], dv = cur[k] - prev[k];
   var cmp = !prev[k] && !cur[k] ? C.nm + ' 기록이 아직 없어요' : !prev[k] ? Pv.nm + '엔 기록이 없었어요' : Math.abs(dv) < 1e-9 ? Pv.nm + '과 같아요' : Pv.nm + '보다 <b class="' + (dv > 0 ? 'wup' : 'wdn') + '">' + wmFmt(k, Math.abs(dv)) + (dv > 0 ? ' 더' : ' 덜') + '</b> 했어요';
   var endIdx = Math.min(dDiff(C.f, TODAY), C.n - 1);
   var cum = function (L, R) { var a = [], s = 0, i; for (i = 0; i < R.n; i++) { var d = addD(R.f, i); L.forEach(function (r) { if (r.d === d) s += k === 'cnt' ? 1 : k === 'kcal' ? (r.akcal || 0) : (r[k] || 0); }); a.push(s); } return a; };
-  h += '<div class="card"><div class="ct">' + C.nm + ' 분석<small>' + bYmd(C.f) + ' ~ ' + bYmd(C.t) + '</small></div>' + bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], p) + bSeg('data-wmk', WMET, k) +
+  var h = '<div class="card"><div class="ct"><span class="wct"><i class="wdot" style="background:' + deep(wTypeCol(t)) + '"></i>' + esc(t) + '</span><small>' + bYmd(C.f) + ' ~ ' + bYmd(C.t) + '</small></div>' +
     '<div class="wbig">' + C.nm + ' 총 ' + nm + ' ' + word + '<br><b>' + wmFmt(k, cur[k], 1) + '</b></div><p class="wsub">' + cmp + '</p>' +
     wCum(cum(l, C), cum(pl, Pv), endIdx, bYmd(C.f), bYmd(C.t), k) +
     '<table class="btab wcmp"><tr><th></th><th>횟수</th><th>1회 평균</th><th>합계</th></tr>' + [[C, cur, 1], [Pv, prev, 0]].map(function (o) {
       return '<tr><td><i class="wdot" style="background:' + (o[2] ? '#3182F6' : '#c9d1db') + '"></i> ' + o[0].nm + (o[1].imp ? '<small class="wd">다른 앱 포함</small>' : '') + '</td><td>' + o[1].cnt + '회</td><td>' + (o[1].cnt && k !== 'cnt' ? wmFmt(k, o[1][k] / o[1].cnt) : '-') + '</td><td>' + wmFmt(k, o[1][k]) + '</td></tr>';
-    }).join('') + '</table></div>';
+    }).join('') + '</table>';
   // 최근 12주 · 12개월 · 5년
   var nb = p === 'y' ? 5 : 12, Rs = [], i; for (i = nb - 1; i >= 0; i--) Rs.push(wPer(p, -i));
   var vals = Rs.map(function (R) { var v = wTot(t, R)[k]; return k === 'dur' ? Math.round(v) : k === 'dist' ? Math.round(v * 10) / 10 : Math.round(v); });
-  h += '<div class="card"><div class="ct">최근 ' + (p === 'w' ? '12주' : p === 'y' ? '5년' : '12개월') + ' ' + WMET.filter(function (x) { return x[0] === k; })[0][1] + '</div>' +
-    bars7(vals, Rs.map(function (R) { return R.lb; }), nb - 1, function (v) { return k === 'dur' ? (v >= 60 ? Math.round(v / 60) + '시간' : v + '분') : k === 'dist' ? v : v.toLocaleString(); }) + (k === 'dist' ? '<div class="legend" style="justify-content:flex-start">단위 km</div>' : '') + '</div>';
+  h += '<div class="sub2" style="margin-top:18px">최근 ' + (p === 'w' ? '12주' : p === 'y' ? '5년' : '12개월') + ' ' + WMET.filter(function (x) { return x[0] === k; })[0][1] + (k === 'dist' ? ' · km' : '') + '</div>' +
+    bars7(vals, Rs.map(function (R) { return R.lb; }), nb - 1, function (v) { return k === 'dur' ? (v >= 60 ? Math.round(v / 60) + '시간' : v + '분') : k === 'dist' ? v : v.toLocaleString(); });
   // 영법 (수영)
   if (sw) {
     var st = {}, tot = 0; l.forEach(function (r) { var o = wStrokes(r); Object.keys(o).forEach(function (s) { st[s] = (st[s] || 0) + o[s]; tot += o[s]; }); });
     var ks = Object.keys(st).sort(function (a, b) { return st[b] - st[a]; });
-    h += '<div class="card"><div class="ct">' + C.nm + ' 영법<a href="#" data-srp>영법 리포트 ›</a></div>' + (tot ? '<div class="wst">' + ks.map(function (s) { return '<i style="flex:' + st[s] + ';background:' + SCOL[s] + '"></i>'; }).join('') + '</div>' +
-      '<p class="wsub" style="margin:10px 0 4px">가장 많이 한 영법은 <b style="color:' + deep(SCOL[ks[0]]) + '">' + ks[0] + '</b>이에요</p><ul class="brow">' + ks.map(function (s) { return '<li><span class="n"><i class="wdot" style="background:' + SCOL[s] + '"></i>' + s + '</span><span class="v"><b>' + st[s].toLocaleString() + '</b><small>m</small></span><span class="d"><span class="mute">' + Math.round(st[s] / tot * 1000) / 10 + '%</span></span></li>'; }).join('') + '</ul>'
-      : '<div class="empty" style="padding:14px 0">' + C.nm + ' 영법 기록이 없어요<br><small>운동 메모에 \'자유형 500m\'처럼 있으면 계산해요</small></div>') + '</div>';
+    h += '<div class="sub2" style="margin-top:18px;display:flex;justify-content:space-between">' + C.nm + ' 영법<a href="#" data-srp style="font-weight:700;color:#3182F6;text-decoration:none">영법 리포트 ›</a></div>' + (tot ? '<div class="wst">' + ks.map(function (s) { return '<i style="flex:' + st[s] + ';background:' + SCOL[s] + '"></i>'; }).join('') + '</div>' +
+      '<p class="wsub" style="margin:8px 0 0">' + ks.map(function (s) { return '<span style="white-space:nowrap"><i class="wdot" style="background:' + SCOL[s] + '"></i> ' + s + ' ' + st[s].toLocaleString() + 'm</span>'; }).join(' · ') + '</p>'
+      : '<p class="wsub" style="margin:6px 0 0">' + C.nm + ' 영법 기록이 없어요</p>');
   }
   // 심박 · 페이스
   var hc = wHrChart(t, Rs.slice(-6)), pv = wPaceNum(l, sw);
-  h += '<div class="card"><div class="ct">심박 · 페이스<small>' + C.nm + '</small></div><div class="st3">' + stat('평균 심박', hc.cur.av != null ? Math.round(hc.cur.av) + '<small class="bu">bpm</small>' : '-') + stat('최대 심박', hc.cur.mx != null ? hc.cur.mx + '<small class="bu">bpm</small>' : '-') +
-    stat('최고 페이스', pv.length ? fmtPace(Math.min.apply(null, pv), sw) : '-', pv.length ? '평균 ' + fmtPace(pv.reduce(function (a, b) { return a + b; }, 0) / pv.length, sw).replace(/<[^>]+>/g, '') : '') + '</div>' + hc.svg +
-    '<div class="legend" style="justify-content:flex-start">막대: 심박 범위 · 점: 평균</div></div>';
+  h += '<div class="st3" style="margin-top:18px">' + stat('평균 심박', hc.cur.av != null ? Math.round(hc.cur.av) + '<small class="bu">bpm</small>' : '-') + stat('최대 심박', hc.cur.mx != null ? hc.cur.mx + '<small class="bu">bpm</small>' : '-') +
+    stat('최고 페이스', pv.length ? fmtPace(Math.min.apply(null, pv), sw) : '-') + '</div></div>';
   return h;
 }
 function bindAnalysis() {
