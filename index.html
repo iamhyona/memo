@@ -732,7 +732,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v4';
+var APP_VER = '20261004v5';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1046,8 +1046,7 @@ function renderMonth() {
     '<div class="sub">' + (pt.cnt ? (diff > 0 ? '지난달보다 <span class="up">' + diff + '회 더</span> 해냈어요' : diff < 0 ? '지난달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난달과 같아요') : '첫 달 기록이에요') + '</div>' +
     '<div class="sub" style="margin-top:4px">달성률 ' + pct(t.rate) + '%' + (pt.goal ? diffHtml(t.rate, pt.rate, '지난달') : '') + ' · 기록한 날 ' + nd + '일 · 일기 ' + dd + '일</div></div>';
   var note = (S.D.notes || {})[ym] || '';
-  h += '<div class="card"><div class="ct">월간 메모<a href="#" id="ntE">' + (note ? '수정 ›' : '쓰기 ›') + '</a></div>' +
-    (note ? '<p class="note">' + esc(note) + '</p>' : '<button class="ntb" id="ntB">' + m + '월은 어땠나요? 리뷰를 남겨 보세요.</button>') + '</div>';
+  // 월간 메모 카드는 2026.10.04 삭제 (기존 메모 데이터는 그대로 둠)
   h += '<div class="card"><div class="ct">습관별 달성률</div>' + habitBars(from, to) + '</div>';
   $('#main').innerHTML = h;
   $('#nP').onclick = function () { S.m--; if (S.m < 1) { S.m = 12; S.y--; } S.sel = null; render(); };
@@ -1059,8 +1058,6 @@ function renderMonth() {
     b.onclick = function () { toggle(S.sel, b.dataset.h); var y0 = window.scrollY; render(); window.scrollTo(0, y0); };
   });
   if ($('#selDiary')) $('#selDiary').onclick = function () { openDiary(S.sel); };
-  $('#ntE').onclick = function (e) { e.preventDefault(); openNote(ym); };
-  if ($('#ntB')) $('#ntB').onclick = function () { openNote(ym); };
 }
 
 // 연간: 습관마다 1년 칸 (작은 칸은 색으로)
