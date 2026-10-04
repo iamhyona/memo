@@ -748,7 +748,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w6';
+var APP_VER = '20261004w7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2517,20 +2517,19 @@ function bAgg(s, k, by) {
 }
 function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
-  var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
+  var h = '', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
   var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
-  // 이번 주 · 이번 달 · 올해: 평균 카드 4칸 (지난 기간 대비)
-  h += SP.map(function (p) {
-    var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
-    return '<div class="card"><div class="ct">' + p[0] + '<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회 · 평균</small></div><div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
-      var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = avgOf(kk, p[3], p[4]);
-      return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
-    }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">▲▼ ' + p[5] + ' 평균 대비</div></div>';
-  }).join('');
+  // 요약 카드 하나: 주 · 월 · 연 단추로 전환 (지난 기간 평균 대비) — 2026.10.04
+  var spi = { w: 0, m: 1, y: 2 }[S.bsp || 'w'] || 0, p = SP[spi];
+  var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
+  h += '<div class="card"><div class="ct">' + p[0] + ' 요약<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회</small></div>' + bSeg('data-bsp', [['w', '주'], ['m', '월'], ['y', '연']], S.bsp || 'w') + '<div class="bc4" style="margin-top:12px">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
+    var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = avgOf(kk, p[3], p[4]);
+    return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
+  }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">평균 · ▲▼ ' + p[5] + ' 평균 대비</div></div>';
   // 2) 항목별 그래프
   var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
   var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
@@ -2562,6 +2561,7 @@ function bdHome() {
     }).join('') + '</table></div>';
   h += '<p class="mnote" style="margin:0 6px 16px">판정은 여성 표준 범위 기준이에요 (BMI 18.5~25 · 체지방률 18~28% · 내장지방 10 미만 · 체중은 키로 계산한 표준체중의 85~115%). 그래프의 점선은 기간 평균이에요.</p>';
   $('#main').innerHTML = h; bindBody();
+  $$('[data-bsp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bsp = b.dataset.bsp; render(); window.scrollTo(0, y0); }; });
   $$('[data-bp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bp = b.dataset.bp; render(); window.scrollTo(0, y0); }; });
   $$('[data-bmm]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bmm = b.dataset.bmm; render(); window.scrollTo(0, y0); }; });
 }
