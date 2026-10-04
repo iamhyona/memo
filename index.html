@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>ARCHIVE</title>
+<title>루틴</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ARCHIVE">
+<meta name="apple-mobile-web-app-title" content="루틴">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f2f4f6">
 <link rel="manifest" href="manifest.webmanifest">
@@ -397,12 +397,27 @@ textarea.dx { width:100%; border:0; background:var(--chip); border-radius:14px; 
 .btn { border:0; background:var(--txt); color:#fff; border-radius:14px; padding:15px 0; width:200px; font-weight:700; font-size:16px; }
 .toast { position:fixed; left:50%; bottom:calc(100px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:rgba(25,31,40,.92); color:#fff; padding:12px 18px; border-radius:14px; font-size:14px; display:none; z-index:60; white-space:nowrap; }
 .busy { opacity:.5; pointer-events:none; }
+
+/* COUNT (횟수) */
+.kc { display:flex; align-items:center; gap:10px; width:100%; border-radius:18px; padding:12px 10px 12px 14px; margin-bottom:8px; color:var(--txt); cursor:pointer; user-select:none; -webkit-user-select:none; transition:transform .08s; }
+.kc:active { transform:scale(.985); }
+.kc .hi { width:36px; height:36px; border-radius:11px; background:rgba(255,255,255,.6); display:flex; align-items:center; justify-content:center; flex:none; }
+.kc .m { flex:1; min-width:0; } .kc .m div { font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px; }
+.kc .kok { display:inline-flex; width:18px; height:18px; border-radius:50%; background:#fff; align-items:center; justify-content:center; flex:none; } .kc .kok svg { width:11px; height:11px; }
+.kbar { display:block; height:5px; border-radius:3px; background:rgba(255,255,255,.55); overflow:hidden; margin-top:7px; } .kbar i { display:block; height:100%; border-radius:3px; }
+.kn2 { flex:none; min-width:40px; text-align:right; } .kn2 b { font-size:24px; font-weight:800; letter-spacing:-0.02em; } .kn2 small { font-size:13px; font-weight:700; color:rgba(25,31,40,.5); margin-left:1px; }
+.kb { flex:none; width:36px; height:36px; border:0; border-radius:50%; background:rgba(255,255,255,.65); display:flex; align-items:center; justify-content:center; padding:0; color:var(--txt); }
+.kb svg { width:16px; height:16px; } .kb:disabled { opacity:.35; } .kb.kplus { background:var(--txt); color:#fff; }
+.khint { font-size:12px; color:var(--mute); }
+.kcell { font-size:12px; font-weight:800; color:var(--sub); }
+.kadd2 { border:0; background:none; padding:10px 4px 4px; font-size:14px; font-weight:600; color:var(--acc); }
+header .mode { margin-top:4px; }
 </style>
 </head>
 <body>
 
 <div class="full hide" id="pinScr">
-  <h1>ARCHIVE</h1>
+  <h1>ROUTINE</h1>
   <p id="pinMsg">PIN 4자리를 입력해 주세요</p>
   <input class="pinIn" id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
   <button class="btn" id="pinBtn">확인</button>
@@ -410,12 +425,12 @@ textarea.dx { width:100%; border:0; background:var(--chip); border-radius:14px; 
 
 <header>
   <div class="hd">
-    <button class="brand" id="brand">ARCHIVE</button>
+    <button class="brand" id="brand">ROUTINE</button>
     <div class="hr">
-      <div class="mode" id="mode"><button data-m="tracker">TRACKER</button><button data-m="feed">FEED</button><button data-m="diary">DIARY</button></div>
       <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
+  <div class="mode" id="mode"><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="feed">FEED</button><button data-m="diary">DIARY</button></div>
   <nav id="nav">
     <button data-v="home">HOME</button><button data-v="daily">DAILY</button><button data-v="week">WEEK</button><button data-v="month">MONTH</button><button data-v="year">YEAR</button>
   </nav>
@@ -438,6 +453,16 @@ textarea.dx { width:100%; border:0; background:var(--chip); border-radius:14px; 
   <div class="fl">색상</div><div class="pal" id="hbC"></div>
   <div class="fl">주간 목표</div><div class="chips" id="hbG"></div>
   <div class="acts"><button class="del" id="hbD">삭제</button><button class="save" id="hbS">저장</button></div>
+</div>
+
+<!-- 횟수 항목 추가·수정 -->
+<div class="bs" id="kb">
+  <h3 id="kbT">횟수 항목 추가</h3>
+  <div class="frow"><div class="f"><label>항목 이름</label><input id="kbN" placeholder="예: 물 마시기, 양치, 간식" maxlength="20"></div></div>
+  <div class="fl">색상</div><div class="pal" id="kbC"></div>
+  <div class="fl">하루 목표 횟수</div><div class="chips" id="kbG"></div>
+  <p class="mnote" style="margin-top:10px">목표를 채운 날이 달성한 날로 쌓여요. 목표가 없으면 한 번이라도 기록한 날이 달성이에요.</p>
+  <div class="acts"><button class="del" id="kbD">삭제</button><button class="save" id="kbS">저장</button></div>
 </div>
 
 <!-- 사진 올리기·수정 -->
@@ -490,6 +515,9 @@ textarea.dx { width:100%; border:0; background:var(--chip); border-radius:14px; 
   <h3>설정</h3>
   <div class="sth">습관 순서 · 수정</div>
   <div id="stH"></div>
+  <div class="sth">횟수 항목 순서 · 수정</div>
+  <div id="stK"></div>
+  <button class="kadd2" id="stKa">+ 횟수 항목 추가</button>
   <div class="sth">사진 카테고리</div>
   <div id="stC"></div>
   <div class="madd"><input id="stCn" placeholder="새 카테고리" maxlength="12"><button id="stCa">추가</button></div>
@@ -521,10 +549,10 @@ function pct(r) { return Math.round(r * 100); }
 function uid(p) { return p + Date.now().toString(36) + (Math.random().toString(36).slice(2) + 'xxx').slice(0, 3); }
 var TODAY = F(new Date());
 var S = { pin: ls.get('memo:pin') || '', view: ls.get('memo:view') || 'home', mode: ls.get('memo:mode') || 'tracker', day: TODAY, y: +TODAY.slice(0, 4), m: +TODAY.slice(5, 7),
-  yy: +TODAY.slice(0, 4), pcat: '전체', sel: null, D: null, ck: {}, q: [], fl: null, pl: [] };
+  yy: +TODAY.slice(0, 4), pcat: '전체', sel: null, D: null, ck: {}, q: [], fl: null, pl: [], kc: {}, kq: [], kfl: null };
 if (S.view === 'photo') { S.mode = 'feed'; S.view = 'month'; } else if (S.view === 'diary') { S.mode = 'diary'; S.view = 'month'; }
 if (['all', 'home', 'daily', 'week', 'month', 'year'].indexOf(S.view) < 0) S.view = 'home';
-if (['tracker', 'feed', 'diary'].indexOf(S.mode) < 0) S.mode = 'tracker';
+if (['tracker', 'count', 'feed', 'diary'].indexOf(S.mode) < 0) S.mode = 'tracker';
 
 // 서버: 구글 Apps Script (memo 트래커 시트와 연결)
 var API = 'https://script.google.com/macros/s/AKfycbwFtL_qIuUMOxdD5wzj6Eltc67OTIScR4yJjMZWxLyPzn8K7Y5JhOBTDlf4wp9Av6lqSQ/exec';
@@ -549,7 +577,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004o';
+var APP_VER = '20261004r1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -557,7 +585,7 @@ function checkUpdate() {
   }).catch(function () {});
 }
 document.addEventListener('visibilitychange', function () {
-  if (document.hidden) { flush(); return; }
+  if (document.hidden) { flush(); kflush(); return; }
   checkUpdate();
   var t = F(new Date());
   if (t !== TODAY) { TODAY = t; S.day = TODAY; render(); }
@@ -570,8 +598,10 @@ function hdDate() { if (!$('#hdt')) return; var d = P(TODAY); $('#hdt').textCont
 
 /* ───── 데이터 ───── */
 function setData(d) {
-  d.notes = d.notes || {};
-  S.D = d; S.ck = {};
+  d.notes = d.notes || {}; d.counters = d.counters || []; d.counts = d.counts || {};
+  S.D = d; S.ck = {}; S.kc = {};
+  Object.keys(d.counts).forEach(function (k) { S.kc[k] = {}; Object.keys(d.counts[k]).forEach(function (h) { S.kc[k][h] = +d.counts[k][h] || 0; }); });
+  (S.kfl || []).concat(S.kq).forEach(function (o) { kraw(o.d, o.h, o.n); });
   Object.keys(d.checks || {}).forEach(function (k) { S.ck[k] = {}; d.checks[k].forEach(function (h) { S.ck[k][h] = 1; }); });
   // 아직 서버에 안 간 체크는 다시 적용
   (S.fl || []).concat(S.q).forEach(function (o) { setCk(o.d, o.h, o.on); });
@@ -580,7 +610,9 @@ function saveCache() {
   if (!S.D) return;
   var checks = {};
   Object.keys(S.ck).forEach(function (k) { var a = Object.keys(S.ck[k]); if (a.length) checks[k] = a; });
-  var d = { habits: S.D.habits, checks: checks, diary: S.D.diary, cats: S.D.cats, url: S.D.url, notes: S.D.notes || {},
+  var counts = {};
+  Object.keys(S.kc).forEach(function (k) { if (Object.keys(S.kc[k]).length) counts[k] = S.kc[k]; });
+  var d = { habits: S.D.habits, checks: checks, counters: S.D.counters || [], counts: counts, diary: S.D.diary, cats: S.D.cats, url: S.D.url, notes: S.D.notes || {},
     photos: S.D.photos.filter(function (p) { return p.fid; }).map(function (p) { return { id: p.id, d: p.d, cat: p.cat, fid: p.fid, memo: p.memo, ts: p.ts }; }) };
   ls.set('memo:data', JSON.stringify(d));
 }
@@ -655,6 +687,7 @@ function purl(p, big) { return p.src || ('https://drive.google.com/thumbnail?id=
 
 /* ───── 화면 ───── */
 var VIEWS = { tracker: { home: trHome, daily: trDaily, week: trWeek, month: renderMonth, year: renderYear },
+  count: { home: ctHome, daily: ctDaily, week: ctWeek, month: ctMonth, year: ctYear },
   feed: { home: fdHome, daily: fdDaily, week: fdWeek, month: fdMonth, year: fdYear },
   diary: { home: dyHome, daily: dyDaily, week: dyWeek, month: renderDiary, year: dyYear } };
 function render() {
@@ -676,6 +709,11 @@ $('#brand').onclick = function () { S.view = 'all'; S.day = TODAY; ls.set('memo:
 
 /* ───── 습관 픽토그램 (이름을 읽어서 자동으로) · 습관 색 ───── */
 var H_ICONS = [
+  [/양치|치실/, 'M4 20l8.5-8.5M12.5 11.5l2-2M14.5 9.5l3-3a2 2 0 0 1 3 3l-3 3zM15 7l2 2'],
+  [/샤워|목욕|세안|씻기/, 'M5 21V8a4 4 0 0 1 8 0M10 8h7l-1 3h-5zM12 14v1M15 14v2M12 18v1M15 19v1'],
+  [/화장품|스킨|로션|선크림|기초|크림|세럼|마스크팩/, 'M9 3h6v3H9zM7.5 6h9l1 3v11a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V9zM9 13h6'],
+  [/화장실|소변|대변|변기/, 'M6 3h5v8H6zM4 11h16a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6zM9 17l-1 4h8l-1-4'],
+  [/간식|커피|디저트|음료|차 /, 'M4 8h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6zM17 9h1a3 3 0 0 1 0 6h-1M8 3v2M12 3v2'],
   [/툰|그림|드로잉|일러스트|스케치/, 'M4 20l4-1 11-11-3-3L5 16zM14 6l3 3'],
   [/이모티콘|스티커/, 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5c1.8 2 5.2 2 7 0M9 9.5h.01M15 9.5h.01'],
   [/유튜브|릴스|쇼츠|영상|틱톡|브이로그|vlog/i, 'M3 6h13v12H3zM16 10l5-3v10l-5-3'],
@@ -1040,15 +1078,15 @@ function renderAll() {
   var tn = hs.filter(function (x) { return on(TODAY, x.id); }).length, tw = total(R.ws, R.we), tm = total(R.mf, R.mt);
   var bestS = hs.map(function (x) { return streak(x.id); }).reduce(function (a, b) { return Math.max(a, b); }, 0);
   var pin = function (a, b) { return ps.filter(function (p) { return inR(p.d, a, b); }); }, din = function (a, b) { return L.filter(function (e) { return inR(e.d, a, b); }); };
-  var h = '<div class="hm"><small>' + y + ' ARCHIVE</small><b>' + mdw(TODAY) + '</b></div>';
+  var h = '<div class="hm"><small>' + y + ' ROUTINE</small><b>' + mdw(TODAY) + '</b></div>';
   // 최근 5주 활동: 칸마다 그날 한 기록 종류 수(습관·사진·일기)
   var start = addD(R.ws, -28), cells = '', act = 0, full = 0;
   for (var d = start; d <= R.we; d = addD(d, 1)) {
-    var k = (S.ck[d] && Object.keys(S.ck[d]).length ? 1 : 0) + (photosOf(d).length ? 1 : 0) + (diaryOf(d) ? 1 : 0);
-    if (d <= TODAY && k) act++; if (k === 3) full++;
-    cells += '<i class="' + (d > TODAY ? 'f' : 'a' + k) + (d === TODAY ? ' td' : '') + '" title="' + d + '"></i>';
+    var k = (S.ck[d] && Object.keys(S.ck[d]).length ? 1 : 0) + (S.kc[d] && Object.keys(S.kc[d]).length ? 1 : 0) + (photosOf(d).length ? 1 : 0) + (diaryOf(d) ? 1 : 0);
+    if (d <= TODAY && k) act++; if (k === 4) full++;
+    cells += '<i class="' + (d > TODAY ? 'f' : 'a' + Math.min(k, 3)) + (d === TODAY ? ' td' : '') + '" title="' + d + '"></i>';
   }
-  h += '<div class="card"><div class="ct">최근 5주 활동<small>' + act + '일 기록 · 세 가지 모두 ' + full + '일</small></div><div class="wdh">' + WM.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div><div class="act5">' + cells + '</div>' +
+  h += '<div class="card"><div class="ct">최근 5주 활동<small>' + act + '일 기록 · 네 가지 모두 ' + full + '일</small></div><div class="wdh">' + WM.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div><div class="act5">' + cells + '</div>' +
     '<div class="legend">적음 <i class="a1"></i><i class="a2"></i><i class="a3"></i> 많음</div></div>';
   // 모드별 요약
   var card = function (mode, title, rows, foot) {
@@ -1056,6 +1094,9 @@ function renderAll() {
   };
   h += card('tracker', 'TRACKER', [stat('오늘', tn + '/' + hs.length), stat('이번 주', pct(tw.rate) + '%'), stat(R.m + '월 체크', tm.cnt + '회'), stat('최고 연속', bestS + '일')],
     hs.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(tw.rate) + '%"></i></div>' : '');
+  var ks = S.D.counters, kw = ktotal(R.ws, R.we), km = ktotal(R.mf, R.mt), kbest = ks.map(krun).reduce(function (a, b) { return Math.max(a, b); }, 0);
+  h += card('count', 'COUNT', [stat('오늘', kdayOk(TODAY) + '/' + ks.length), stat('이번 주', pct(kw.rate) + '%'), stat(R.m + '월 기록', km.cnt + '회'), stat('최고 연속', kbest + '일')],
+    ks.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(kw.rate) + '%"></i></div>' : '');
   var pw = pin(R.ws, R.we), pm = pin(R.mf, R.mt);
   var lp = sortedPhotos(ps).slice(0, 4);
   h += card('feed', 'FEED', [stat('오늘', photosOf(TODAY).length + '장'), stat('이번 주', pw.length + '장'), stat(R.m + '월', pm.length + '장'), stat('게시물', posts(ps).length + '개')],
@@ -1070,7 +1111,7 @@ function renderAll() {
   var mv = [], ml = [];
   for (var mm = 1; mm <= 12; mm++) {
     var f = y + '-' + pad(mm) + '-01', e = mEnd(R.y, mm), c = 0;
-    if (f <= TODAY) for (d = f; d <= e && d <= TODAY; d = addD(d, 1)) if ((S.ck[d] && Object.keys(S.ck[d]).length) || photosOf(d).length || diaryOf(d)) c++;
+    if (f <= TODAY) for (d = f; d <= e && d <= TODAY; d = addD(d, 1)) if ((S.ck[d] && Object.keys(S.ck[d]).length) || (S.kc[d] && Object.keys(S.kc[d]).length) || photosOf(d).length || diaryOf(d)) c++;
     mv.push(c); ml.push(mm);
   }
   h += '<div class="card"><div class="ct">월별 기록한 날</div>' + bars7(mv, ml, R.m - 1) + '</div>';
@@ -1487,6 +1528,7 @@ function unsure(btn) { if (btn.classList.contains('sure')) { btn.classList.remov
 
 $('#fab').onclick = function () {
   if (S.mode === 'tracker') openHabit(null);
+  else if (S.mode === 'count') openCounter(null);
   else if (S.mode === 'feed') openUpload(null);
   else openDiary(S.view === 'daily' ? S.day : TODAY);
 };
@@ -1788,6 +1830,7 @@ sure($('#ntDel'), function () { saveNote(''); });
 /* 설정 */
 function renderSettings() {
   if (!S.D) return;
+  renderCounterSettings();
   var hs = S.D.habits;
   $('#stH').innerHTML = hs.length ? hs.map(function (x, i) {
     return '<div class="mrow"><button class="hb" data-h="' + x.id + '">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span><small>' + (x.target === 7 ? '매일' : '주 ' + x.target + '회') + '</small></button>' +
@@ -1831,6 +1874,259 @@ $('#stCa').onclick = function () {
 };
 $('#stCn').onkeydown = function (e) { if (e.key === 'Enter') $('#stCa').click(); };
 $('#setBtn').onclick = function () { if (!S.D) return; renderSettings(); openBs('#st'); };
+
+
+/* ───── COUNT: 하루에 여러 번 하는 루틴의 횟수 (물·간식·양치·화장실·샤워 …) ───── */
+// S.D.counters = [{id,name,color,goal(하루 목표, 0=목표 없음),start}], S.kc[날짜][id] = 횟수
+function kv(d, id) { return (S.kc[d] && S.kc[d][id]) || 0; }
+function kraw(d, id, n) { if (n > 0) (S.kc[d] = S.kc[d] || {})[id] = n; else if (S.kc[d]) delete S.kc[d][id]; }
+function kok(d, x) { var v = kv(d, x.id); return x.goal ? v >= x.goal : v > 0; }
+function kgoalTxt(x) { return x.goal ? '하루 ' + x.goal + '회' : '목표 없음'; }
+var kT;
+function kset(d, id, n) {
+  n = Math.max(0, Math.min(99, n)); kraw(d, id, n);
+  S.kq = S.kq.filter(function (o) { return !(o.d === d && o.h === id); }); S.kq.push({ d: d, h: id, n: n });
+  clearTimeout(kT); kT = setTimeout(kflush, 700); saveCache();
+}
+function kflush() {
+  clearTimeout(kT);
+  if (S.kfl || !S.kq.length) return;
+  S.kfl = S.kq; S.kq = [];
+  call('appCounts', S.pin, S.kfl).then(function () { S.kfl = null; if (S.kq.length) kflush(); })
+    .catch(function () { S.kq = S.kfl.concat(S.kq); S.kfl = null; toast('저장하지 못했어요 · 잠시 후 다시 시도할게요'); kT = setTimeout(kflush, 4000); });
+}
+function saveCounters() {
+  saveCache();
+  return call('appCounters', S.pin, S.D.counters.map(function (x) { return { id: x.id, name: x.name, color: x.color, goal: x.goal || 0, start: x.start }; }))
+    .catch(function (e) { toast(errMsg(e)); load(); });
+}
+function kfirst(x) {
+  var f = x.start || TODAY;
+  Object.keys(S.kc).forEach(function (d) { if (d < f && S.kc[d][x.id]) f = d; });
+  return f;
+}
+// 기간 통계: 총 횟수, 하루 평균, 목표 달성한 날, 대상 일수, 최장 연속
+function kstat(x, from, to) {
+  var s0 = kfirst(x), a = s0 > from ? s0 : from, b = to < TODAY ? to : TODAY;
+  var cnt = 0, ok = 0, days = 0, best = 0, run = 0;
+  for (var d = from; d <= to; d = addD(d, 1)) {
+    var v = kv(d, x.id); cnt += v;
+    if (kok(d, x)) { run++; if (run > best) best = run; } else run = 0;
+    if (d >= a && d <= b) { days++; if (kok(d, x)) ok++; }
+  }
+  return { cnt: cnt, ok: ok, days: days, rate: days ? ok / days : 0, avg: days ? cnt / days : 0, best: best };
+}
+function ktotal(from, to) {
+  var ok = 0, days = 0, cnt = 0;
+  S.D.counters.forEach(function (x) { var s = kstat(x, from, to); ok += s.ok; days += s.days; cnt += s.cnt; });
+  return { rate: days ? ok / days : 0, cnt: cnt, ok: ok, days: days };
+}
+function krun(x) {
+  var d = TODAY, n = 0;
+  if (!kok(d, x)) d = addD(d, -1);
+  while (kok(d, x)) { n++; d = addD(d, -1); }
+  return n;
+}
+function kdayOk(d) { return S.D.counters.filter(function (x) { return kok(d, x); }).length; }
+function kavg(v) { return (Math.round(v * 10) / 10).toString(); }
+var MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h12"/></svg>';
+var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>';
+
+// 카드 한 장: 누르면 +1, − 버튼으로 -1
+function kcard(x, d) {
+  var v = kv(d, x.id), ok = kok(d, x), g = x.goal || 0;
+  var bar = g ? '<span class="kbar"><i style="width:' + Math.min(100, v / g * 100) + '%;background:' + dc(x) + '"></i></span>' : '';
+  return '<div class="kc' + (ok ? ' ok' : '') + '" data-k="' + x.id + '" style="background:' + x.color + '">' +
+    '<span class="hi">' + hIco(x) + '</span>' +
+    '<span class="m"><div>' + esc(x.name) + (ok && g ? '<em class="kok">' + CHK + '</em>' : '') + '</div>' + bar + '</span>' +
+    '<span class="kn2"><b>' + v + '</b>' + (g ? '<small>/' + g + '</small>' : '') + '</span>' +
+    '<button class="kb kminus" data-m="' + x.id + '" aria-label="한 번 빼기"' + (v ? '' : ' disabled') + '>' + MINUS + '</button>' +
+    '<button class="kb kplus" data-p="' + x.id + '" aria-label="한 번 더하기">' + PLUS + '</button></div>';
+}
+function bindKc(d) {
+  var keep = function (fn) { var y0 = window.scrollY; fn(); render(); window.scrollTo(0, y0); };
+  $$('.kc').forEach(function (c) {
+    c.onclick = function (e) {
+      var id = c.dataset.k;
+      if (e.target.closest('.kminus')) return keep(function () { kset(d, id, kv(d, id) - 1); });
+      keep(function () { kset(d, id, kv(d, id) + 1); });
+    };
+  });
+}
+
+// COUNT HOME
+function ctHome() {
+  var ks = S.D.counters, R = rng(), n = kdayOk(TODAY);
+  var h = '<div class="hm"><small>COUNT</small><b>' + mdw(TODAY) + '</b></div>';
+  h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + ks.length + ' 목표 달성 ›</a></div>';
+  if (!ks.length) { h += '<div class="empty">물 마시기, 양치, 간식처럼<br>하루에 여러 번 하는 일을 + 버튼으로 추가해 보세요</div></div>'; $('#main').innerHTML = h; return bindHome(); }
+  h += '<div class="pbar"><i style="width:' + Math.round(n / ks.length * 100) + '%"></i></div>' + ks.map(function (x) { return kcard(x, TODAY); }).join('') + '</div>';
+  var tw = ktotal(R.ws, R.we), pw = ktotal(R.pws, R.pwe);
+  var wv = weekDays(R.ws).map(function (d) { return d > TODAY ? 0 : kdayOk(d); });
+  h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">자세히 ›</a></div><div class="st3">' +
+    stat('달성률', pct(tw.rate) + '%', '지난주 ' + pct(pw.rate) + '%') + stat('기록', tw.cnt + '회', delta(tw.cnt, pw.cnt, '회')) + stat('달성한 칸', tw.ok + '/' + tw.days) + '</div>' +
+    bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '<div class="legend" style="justify-content:flex-start">막대: 그날 목표를 채운 항목 수</div></div>';
+  var tm = ktotal(R.mf, R.mt), pm = ktotal(R.pmf, R.pmt);
+  var rows = ks.map(function (x) { var s = kstat(x, R.mf, R.mt); return { n: x.name, v: s.rate, t: '하루 평균 ' + kavg(s.avg) + '회 · <b>' + pct(s.rate) + '%</b>', c: dc(x), ico: hIco(x, 'hico sm') }; })
+    .sort(function (a, b) { return b.v - a.v; });
+  h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">리뷰 ›</a></div><div class="st3">' +
+    stat('달성률', pct(tm.rate) + '%', '지난달 ' + pct(pm.rate) + '%') + stat('기록', tm.cnt + '회', delta(tm.cnt, pm.cnt, '회')) + stat('달성한 칸', tm.ok + '/' + tm.days) + '</div>' +
+    '<div class="sub2">항목별 달성률</div>' + hlist(rows.map(function (r) { return { n: r.n, v: Math.max(r.v, .001), t: r.t, c: r.c, ico: r.ico }; })) + '</div>';
+  var st = ks.map(function (x) { return { x: x, s: krun(x) }; }).filter(function (o) { return o.s > 0; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 5);
+  h += '<div class="card"><div class="ct">연속 달성</div>' + (st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: dc(o.x), ico: hIco(o.x, 'hico sm') }; })) : '<div class="empty">하루 목표를 채우면 연속 기록이 시작돼요</div>') + '</div>';
+  var left = ks.filter(function (x) { return x.goal && kv(TODAY, x.id) < x.goal; });
+  if (left.length) h += '<div class="card"><div class="ct">오늘 남은 목표</div><ul class="leg lows">' + left.map(function (x) {
+    return '<li>' + hIco(x, 'hico sm') + '<span class="n">' + esc(x.name) + '</span><span class="v">' + kv(TODAY, x.id) + '/' + x.goal + ' · ' + (x.goal - kv(TODAY, x.id)) + '회 남음</span></li>';
+  }).join('') + '</ul></div>';
+  $('#main').innerHTML = h; bindHome(); bindKc(TODAY);
+}
+// COUNT DAILY
+function ctDaily() {
+  var ks = S.D.counters, day = S.day, n = kdayOk(day);
+  var h = dayNav();
+  if (ks.length) h += '<div class="tdh"><span class="cnt">' + n + '/' + ks.length + ' 목표 달성</span><span class="khint">카드를 누르면 +1</span></div>';
+  else h += '<div class="card empty">아직 횟수 항목이 없어요<br>오른쪽 아래 + 버튼으로 물 마시기, 양치처럼<br>하루에 여러 번 하는 일을 추가해 보세요</div>';
+  h += ks.map(function (x) { return kcard(x, day); }).join('');
+  $('#main').innerHTML = h;
+  bindDay(); bindKc(day);
+}
+// COUNT WEEK: 항목 × 요일 횟수표
+function ctWeek() {
+  var ks = S.D.counters, ws = monOf(S.day), we = addD(ws, 6), days = weekDays(ws);
+  var h = weekNav();
+  h += '<div class="card wk"><div class="wh"><div class="t">주간 횟수<span class="cnt">' + ks.length + '</span></div></div>';
+  h += '<div class="hg"><div class="hs">칸을 누르면 그날로</div>';
+  days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
+  h += '<div class="ln"></div>';
+  ks.forEach(function (x) {
+    h += '<button class="hn kname" data-e="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span></button>';
+    days.forEach(function (d) {
+      var v = kv(d, x.id), ok = kok(d, x), g = x.goal || 1;
+      var st = v ? ' style="background:' + (ok ? dc(x) : x.color) + (ok ? ';color:#fff' : '') + '"' : '';
+      h += '<button class="ck kcell' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '"' + st + '>' + (v || '') + '</button>';
+    });
+  });
+  h += '<button class="hadd" id="kAdd">항목 추가</button></div></div>';
+  var t = ktotal(ws, we), cnt = 0;
+  if (ks.length) h += '<div class="mini"><div><small>주간 달성률</small><b>' + pct(t.rate) + '%</b></div><div><small>기록</small><b>' + t.cnt + '회</b></div><div><small>달성한 칸</small><b>' + t.ok + '/' + t.days + '</b></div></div>' +
+    '<div class="legend" style="margin:-4px 6px 12px">진한 칸: 하루 목표 달성 · 연한 칸: 기록만 있음</div>';
+  $('#main').innerHTML = h;
+  bindWeek();
+  $('#kAdd').onclick = function () { openCounter(null); };
+  $$('.kname').forEach(function (b) { b.onclick = function () { openCounter(b.dataset.e); }; });
+  $$('.kcell').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
+}
+// COUNT MONTH
+function ctMonth() {
+  var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), ks = S.D.counters, d, i;
+  var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1, t = ktotal(from, to), pt = ktotal(py + '-' + pad(pm) + '-01', mEnd(py, pm));
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
+  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
+  var lead = (P(from).getDay() + 6) % 7;
+  for (i = 0; i < lead; i++) h += '<button class="out"></button>';
+  for (d = from; d <= to; d = addD(d, 1)) {
+    var dots = ks.filter(function (x) { return kok(d, x); }).map(function (x) { return '<i style="background:' + dc(x) + '"></i>'; }).join('');
+    h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span><span class="dts">' + dots + '</span></button>';
+  }
+  h += '</div><div class="legend">점: 그날 목표를 채운 항목 · 날짜를 누르면 그날로</div></div>';
+  var diff = t.cnt - pt.cnt;
+  h += '<div class="card big1"><small>' + m + '월 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b>' +
+    '<div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '지난달') : '') + '</div>' +
+    (pt.cnt ? '<div class="sub" style="margin-top:4px">' + (diff > 0 ? '지난달보다 <span class="up">' + diff + '회 더</span> 기록했어요' : diff < 0 ? '지난달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난달과 같아요') + '</div>' : '') + '</div>';
+  h += '<div class="card"><div class="ct">항목별 리뷰</div>' + (ks.length ? '<ul class="leg bars">' + ks.map(function (x) {
+    var s = kstat(x, from, to);
+    return '<li class="kedit" data-e="' + x.id + '"><div class="row1"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span><span class="v">' + s.ok + '/' + s.days + '일 · <b>' + pct(s.rate) + '%</b></span></div>' +
+      '<div class="trk"><div class="fil" style="width:' + pct(s.rate) + '%;background:' + dc(x) + '"></div></div>' +
+      '<div class="sm">' + kgoalTxt(x) + ' · 총 ' + s.cnt + '회 · 하루 평균 ' + kavg(s.avg) + '회 · 최장 연속 ' + s.best + '일</div></li>';
+  }).join('') + '</ul>' : '<div class="empty">횟수 항목을 추가하면 리뷰가 보여요</div>') + '</div>';
+  $('#main').innerHTML = h;
+  bindMonth();
+  $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
+  $$('.kedit').forEach(function (b) { b.onclick = function () { openCounter(b.dataset.e); }; });
+}
+// COUNT YEAR
+function kyearGrid(x, y) {
+  var from = y + '-01-01', to = y + '-12-31', lead = (P(from).getDay() + 6) % 7, h = '', c = dc(x), d;
+  for (var i = 0; i < lead; i++) h += '<i class="o"></i>';
+  for (d = from; d <= to; d = addD(d, 1)) {
+    var v = kv(d, x.id);
+    h += '<i' + (kok(d, x) ? ' style="background:' + c + '"' : v ? ' style="background:' + x.color + '"' : d > TODAY ? ' class="f"' : '') + '></i>';
+  }
+  return '<div class="yg">' + h + '</div>';
+}
+function ctYear() {
+  var y = S.yy, from = y + '-01-01', to = y + '-12-31', ks = S.D.counters;
+  var t = ktotal(from, to), pt = ktotal((y - 1) + '-01-01', (y - 1) + '-12-31');
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
+  h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '작년') : '') + '</div></div>';
+  h += '<div class="card"><div class="ct">월별 달성률</div><div class="mbar">';
+  for (var m = 1; m <= 12; m++) {
+    var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), r = f > TODAY ? null : ktotal(f, e);
+    h += '<div class="' + (f.slice(0, 7) === TODAY.slice(0, 7) ? 'cur' : '') + '"><em>' + (r && r.days ? pct(r.rate) : '') + '</em><i style="height:' + (r && r.days ? Math.max(2, r.rate * 100) : 2) + '%"></i><span>' + m + '</span></div>';
+  }
+  h += '</div></div>';
+  h += '<div class="sec">Yearly Report<small>진한 칸: 목표 달성 · 연한 칸: 기록만</small></div>';
+  if (!ks.length) h += '<div class="card empty">횟수 항목을 추가하면 1년 기록이 쌓여요</div>';
+  ks.forEach(function (x) {
+    var s = kstat(x, from, to);
+    h += '<div class="yh kedit" data-e="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + esc(x.name) + '</span><small>' + s.cnt + '회 · 달성 ' + s.ok + '일 · 최장 ' + s.best + '일</small></div>' + kyearGrid(x, y);
+  });
+  $('#main').innerHTML = h;
+  bindYear();
+  $$('.kedit').forEach(function (b) { b.onclick = function () { openCounter(b.dataset.e); }; });
+}
+
+/* 횟수 항목 추가·수정 */
+var KB = null;
+function openCounter(id) {
+  var x = id ? S.D.counters.filter(function (k) { return k.id === id; })[0] : null;
+  var used = S.D.counters.map(function (k) { return k.color; });
+  KB = x ? { id: x.id, name: x.name, color: x.color, goal: x.goal || 0 } :
+    { id: null, name: '', color: COLORS.filter(function (c) { return used.indexOf(c) < 0; })[0] || COLORS[S.D.counters.length % COLORS.length], goal: 0 };
+  $('#kbT').textContent = x ? '횟수 항목 수정' : '횟수 항목 추가';
+  $('#kbN').value = KB.name;
+  $('#kbD').classList.toggle('hide', !x); unsure($('#kbD'));
+  drawCounter(); openBs('#kb');
+  if (!x) setTimeout(function () { $('#kbN').focus(); }, 250);
+}
+function drawCounter() {
+  $('#kbC').innerHTML = COLORS.map(function (c) { return '<button data-c="' + c + '" class="' + (KB.color === c ? 'on' : '') + '" style="background:' + c + '">' + CHK + '</button>'; }).join('');
+  var gs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
+  if (gs.indexOf(KB.goal) < 0) gs.push(KB.goal);
+  $('#kbG').innerHTML = gs.map(function (n) { return '<button data-n="' + n + '" class="' + (KB.goal === n ? 'on' : '') + '">' + (n ? n + '회' : '없음') + '</button>'; }).join('');
+  $$('#kbC button').forEach(function (b) { b.onclick = function () { KB.color = b.dataset.c; drawCounter(); }; });
+  $$('#kbG button').forEach(function (b) { b.onclick = function () { KB.goal = +b.dataset.n; drawCounter(); }; });
+}
+$('#kbS').onclick = function () {
+  var n = $('#kbN').value.trim();
+  if (!n) return toast('항목 이름을 입력해 주세요');
+  if (KB.id) S.D.counters.forEach(function (k) { if (k.id === KB.id) { k.name = n; k.color = KB.color; k.goal = KB.goal; } });
+  else S.D.counters.push({ id: uid('k'), name: n, color: KB.color, goal: KB.goal, start: TODAY });
+  closeBs(); render(); renderSettings(); saveCounters(); toast('저장했어요');
+};
+sure($('#kbD'), function () {
+  var id = KB.id;
+  S.D.counters = S.D.counters.filter(function (k) { return k.id !== id; });
+  Object.keys(S.kc).forEach(function (d) { delete S.kc[d][id]; });
+  S.kq = S.kq.filter(function (o) { return o.h !== id; });
+  closeBs(); render(); renderSettings(); saveCache(); toast('삭제했어요');
+  call('appCounterDel', S.pin, id).catch(function (e) { toast(errMsg(e)); load(); });
+});
+function renderCounterSettings() {
+  var ks = S.D.counters;
+  $('#stK').innerHTML = ks.length ? ks.map(function (x, i) {
+    return '<div class="mrow"><button class="hb" data-k="' + x.id + '">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span><small>' + kgoalTxt(x) + '</small></button>' +
+      '<button data-ku="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="위로">▲</button><button data-kw="' + i + '"' + (i < ks.length - 1 ? '' : ' disabled') + ' aria-label="아래로">▼</button></div>';
+  }).join('') : '<p class="mnote">아직 횟수 항목이 없어요</p>';
+  $$('#stK .hb').forEach(function (b) { b.onclick = function () { var id = b.dataset.k; closeBs(); setTimeout(function () { openCounter(id); }, 230); }; });
+  $$('#stK [data-ku],#stK [data-kw]').forEach(function (b) {
+    b.onclick = function () {
+      var i = +(b.dataset.ku || b.dataset.kw), j = b.dataset.ku != null ? i - 1 : i + 1, t = ks[i];
+      ks[i] = ks[j]; ks[j] = t; renderCounterSettings(); render(); saveCounters();
+    };
+  });
+}
+$('#stKa').onclick = function () { closeBs(); setTimeout(function () { openCounter(null); }, 230); };
 
 /* ───── 시작: PIN ───── */
 var pinMode = 'enter';
