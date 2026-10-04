@@ -469,7 +469,12 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bcd small { display:block; font-size:12px; color:var(--mute); white-space:nowrap; }
 .bcd b { display:block; font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:4px 0 3px; }
 .bcd em { display:block; font-style:normal; font-size:11.5px; font-weight:700; }
-.sumc .bcd b, .asm .bcd b { white-space:nowrap; } .asm .bc4 { margin-top:2px; } .asm { cursor:pointer; } .asm .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); } .asm .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .ahm { justify-content:space-between; gap:8px; } .aseg { display:flex; gap:4px; flex:none; } .aseg button { border:0; background:#fff; border-radius:999px; min-width:34px; padding:7px 10px; font-size:12.5px; font-weight:700; color:var(--sub); } .aseg button.on { background:var(--txt); color:#fff; } .asub { font-size:12px; color:var(--mute); margin:-6px 6px 12px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
+.sumc .bcd b, .asm .bcd b { white-space:nowrap; } .asm .bc4 { margin-top:2px; } .asm { cursor:pointer; } .asm .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); } .asm .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .asm .ct { align-items:baseline; } .asm .ct .asm-s { flex:1; margin-left:8px; font-size:12px; color:var(--mute); font-weight:600; } .aemp { font-size:13px; color:var(--mute); padding:6px 0 2px; }
+.arow { list-style:none; margin:2px 0 0; padding:0; } .arow li { display:grid; grid-template-columns:1fr 54px 64px 66px; align-items:center; gap:4px; padding:9px 0; border-top:1px solid #f2f4f6; font-size:13px; } .arow li:first-child { border-top:0; } .arow .n { display:flex; align-items:center; gap:8px; min-width:0; } .arow .n em { font-style:normal; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .arow .n .wib { width:26px; height:26px; border-radius:8px; } .arow .n .wib .hico { width:15px; height:15px; } .arow .a1, .arow .a2, .arow .a3 { text-align:right; color:var(--sub); white-space:nowrap; } .arow b { color:var(--txt); font-weight:800; } .arow b.ok { color:#2fb67c; } .arow .a2 { color:var(--mute); }
+.athumb { margin-top:4px; } .adia { background:var(--chip); border-radius:14px; padding:12px 14px; } .adia .adh { font-size:12px; color:var(--mute); font-weight:700; display:flex; align-items:center; gap:8px; } .adia p { margin:6px 0 0; font-size:14px; line-height:1.5; color:var(--txt); } .amood { display:inline-flex; align-items:center; gap:4px; color:var(--sub); } .amood i, .amc i { width:8px; height:8px; border-radius:50%; display:inline-block; } .amc { display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:10px; font-size:12.5px; color:var(--sub); } .amc span { display:inline-flex; align-items:center; gap:5px; }
+.avis { display:flex; align-items:baseline; gap:8px; padding:8px 0; font-size:14px; min-width:100%; box-sizing:border-box; } .avis .avl, .avl { font-size:12px; color:var(--mute); font-weight:600; flex:none; width:64px; } .avis b { font-weight:800; flex:none; } .avis span:not(.avl) { color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .avis em { font-style:normal; font-size:12px; font-weight:700; margin-left:auto; flex:none; }
+.asw { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:8px; scrollbar-width:none; } .asw::-webkit-scrollbar { display:none; } .asw > * { scroll-snap-align:start; flex:none; } .alabl { font-size:12px; color:var(--mute); font-weight:600; margin:12px 0 6px; } .alab .alb { width:calc(50% - 4px); background:var(--chip); border-radius:14px; padding:10px 12px 12px; box-sizing:border-box; } .alb > small { display:block; font-size:11.5px; color:var(--mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .alb > b { display:block; font-size:20px; font-weight:800; margin:2px 0 8px; } .alb > b small { font-size:11px; color:var(--mute); font-weight:600; } .alb > b.lo { color:#ff8a3d; }
+.ahm { justify-content:space-between; gap:8px; } .aseg { display:flex; gap:4px; flex:none; } .aseg button { border:0; background:#fff; border-radius:999px; min-width:34px; padding:7px 10px; font-size:12.5px; font-weight:700; color:var(--sub); } .aseg button.on { background:var(--txt); color:#fff; } .asub { font-size:12px; color:var(--mute); margin:-6px 6px 12px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
 .bsel { display:flex; align-items:center; gap:6px; margin:0 2px 4px; }
 .bsel span { font-size:13px; color:var(--mute); font-weight:600; } .bsel b { font-size:15px; font-weight:800; } .bsel small { margin-left:auto; font-size:12px; color:var(--mute); }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
@@ -815,7 +820,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zt';
+var APP_VER = '20261005zu';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1397,20 +1402,67 @@ function renderAll() {
   else if (sp === 'm') { var ay = +A.slice(0, 4), am = +A.slice(5, 7), apy = am === 1 ? ay - 1 : ay, apm = am === 1 ? 12 : am - 1; P = { f: A.slice(0, 8) + '01', t: mEnd(ay, am), pf: apy + '-' + pad(apm) + '-01', pt: mEnd(apy, apm), pn: '지난 달' }; }
   else { var yy0 = +A.slice(0, 4); P = { f: yy0 + '-01-01', t: yy0 + '-12-31', pf: (yy0 - 1) + '-01-01', pt: (yy0 - 1) + '-12-31', pn: '작년' }; }
   var h = '<div class="hm ahm"><small>' + y + ' ROUTINE</small><b>' + mdw(A) + '</b><div class="aseg">' + [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-asp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
-    '<div class="asub">' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + ' 요약 · ▲▼ ' + P.pn + ' 대비</div>';
+    '<div class="asub">' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + ' 요약 · MEDICAL은 올해 합산</div>';
   var card = function (mode, title, tiles, note) {
     return '<div class="card mcard asm" data-amode="' + mode + '"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div>' +
       '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' + (note ? '<div class="legend" style="justify-content:flex-start;margin-top:8px">' + note + '</div>' : '') + '</div>';
   };
   var withP = function (food, fn) { var all = S.D.photos; S.D.photos = all.filter(function (p) { return isFood(p) === food; }); try { return fn(); } finally { S.D.photos = all; } };
+  // 메뉴별 내용 (2026.10.05): 숫자 칸보다 '무엇을 얼마나·연속' 위주
+  var box = function (mode, title, sub, body) { return '<div class="card mcard asm" data-amode="' + mode + '"><div class="ct"><span class="mk">' + title + '</span>' + (sub ? '<small class="asm-s">' + sub + '</small>' : '') + '<a href="#" data-mode="' + mode + '">HOME ›</a></div>' + body + '</div>'; };
+  var empty = function (t) { return '<div class="aemp">' + t + '</div>'; };
+  var te = P.t < TODAY ? P.t : TODAY;
+  var bestRun = function (has) { var b = 0, r = 0; for (var d = P.f; d <= te; d = addD(d, 1)) { if (has(d)) { r++; if (r > b) b = r; } else r = 0; } return b; };
+  var rows = function (list) { return '<ul class="arow">' + list.map(function (o) { return '<li><span class="n">' + o.ico + '<em>' + esc(o.n) + '</em></span><span class="a1">' + o.a + '</span><span class="a2">' + (o.b || '') + '</span><span class="a3">' + o.c + '</span></li>'; }).join('') + '</ul>'; };
   var CD = {};
-  if (bList().length) CD.body = card('body', 'BODY', sumB(P), '평균');
-  if ((S.D.workouts || []).length) CD.workout = card('workout', 'WORKOUT', sumW(P));
-  if (uItems().length) CD.habit = card('habit', 'HABIT', sumU(P));
-  CD.food = card('food', 'FOOD', withP(true, function () { return sumF(P); }));
-  CD.feed = card('feed', 'ME', withP(false, function () { return sumF(P); }));
-  CD.diary = card('diary', 'DIARY', sumD(P), '연속 작성 ' + dRun() + '일');
-  if (vList().length) CD.medical = card('medical', 'MEDICAL', sumM(P));
+  if (bList().length) CD.body = card('body', 'BODY', sumB(P), '평균 · ▲▼ ' + P.pn + ' 대비');
+  // WORKOUT: 운동 종류별 횟수 · 시간 · 연속
+  var wl = S.D.workouts || [];
+  if (wl.length) {
+    var wp = wIn(P.f, P.t), wt = wTypes(wp);
+    CD.workout = box('workout', 'WORKOUT', wp.length ? '총 ' + wp.length + '회 · ' + fmtMin(wSum(wp, 'dur')) : '', wt.length ? rows(wt.map(function (o) {
+      return { ico: wIco(o.n), n: o.n, a: '<b>' + o.c + '</b>회', b: fmtMin(o.dur), c: '연속 <b>' + bestRun(function (d) { return wIn(d, d).some(function (r) { return (r.type || '기타') === o.n; }); }) + '</b>일' };
+    })) : empty('이 기간 운동 기록이 없어요' + (wl.length ? ' · 마지막 ' + bShort(wList().slice(-1)[0].d) : '')));
+  }
+  // HABIT: 항목별 횟수 · 연속
+  var us = uItems();
+  if (us.length) {
+    var ur = us.map(function (u) { var q = uStat(u, P.f, P.t), run = bestRun(function (d) { return uDone(u, d); }); return { u: u, cnt: q.cnt, run: run, rate: q.rate }; }), on2 = ur.filter(function (o) { return o.cnt; }).sort(function (a, b) { return b.cnt - a.cnt; });
+    var ut = uTotal(P.f, P.t);
+    CD.habit = box('habit', 'HABIT', '달성률 ' + pct(ut.rate) + '% · ' + on2.length + '/' + us.length + '개', on2.length ? rows(on2.map(function (o) {
+      return { ico: hIco(o.u.x, 'hico sm'), n: o.u.x.name, a: o.u.t === 'h' && sp === 'd' ? '<b class="ok">✓</b>' : '<b>' + o.cnt + '</b>회', b: pct(o.rate) + '%', c: '연속 <b>' + o.run + '</b>일' };
+    })) + (on2.length < us.length ? '<div class="legend" style="justify-content:flex-start;margin-top:6px">기록 없는 항목 ' + (us.length - on2.length) + '개</div>' : '') : empty('이 기간 기록이 없어요'));
+  }
+  // FOOD · ME: 최근 사진
+  [['food', 'FOOD', true], ['feed', 'ME', false]].forEach(function (o) {
+    var L2 = ps.filter(function (p) { return isFood(p) === o[2]; }), inP = L2.filter(function (p) { return inR(p.d, P.f, P.t); }), lp = sortedPhotos(L2).slice(0, 4);
+    CD[o[0]] = box(o[0], o[1], inP.length + '장 · 게시물 ' + posts(inP).length + '개', lp.length ? '<div class="thumbs athumb">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:6px">최근 올린 사진 · ' + bShort(lp[0].d) + '</div>' : empty('아직 올린 사진이 없어요'));
+  });
+  // DIARY: 최근 일기 첫 줄 · 기분 일수 · 연속
+  var DL = S.D.diary.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }), dIn = DL.filter(function (e) { return inR(e.d, P.f, P.t); }), last = dIn[0] || DL[0];
+  var mc = MOODS.map(function (m) { return { k: m.k, c: m.c, n: dIn.filter(function (e) { return e.mood === m.k; }).length }; }).filter(function (m) { return m.n; });
+  CD.diary = box('diary', 'DIARY', '작성 ' + dIn.length + '일 · 연속 ' + dRun() + '일',
+    (last ? '<div class="adia"><div class="adh">' + bShort(last.d) + (last.mood ? ' <span class="amood"><i style="background:' + moodC(last.mood) + '"></i>' + esc(last.mood) + '</span>' : '') + '</div><p>' + esc(((last.text || '').split('\n')[0] || '').slice(0, 80)) + '</p></div>' : empty('아직 쓴 일기가 없어요')) +
+    (mc.length ? '<div class="amc">' + mc.map(function (m) { return '<span><i style="background:' + m.c + '"></i>' + m.k + ' <b>' + m.n + '</b>일</span>'; }).join('') + '</div>' : ''));
+  // MEDICAL: 올해 합산 · 마지막 방문 · 예정 방문 · 최근 검사(크레아티닌 먼저)
+  var vl = vList();
+  if (vl.length) {
+    var yv = vl.filter(function (v) { return v.d.slice(0, 4) === y; }), lastV = vl.filter(function (v) { return v.d <= TODAY; }).slice(-1)[0];
+    var nx = vl.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
+    var vline = function (lb, d, v, dd) { return '<div class="avis"><span class="avl">' + lb + '</span><b>' + bShort(d) + '</b><span>' + esc(v.hosp || '병원') + (v.dept ? ' · ' + esc(v.dept) : '') + '</span>' + (dd != null ? '<em class="' + (dd <= 7 ? 'dn' : 'mute') + '">' + (dd ? 'D-' + dd : '오늘') + '</em>' : '') + '</div>'; };
+    var mh = (lastV ? vline('마지막 방문', lastV.d, lastV) : '') + (nx.length ? '<div class="asw">' + nx.map(function (v) { return vline('예정 방문', v.next, v, dDiff(TODAY, v.next)); }).join('') + '</div>' + (nx.length > 1 ? '<div class="legend" style="justify-content:flex-start;margin-top:2px">예정 ' + nx.length + '건 · 옆으로 밀어 보기</div>' : '') : '<div class="avis"><span class="avl">예정 방문</span><span>예약 없음</span></div>');
+    var lvs = vl.filter(function (v) { return labsOf(v.id).length; }), lv = lvs[lvs.length - 1];
+    if (lv) {
+      var labs = []; lvs.filter(function (v) { return v.d <= lv.d && dDiff(v.d, lv.d) <= 7; }).forEach(function (v) { labs = labs.concat(labsOf(v.id)); });
+      var isCr = function (l) { return /creatinine/i.test(l.item) && !/\(u|urine|소변|cystatin|ratio|clearance/i.test(l.item); };
+      labs.sort(function (a, b) { return (isCr(b) ? 1 : 0) - (isCr(a) ? 1 : 0) || labRank(a.item) - labRank(b.item); });
+      mh += '<div class="alabl">최근 검사 · ' + bShort(lv.d) + (labs.length > 1 ? ' · 옆으로 밀어 ' + labs.length + '개' : '') + '</div><div class="asw alab">' + labs.map(function (l) {
+        var bad = labFlag(l);
+        return '<div class="alb"><small>' + esc(l.item) + '</small><b class="' + (bad === 'L' ? 'lo' : bad ? 'dn' : '') + '">' + esc(String(l.val)) + '<small> ' + esc(l.unit || '') + '</small></b>' + labBar(l) + '</div>';
+      }).join('') + '</div>';
+    }
+    CD.medical = box('medical', 'MEDICAL', y + '년 방문 ' + yv.length + '회 · 검사 ' + yv.filter(function (v) { return labsOf(v.id).length; }).length + '회', mh);
+  }
   h += ['body', 'workout', 'habit', 'food', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
   // 활동 기록 (맨 아래): 칸마다 그날 한 기록 종류 수
   var start = addD(R.ws, -28), cells = '', act = 0, full = 0;
