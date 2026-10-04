@@ -543,7 +543,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 #lb .sub2 { margin-top:18px; }
 .ycal { display:grid; grid-template-columns:repeat(3,1fr); gap:14px 10px; }
 .ycal .wym { display:flex; flex-direction:column; align-items:stretch; width:100%; border:0; background:none; padding:6px 4px; text-align:left; min-width:0; border-radius:10px; }
-.ycal .wym.cur { background:var(--chip); }
+.ycal .wym.cur { background:none; }
 .ycal .wym b { display:flex; align-items:baseline; gap:4px; font-size:13px; font-weight:800; color:var(--txt); margin:0 0 6px 2px; } .ycal .wym b small { font-size:10.5px; color:var(--mute); font-weight:600; }
 .ycal .wyg { display:grid; width:100%; grid-template-columns:repeat(7,1fr); gap:2px; }
 .ycal .wyg i { display:block; aspect-ratio:1; border-radius:3px; background:#eef0f3; } .ycal .wyg i.o { visibility:hidden; } .ycal .wyg i.fu { background:#f7f8fa; }
@@ -802,7 +802,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zl';
+var APP_VER = '20261005zm';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3123,14 +3123,20 @@ function wCalCells(from, to) {
   for (d = from; d <= to; d = addD(d, 1)) { var dl = wIn(d, d); h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dl.length ? '<span class="dts">' + dl.map(function (r) { return '<i style="background:' + deep(wTypeCol(r.type)) + '"></i>'; }).join('') + '</span>' : '') + '</button>'; }
   return h;
 }
-// 연간 달력: 12개월 미니 달력 (운동한 날 = 그날 첫 운동 종류 색)
+// 연간 달력: 12개월 미니 달력 (운동한 날 = 운동 종류 색, 여러 종류면 대각선 분할)
 function wYearCal(y) {
   var h = '<div class="ycal">', m, d, i;
   for (m = 1; m <= 12; m++) {
     var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), lead = (P(f).getDay() + 6) % 7, n = wIn(f, e).length;
     h += '<button class="wym' + (f.slice(0, 7) === TODAY.slice(0, 7) ? ' cur' : '') + '" data-wm="' + m + '"><b>' + m + '월<small>' + (n ? n + '회' : '') + '</small></b><span class="wyg">';
     for (i = 0; i < lead; i++) h += '<i class="o"></i>';
-    for (d = f; d <= e; d = addD(d, 1)) { var dl = wIn(d, d); h += '<i' + (dl.length ? ' style="background:' + deep(wTypeCol(dl[0].type)) + '"' : d > TODAY ? ' class="fu"' : '') + '></i>'; }
+    for (d = f; d <= e; d = addD(d, 1)) {
+      var dl = wIn(d, d), cs = [];
+      dl.forEach(function (r) { var c = deep(wTypeCol(r.type)); if (cs.indexOf(c) < 0) cs.push(c); });
+      // 하루에 여러 종류 → 칸을 대각선으로 나눠 종류별 색 (2026.10.05)
+      var bg = cs.length > 1 ? 'linear-gradient(135deg,' + cs.map(function (c, k) { return c + ' ' + (k / cs.length * 100).toFixed(1) + '% ' + ((k + 1) / cs.length * 100).toFixed(1) + '%'; }).join(',') + ')' : cs[0];
+      h += '<i' + (cs.length ? ' style="background:' + bg + '"' : d > TODAY ? ' class="fu"' : '') + '></i>';
+    }
     h += '</span></button>';
   }
   return h + '</div>';
