@@ -780,7 +780,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y7';
+var APP_VER = '20261005y8';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1131,8 +1131,8 @@ function renderYear() {
   var y = S.yy, from = y + '-01-01', to = y + '-12-31';
   var t = total(from, to), pt = total((y - 1) + '-01-01', (y - 1) + '-12-31');
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
-  h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">체크 ' + t.cnt + '회 · 일기 ' +
-    S.D.diary.filter(function (x) { return x.d.slice(0, 4) === String(y); }).length + '일 · 사진 ' + S.D.photos.filter(function (p) { return p.d.slice(0, 4) === String(y); }).length + '장' +
+  h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">체크 ' + t.cnt + '회 · 기록한 날 ' +
+    Object.keys(S.ck).filter(function (d) { return d.slice(0, 4) === String(y) && Object.keys(S.ck[d]).length; }).length + '일' +
     (pt.goal ? diffHtml(t.rate, pt.rate, '작년') : '') + '</div></div>';
   // 월별 달성률: 전체 또는 습관(카테고리) 하나 골라서 보기 (2026.10.05)
   var hsY = S.D.habits, sel = hsY.filter(function (x) { return x.id === S.tyh; })[0] || null;
