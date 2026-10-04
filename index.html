@@ -781,7 +781,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005z3';
+var APP_VER = '20261005z4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1284,7 +1284,7 @@ function goMode(mode, view) { S.mode = mode; S.view = view || 'home'; ls.set('me
 // TRACKER HOME
 function trHome() {
   var hs = S.D.habits, R = rng(), n = hs.filter(function (x) { return on(TODAY, x.id); }).length;
-  var h = '';
+  var h = '<div class="hm"><small>TRACKER</small><b>' + mdw(TODAY) + '</b></div>';
   // 오늘
   h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + hs.length + ' 완료 ›</a></div>' +
     (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk dico">' + hs.map(function (x) {
@@ -2266,7 +2266,7 @@ function bindKc(d) {
 // COUNT HOME: 항목별 요약 카드 그리드 (오늘·주·월·연) — 2026.10.04
 function kSum(id, f, t) { var c = 0; for (var d = f; d <= t; d = addD(d, 1)) c += kv(d, id); return c; }
 function ctHome() {
-  var ks = S.D.counters, R = rng(), p = S.ksp || 'd', h = '';
+  var ks = S.D.counters, R = rng(), p = S.ksp || 'd', h = '<div class="hm"><small>COUNT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!ks.length) { $('#main').innerHTML = '<div class="card empty">물 마시기, 양치, 간식처럼<br>하루에 여러 번 하는 일을 + 버튼으로 추가해 보세요</div>'; return; }
   var yx = +TODAY.slice(0, 4), yd = addD(TODAY, -1);
   var lastDay = function (f, t) { return t < TODAY ? t : TODAY; };
@@ -2617,7 +2617,7 @@ function bAgg(s, k, by) {
 }
 function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
-  var h = '', L = bList();
+  var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
@@ -2949,7 +2949,7 @@ function wDist(t, km) { if (!km) return '-'; return /수영/.test(t || '') ? Mat
 function wHr(l) { var s = 0, w = 0; l.forEach(function (r) { if (r.hr) { var k = r.dur || 1; s += r.hr * k; w += k; } }); return w ? Math.round(s / w) + '<small class="u">bpm</small>' : '-'; }
 function wkHome() {
   var R = rng(), all = wList();
-  var h = '';
+  var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
   h += wAnalysis(all);
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
