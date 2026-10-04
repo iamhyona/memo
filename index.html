@@ -575,6 +575,8 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .kc.k0 .hi { background:#fff; } .kc.k0 .hi .hico { opacity:.45; } .kc.k0 .m div, .kc.k0 .kn2 b { color:#8b95a1; } .kc.k0 .kb.kminus { background:#fff; }
 .mlist .mlt { display:flex; align-items:baseline; gap:5px; font-weight:700; color:var(--txt); font-size:14.5px; min-width:0; } .mlist .mlt small { font-size:11px; color:var(--faint); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mlist .n { flex-direction:column; align-items:flex-start; gap:3px; } .mlist .dt b { font-weight:700; }
+.f select.vsel { width:100%; border:0; background:var(--chip); border-radius:12px; padding:0 34px 0 12px; outline:0; font-size:16px; height:46px; color:var(--txt); -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:16px; }
+.f select.vsel.ph { color:#b0b8c1; }
 </style>
 </head>
 <body>
@@ -657,7 +659,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
   <h3 id="vbT">병원 기록</h3>
   <div class="frow"><div class="f"><label>날짜</label><input id="vbD" type="date"></div><div class="f"><label>다음 예약 (선택)</label><input id="vbNx" type="date"></div></div>
   <div class="fl">구분</div><div class="chips" id="vbK"></div>
-  <div class="frow" style="margin-top:14px"><div class="f"><label>병원</label><input id="vbH" list="vbHl" placeholder="병원 이름" maxlength="30"><datalist id="vbHl"></datalist></div><div class="f" style="flex:.7"><label>진료과</label><input id="vbDp" placeholder="예: 내과" maxlength="15"></div></div>
+  <div class="frow" style="margin-top:14px"><div class="f"><label>병원</label><select id="vbH" class="vsel"></select><datalist id="vbHl"></datalist></div><div class="f" style="flex:.8"><label>과목</label><select id="vbDp" class="vsel"></select></div></div>
   <div class="fl">내용</div><textarea class="dx sm2" id="vbN" placeholder="증상 · 진단 · 의사 소견"></textarea>
   <div class="frow" style="margin-top:12px"><div class="f"><label>처방</label><input id="vbR" placeholder="약 · 주사 · 처치 (선택)"></div></div>
   <div class="fl">혈액검사 결과</div>
@@ -783,7 +785,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005za';
+var APP_VER = '20261005zb';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -949,8 +951,8 @@ function renderCore() {
   VIEWS[S.mode][S.view]();
 }
 var FOOD_CATS = ['아침', '점심', '저녁', '간식', '야식', '카페', '음식'];
-function isFood(p) { return FOOD_CATS.indexOf(p.cat) >= 0; }
-function upCats() { return S.mode === 'food' ? FOOD_CATS.slice() : S.D.cats.filter(function (c) { return FOOD_CATS.indexOf(c) < 0; }); }
+function isFood(p) { return FOOD_CATS.indexOf(p.cat) >= 0 || mOpt('FOOD', '식사 구분', []).indexOf(p.cat) >= 0; }
+function upCats() { return S.mode === 'food' ? mOpt('FOOD', '식사 구분', FOOD_CATS) : S.D.cats.filter(function (c) { return FOOD_CATS.indexOf(c) < 0; }); }
 function syncView(v) {
   if (v === 'month') { S.y = +S.day.slice(0, 4); S.m = +S.day.slice(5, 7); S.sel = null; }
   if (v === 'year') S.yy = +S.day.slice(0, 4);
@@ -3200,7 +3202,7 @@ function wParse(txt) {
 var WB = null;
 $('#wbG').innerHTML = WK.map(function (x) { return '<label class="bf"><span>' + x.n + '</span><input inputmode="decimal" autocomplete="off" data-w="' + x.k + '"><em>' + x.u + '</em></label>'; }).join('');
 function drawWTypes() {
-  var ts = WTYPES.slice(); wList().forEach(function (r) { if (r.type && ts.indexOf(r.type) < 0) ts.unshift(r.type); });
+  var ts = mOpt('WORKOUT', '운동 종류', WTYPES); wList().forEach(function (r) { if (r.type && ts.indexOf(r.type) < 0) ts.unshift(r.type); });
   ts = ts.slice(0, 16);
   var cur = $('#wbTy').value.trim();
   $('#wbC').innerHTML = ts.map(function (t) { return '<button data-t="' + esc(t) + '" class="' + (t === cur ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('');
@@ -3347,7 +3349,13 @@ function labNum(v) { var m = String(v == null ? '' : v).replace(/,/g, '').match(
 function labKo(item) { var x = labInfo(item); return x ? x[1] : ''; }
 
 /* ───── MEDICAL: 병원 방문 · 혈액검사 (2026.10.04) — 'Daily Archive_병원 기록' 시트 (병원 · 혈액검사 탭) ───── */
-var MKINDS = ['진료', '검사', '검진', '치과', '한의원', '약국', '기타'];
+// 드롭다운 값: 'Daily Archive_마스터' 시트 (탭별) — 없으면 기본값 (2026.10.05)
+function mOpt(tab, key, def) { var m = S.D && S.D.master && S.D.master[tab], v = m && m[key]; return v && v.length ? v.slice() : (def || []).slice(); }
+function fillSel(el, list, cur, ph) { if (!el) return; var L = list.slice(); if (cur && L.indexOf(cur) < 0) L.push(cur); el.innerHTML = '<option value="">' + (ph || '선택') + '</option>' + L.map(function (x) { return '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); el.value = cur || ''; el.classList.toggle('ph', !el.value); }
+var MKINDS = ['외래', '입원', '검사', '검진', '약국'];
+var MDEPTS = ['류마티스내과', '신장내과', '산부인과', '정신의학과', '유방외과', '알러지내과', '안과', '정형외과', '재활의학과', '치과', '호흡기내과', '이비인후과', '피부과', '내과', '한의원', '응급실', '약국'];
+var MHOSPS = ['서울성모', '여의도성모', '연세사랑산부인과', '바로본정형외과', '튼튼본정형외과', '서울수치과', '고은이치과', '합정호치과', '멜로우피부과', '닥터스피부과', '더힐피부과', '마포탑안과', '예승한의원', '서울이비인후과', '연세유내과', '온안정신과', '아비쥬의원', '늘푸른약국', '독일약국', '대교약국', '수복약국'];
+document.addEventListener('change', function (e) { var t = e.target; if (t && t.classList && t.classList.contains('vsel')) t.classList.toggle('ph', !t.value); });
 function vList() { return (S.D.visits || []).slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }); }
 function vIn(a, b) { return vList().filter(function (v) { return inR(v.d, a, b); }); }
 function labsOf(vid) { return (S.D.labs || []).filter(function (l) { return l.vid === vid; }); }
@@ -3597,7 +3605,7 @@ var RXB = null;
 (function () {
   var d = document.createElement('div'); d.className = 'bs'; d.id = 'rxb';
   d.innerHTML = '<h3 id="rxT">약 추가</h3>' +
-    '<div class="frow"><div class="f"><label>진료과</label><input id="rxDp" list="rxDl" placeholder="예: 신장내과" maxlength="20"><datalist id="rxDl"></datalist></div><div class="f"><label>병원</label><input id="rxH" list="vbHl" placeholder="병원 이름" maxlength="30"></div></div>' +
+    '<div class="frow"><div class="f"><label>과목</label><select id="rxDp" class="vsel"></select><datalist id="rxDl"></datalist></div><div class="f"><label>병원</label><select id="rxH" class="vsel"></select></div></div>' +
     '<div class="frow"><div class="f"><label>약 이름</label><input id="rxN" placeholder="예: 프레드니솔론정 5mg" maxlength="40"></div></div>' +
     '<div class="frow"><div class="f"><label>성분 · 효능 (선택)</label><input id="rxI" placeholder="예: 스테로이드 · 염증 억제" maxlength="60"></div></div>' +
     '<div class="frow"><div class="f"><label>용량</label><input id="rxDo" placeholder="예: 1정" maxlength="20"></div><div class="f"><label>복용법</label><input id="rxHw" placeholder="예: 하루 2번 아침·저녁 식후" maxlength="40"></div></div>' +
@@ -3614,7 +3622,7 @@ function openRx(id) {
   $('#rxDl').innerHTML = Object.keys(ds).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
   var hs = {}; (S.D.visits || []).concat(S.D.rx || []).forEach(function (x) { if (x.hosp) hs[x.hosp] = 1; });
   if ($('#vbHl')) $('#vbHl').innerHTML = Object.keys(hs).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
-  $('#rxDp').value = r ? r.dept || '' : ''; $('#rxH').value = r ? r.hosp || '' : ''; $('#rxN').value = r ? r.name || '' : ''; $('#rxI').value = r ? r.ing || '' : '';
+  fillSel($('#rxDp'), mOpt('MEDICAL', '과목', MDEPTS), r ? r.dept || '' : '', '과목 선택'); fillSel($('#rxH'), mOpt('MEDICAL', '병원', MHOSPS), r ? r.hosp || '' : '', '병원 선택'); $('#rxN').value = r ? r.name || '' : ''; $('#rxI').value = r ? r.ing || '' : '';
   $('#rxDo').value = r ? r.dose || '' : ''; $('#rxHw').value = r ? r.how || '' : ''; $('#rxD').value = r ? r.d : TODAY; $('#rxE').value = r ? r.end || '' : ''; $('#rxM').value = r ? r.memo || '' : '';
   $('#rxX').classList.toggle('hide', !r); unsure($('#rxX'));
   openBs('#rxb');
@@ -3677,7 +3685,8 @@ function labParse(txt) {
 }
 var VB = null;
 function drawKinds() {
-  $('#vbK').innerHTML = MKINDS.map(function (k) { return '<button data-k="' + k + '" class="' + (VB.kind === k ? 'on' : '') + '">' + k + '</button>'; }).join('');
+  var KS = mOpt('MEDICAL', '구분', MKINDS); if (VB.kind && KS.indexOf(VB.kind) < 0) KS.push(VB.kind);
+  $('#vbK').innerHTML = KS.map(function (k) { return '<button data-k="' + k + '" class="' + (VB.kind === k ? 'on' : '') + '">' + k + '</button>'; }).join('');
   $$('#vbK button').forEach(function (b) { b.onclick = function () { VB.kind = b.dataset.k; drawKinds(); }; });
 }
 function drawLabs() {
@@ -3693,11 +3702,11 @@ function drawLabs() {
 $('#vbLa').onclick = function () { VB.labs.push({ item: '', val: null, unit: '', ref: '' }); drawLabs(); var ins = $$('#vbL input[data-f="item"]'); if (ins.length) ins[ins.length - 1].focus(); };
 function openVisit(id, d) {
   var v = id ? (S.D.visits || []).filter(function (x) { return x.id === id; })[0] : null;
-  VB = { id: v ? v.id : null, kind: v ? v.kind || '진료' : '진료', labs: v ? labsOf(v.id).map(function (l) { return { id: l.id, item: l.item, val: l.val, unit: l.unit, ref: l.ref, flag: l.flag }; }) : [], busy: 0 };
+  VB = { id: v ? v.id : null, kind: v ? v.kind || '' : mOpt('MEDICAL', '구분', MKINDS)[0], labs: v ? labsOf(v.id).map(function (l) { return { id: l.id, item: l.item, val: l.val, unit: l.unit, ref: l.ref, flag: l.flag }; }) : [], busy: 0 };
   VB.d0 = v ? v.d : '';
   $('#vbT').textContent = v ? '병원 기록 수정' : '병원 기록';
   $('#vbD').value = v ? v.d : (d || (S.view === 'daily' ? S.day : TODAY));
-  $('#vbH').value = v ? v.hosp || '' : ''; $('#vbDp').value = v ? v.dept || '' : '';
+  fillSel($('#vbH'), mOpt('MEDICAL', '병원', MHOSPS), v ? v.hosp || '' : '', '병원 선택'); fillSel($('#vbDp'), mOpt('MEDICAL', '과목', MDEPTS), v ? v.dept || '' : '', '과목 선택');
   $('#vbN').value = v ? v.note || '' : ''; $('#vbR').value = v ? v.rx || '' : ''; $('#vbNx').value = v ? v.next || '' : '';
   var hs = {}; vList().forEach(function (x) { if (x.hosp) hs[x.hosp] = 1; });
   $('#vbHl').innerHTML = Object.keys(hs).map(function (h) { return '<option value="' + esc(h) + '">'; }).join('');
