@@ -432,7 +432,7 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .seg3 button.on { background:var(--txt); color:#fff; }
 .st3 .lo { color:#e5484d; } .st3 .hi { color:#3182f6; } .st3 .sl { color:var(--faint); font-weight:500; margin:0 5px; } .st3 .mm { font-size:17px; } .st3 .mm small.bu { margin-left:1px; font-size:11px; }
 .bper th { font-size:11.5px; letter-spacing:-0.03em; padding-left:2px; } .bper th small { display:block; font-size:10.5px; color:var(--faint); font-weight:500; margin-top:1px; }
-.bper td { font-size:13px; padding:12px 0 12px 2px; letter-spacing:-0.02em; } .bper td:first-child { font-size:13.5px; } .bper td small.wd { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; }
+.bper td { font-size:13px; padding:12px 0 12px 2px; letter-spacing:-0.02em; } .bper td:first-child { font-size:13.5px; } .bper td small.u { font-size:9.5px; color:var(--mute); font-weight:600; margin-left:1px; letter-spacing:0; } .bper td small.wi { font-size:11px; color:var(--faint); font-weight:500; margin-left:3px; } .bper td small.wd { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; }
 .bu2 { font-style:normal; font-size:11px; font-weight:600; color:var(--mute); margin-left:1px; }
 .bsum td b { display:block; font-size:14px; } .bsum td small { display:block; font-size:11px; font-weight:600; margin-top:2px; } .bsum td { padding:10px 0; }
 .bmm td b { display:block; font-size:14px; }
@@ -732,7 +732,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v6';
+var APP_VER = '20261004v7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2465,13 +2465,14 @@ function bindBody() {
 // 기록 표 (날짜 · 체중 · 골격근량 · 체지방률)
 // 표에 쓰는 5개 항목 (체중·골격근량·체지방량·체지방률·내장지방)
 var BK5 = ['w', 'smm', 'bfm', 'pbf', 'vfl'], BK5N = { w: '체중', smm: '골격근량', bfm: '체지방량', pbf: '체지방률', vfl: '내장지방' };
-function bTh(kk) { var u = bkOf(kk).u; return '<th>' + BK5N[kk] + '<small>' + (u || '&nbsp;') + '</small></th>'; }
+function bTh(kk) { return '<th>' + BK5N[kk] + '</th>'; }
+function bVal(kk, v, xx) { var x = bkOf(kk); return bfmt(xx || x, v) + (x.u ? '<small class="u">' + x.u + '</small>' : ''); }
 function bTable(recs) {
   if (!recs.length) return '<div class="empty" style="padding:18px 0">기록이 없어요</div>';
   var ks = BK5;
   return '<table class="btab bper"><tr><th>날짜</th>' + ks.map(bTh).join('') + '</tr>' +
     recs.slice().reverse().map(function (r) {
-      return '<tr data-bd="' + r.d + '"><td>' + bShort(r.d) + '<small class="wd">' + W[P(r.d).getDay()] + '</small></td>' + ks.map(function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bfmt(bkOf(k), r[k])) + '</td>'; }).join('') + '</tr>';
+      return '<tr data-bd="' + r.d + '"><td>' + bShort(r.d) + '<small class="wi">' + W[P(r.d).getDay()] + '</small></td>' + ks.map(function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bVal(k, r[k])) + '</td>'; }).join('') + '</tr>';
     }).join('') + '</table>';
 }
 
@@ -2617,7 +2618,7 @@ function bdYear() {
   h += '<div class="card"><div class="ct">' + y + '년 월별 평균 · ' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(pts, x) + bSum(s, k, x) + '</div>';
   var rows = ms.filter(function (o) { return o.n; });
   h += '<div class="card"><div class="ct">' + y + '년 월별 평균<small>측정 ' + rows.reduce(function (a, o) { return a + o.n; }, 0) + '회</small></div>' + (rows.length ? '<table class="btab bper"><tr><th>월</th>' + ks.map(bTh).join('') + '</tr>' +
-    rows.reverse().map(function (o) { return '<tr data-bm="' + o.m + '"><td>' + o.m + '월<small class="wd">' + o.n + '회</small></td>' + ks.map(function (kk) { var xx = bkOf(kk); return '<td>' + (o.a[kk] == null ? '<span class="mute">-</span>' : bfmt(kk === 'vfl' ? { dp: 1 } : xx, o.a[kk])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
+    rows.reverse().map(function (o) { return '<tr data-bm="' + o.m + '"><td>' + o.m + '월<small class="wd">' + o.n + '회</small></td>' + ks.map(function (kk) { var xx = bkOf(kk); return '<td>' + (o.a[kk] == null ? '<span class="mute">-</span>' : bVal(kk, o.a[kk], kk === 'vfl' ? { dp: 1 } : xx)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
     '<div class="legend" style="justify-content:flex-start">그 달 측정값의 평균 · 누르면 그 달로</div>' : '<div class="empty" style="padding:18px 0">기록이 없어요</div>') + '</div>';
   h += '<div class="card"><button class="ballo" id="bAllO"><span>전체 기록 보기</span><small>' + bList().length.toLocaleString() + '회 ›</small></button></div>';
   $('#main').innerHTML = h; bindYear(); bindBody();
