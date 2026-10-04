@@ -245,9 +245,8 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .hc .hi { width:36px; height:36px; border-radius:11px; background:rgba(255,255,255,.6); display:flex; align-items:center; justify-content:center; flex:none; }
 .hc .m { flex:1; min-width:0; } .hc .m div { font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .hc .m small { font-size:12px; color:rgba(25,31,40,.55); font-weight:500; }
-.hc.done { background:#e9ecef !important; color:var(--mute); }
-.hc.done .cc { background:#fff; border-color:#fff; }
-.hc.done .hi { opacity:.55; } .hc.done .m small { color:var(--faint); }
+.hc { background:#fff; color:#8b95a1; } .hc:not(.done) .hi { background:#f2f4f6; } .hc:not(.done) .hi svg { stroke:#c3c9d1; } .hc .cc { border-color:#d5dbe3; background:#fff; }
+.hc.done { color:var(--txt); } .hc.done .cc { background:#fff; border-color:#fff; }
 .hsub { font-size:13px; color:var(--mute); font-weight:700; margin:16px 4px 8px; }
 /* 월간 리뷰 */
 .dwrap { display:flex; justify-content:center; margin:0 0 14px; }
@@ -286,7 +285,7 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .dchk { display:flex; flex-wrap:wrap; gap:6px; }
 .dchk button { border:0; border-radius:999px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--chip); color:var(--mute); display:flex; align-items:center; gap:6px; }
 .dchk button.on { color:var(--txt); }
-.dchk button .hico { opacity:.35; } .dchk button.on .hico { opacity:1; }
+.dchk button .hico { opacity:.35; } .dchk button.on .hico { opacity:1; } .dchk button.on { color:var(--txt); }
 
 /* 사진 */
 .pst { display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; background:#fff; border-radius:20px; padding:16px 8px; margin-bottom:12px; }
@@ -428,6 +427,7 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .seg3 { display:flex; gap:6px; margin:0 0 12px; }
 .seg3 button { flex:1; border:0; background:var(--chip); border-radius:10px; padding:7px 0; font-size:13px; font-weight:600; color:var(--sub); }
 .seg3 button.on { background:var(--txt); color:#fff; }
+.bsum td b { display:block; font-size:14px; } .bsum td small { display:block; font-size:11px; font-weight:600; margin-top:2px; } .bsum td { padding:10px 0; }
 .bmm td b { display:block; font-size:14px; } .bmm td small { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; } .bmm td { padding:9px 0; }
 .ballo { width:100%; border:0; background:none; display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:700; color:var(--txt); padding:2px 0; }
 .ballo small { font-size:13px; color:var(--mute); font-weight:600; }
@@ -532,7 +532,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
       <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
-  <nav id="mode" class="mtabs"><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="feed">OUTFIT</button><button data-m="diary">DIARY</button><button data-m="body">BODY</button><button data-m="food">FOOD</button><button data-m="workout">WORKOUT</button><button data-m="medical">MEDICAL</button></nav>
+  <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="food">FOOD</button><button data-m="workout">WORKOUT</button><button data-m="feed">ME</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
   <div class="mode vseg" id="nav"><button data-v="home">HOME</button><button data-v="daily">DAY</button><button data-v="week">WEEK</button><button data-v="month">MONTH</button><button data-v="year">YEAR</button></div>
 </header>
 <main id="main"><div class="ld">불러오는 중…</div></main>
@@ -722,7 +722,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u2';
+var APP_VER = '20261004u3';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -901,6 +901,11 @@ $('#brand').onclick = function () { S.view = 'all'; S.day = TODAY; ls.set('memo:
 
 /* ───── 습관 픽토그램 (이름을 읽어서 자동으로) · 습관 색 ───── */
 var H_ICONS = [
+  [/인바디|체중|몸무게/, 'M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM7.5 11a5 5 0 0 1 9 0M12 11l1.8-2.4'],
+  [/아침밥|아침 식사|브런치/, 'M12 4c4 0 8 2.5 8 7 0 3.5-2.2 6-5 7.5S8.5 21 6 19.5 3 15 4 11.5 8 4 12 4zM12 15a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],
+  [/점심밥|점심/, 'M3 12h18a9 9 0 0 1-18 0zM13 3l-3 7M19 4l-5 6'],
+  [/저녁밥|저녁 식사|저녁식사|야식/, 'M6 3v6a2 2 0 0 0 2 2v10M10 3v6a2 2 0 0 1-2 2M18 21V3c-2.2 1-3.5 4-3.5 8H18'],
+  [/약/, 'M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7zM7 10l7 7'],
   [/양치|치실/, 'M4 20l8.5-8.5M12.5 11.5l2-2M14.5 9.5l3-3a2 2 0 0 1 3 3l-3 3zM15 7l2 2'],
   [/샤워|목욕|세안|씻기/, 'M5 21V8a4 4 0 0 1 8 0M10 8h7l-1 3h-5zM12 14v1M15 14v2M12 18v1M15 19v1'],
   [/화장품|스킨|로션|선크림|기초|크림|세럼|마스크팩/, 'M9 3h6v3H9zM7.5 6h9l1 3v11a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V9zM9 13h6'],
@@ -1184,7 +1189,7 @@ function trHome() {
   // 오늘
   h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + hs.length + ' 완료 ›</a></div>' +
     (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk">' + hs.map(function (x) {
-      return '<button data-h="' + x.id + '" class="' + (on(TODAY, x.id) ? 'on' : '') + '">' + hIco(x, 'hico sm') + esc(x.name) + '</button>';
+      return '<button data-h="' + x.id + '" class="' + (on(TODAY, x.id) ? 'on' : '') + '"' + (on(TODAY, x.id) ? ' style="background:' + x.color + '"' : '') + '>' + hIco(x, 'hico sm') + esc(x.name) + '</button>';
     }).join('') + '</div>' : '<div class="empty">+ 버튼으로 습관을 추가해 보세요</div>') + '</div>';
   if (!hs.length) { $('#main').innerHTML = h; return bindHome(); }
   // 이번 주
@@ -1215,7 +1220,7 @@ function trHome() {
 function fdHome() {
   var R = rng(), ps = S.D.photos, cnt = function (a, b) { return ps.filter(function (p) { return inR(p.d, a, b); }); };
   var today = photosOf(TODAY), w = cnt(R.ws, R.we), pw = cnt(R.pws, R.pwe), m = cnt(R.mf, R.mt), pm = cnt(R.pmf, R.pmt);
-  var h = '<div class="hm"><small>FEED</small><b>' + mdw(TODAY) + '</b></div>';
+  var h = '<div class="hm"><small>ME</small><b>' + mdw(TODAY) + '</b></div>';
   h += '<div class="mini">' + stat('오늘', today.length + '장') + stat('이번 주', posts(w).length + '개 게시물') + stat('전체', posts(ps).length + '개 게시물') + '</div>';
   // 이번 주
   var wv = weekDays(R.ws).map(function (d) { return photosOf(d).length; }), act = wv.filter(Boolean).length;
@@ -1281,15 +1286,15 @@ function renderAll() {
   h += '<div class="card"><div class="ct">최근 5주 활동<small>' + act + '일 기록 · 네 가지 모두 ' + full + '일</small></div><div class="wdh">' + WM.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div><div class="act5">' + cells + '</div>' +
     '<div class="legend">적음 <i class="a1"></i><i class="a2"></i><i class="a3"></i> 많음</div></div>';
   // 모드별 요약
-  var card = function (mode, title, rows, foot) {
-    return '<div class="card mcard"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div><div class="st4">' + rows.join('') + '</div>' + (foot || '') + '</div>';
+  var CD = {}, card = function (mode, title, rows, foot) {
+    CD[mode] = '<div class="card mcard"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div><div class="st4">' + rows.join('') + '</div>' + (foot || '') + '</div>'; return '';
   };
   h += card('tracker', 'TRACKER', [stat('오늘', tn + '/' + hs.length), stat('이번 주', pct(tw.rate) + '%'), stat(R.m + '월 체크', tm.cnt + '회'), stat('최고 연속', bestS + '일')],
     hs.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(tw.rate) + '%"></i></div>' : '');
   var ks = S.D.counters, kw = ktotal(R.ws, R.we), km = ktotal(R.mf, R.mt), kbest = ks.map(krun).reduce(function (a, b) { return Math.max(a, b); }, 0);
   h += card('count', 'COUNT', [stat('오늘', kdayOk(TODAY) + '/' + ks.length), stat('이번 주', pct(kw.rate) + '%'), stat(R.m + '월 기록', km.cnt + '회'), stat('최고 연속', kbest + '일')],
     ks.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(kw.rate) + '%"></i></div>' : '');
-  [['feed', 'OUTFIT', false], ['food', 'FOOD', true]].forEach(function (o) {
+  [['feed', 'ME', false], ['food', 'FOOD', true]].forEach(function (o) {
     var L2 = ps.filter(function (p) { return isFood(p) === o[2]; }), in2 = function (a, b) { return L2.filter(function (p) { return inR(p.d, a, b); }); }, lp = sortedPhotos(L2).slice(0, 4);
     h += card(o[0], o[1], [stat('오늘', in2(TODAY, TODAY).length + '장'), stat('이번 주', in2(R.ws, R.we).length + '장'), stat(R.m + '월', in2(R.mf, R.mt).length + '장'), stat('게시물', posts(L2).length + '개')],
       lp.length ? '<div class="thumbs">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div>' : '');
@@ -1303,6 +1308,7 @@ function renderAll() {
   if (vl.length) { var vnx = vl.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; })[0]; h += card('medical', 'MEDICAL', [stat('최근 방문', bShort(vl[vl.length - 1].d)), stat('다음 예약', vnx ? bShort(vnx.next) : '-'), stat('올해', vIn(R.y + '-01-01', R.y + '-12-31').length + '회'), stat('혈액검사', vl.filter(function (v) { return labsOf(v.id).length; }).length + '회')]); }
   var br = bLast('w');
   if (br) h += card('body', 'BODY', [stat('최근 측정', bShort(br.d)), stat('체중', bfmt(bkOf('w'), br.w) + 'kg'), stat('골격근량', bfmt(bkOf('smm'), br.smm) + 'kg'), stat('체지방률', bfmt(bkOf('pbf'), br.pbf) + '%')]);
+  h += ['body', 'tracker', 'count', 'food', 'workout', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
   // 올해
   var ty = total(y + '-01-01', y + '-12-31');
   h += '<div class="sec">' + y + '년</div><div class="mini">' + stat('습관 체크', ty.cnt + '회') + stat('사진', ps.filter(function (p) { return p.d.slice(0, 4) === y; }).length + '장') + stat('일기', L.filter(function (e) { return e.d.slice(0, 4) === y; }).length + '일') + '</div>';
@@ -1327,13 +1333,12 @@ function trDaily() {
   var cardOf = function (x) {
     var v = on(day, x.id), c = weekCnt(x, ws), st = streak(x.id);
     var sub = '이번 주 ' + c + '/' + x.target + (c >= x.target ? ' 달성' : '') + (st >= 2 ? ' · 연속 ' + st + '일' : '');
-    return '<button class="hc' + (v ? ' done' : '') + '" data-h="' + x.id + '" style="background:' + x.color + '"><span class="cc">' + (v ? CHK : '') + '</span>' +
+    return '<button class="hc' + (v ? ' done' : '') + '" data-h="' + x.id + '"' + (v ? ' style="background:' + x.color + '"' : '') + '><span class="cc">' + (v ? CHK : '') + '</span>' +
       '<span class="hi">' + hIco(x) + '</span><span class="m"><div>' + esc(x.name) + '</div></span></button>';
   };
-  var todo = hs.filter(function (x) { return !on(day, x.id); }), done = hs.filter(function (x) { return on(day, x.id); });
+  // 순서는 그대로 두고, 체크한 항목만 색으로 (2026.10.04)
   if (!hs.length) h += '<div class="card empty">아직 습관이 없어요<br>오른쪽 아래 + 버튼으로 첫 습관을 추가해 보세요</div>';
-  h += todo.map(cardOf).join('');
-  if (done.length) h += '<div class="hsub">완료 ' + done.length + '</div>' + done.map(cardOf).join('');
+  h += hs.map(cardOf).join('');
   $('#main').innerHTML = h;
   bindDay(); bindStrip();
   $$('.hc').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; toggle(S.day, b.dataset.h); render(); window.scrollTo(0, y0); }; });
@@ -2460,7 +2465,7 @@ function bTable(recs) {
     }).join('') + '</table>';
 }
 
-// BODY HOME: 분석 — 항목별 그래프 · 최저/최고 · 기간별 변화 (2026.10.04 개편)
+// BODY HOME: 요약(주·월·연) · 최저/최고 · 항목별 그래프 · 기간별 변화 (2026.10.04 개편)
 var BMK = ['w', 'smm', 'bfm', 'pbf', 'vfl', 'bmi'];
 var BPER = [['1m', '1개월'], ['3m', '3개월'], ['1y', '1년'], ['all', '전체']];
 function devName(d) { d = String(d || ''); return /^H20/i.test(d) ? '인바디다이얼' : /^\d/.test(d) ? 'InBody ' + d : /^etc$/i.test(d) ? '기타' : d; }
@@ -2475,16 +2480,17 @@ function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function
 function bdHome() {
   var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
-  // 1) 항목별 그래프
-  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
-  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
-  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
-  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
-  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
-  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
-    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
-    bChart(pts, x) + bSum(s, k, x) + '</div>';
-  // 2) 최저 · 최고
+  // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
+  var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
+  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
+  var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
+  var wX = bkOf('w'), sX = bkOf('smm'), pX = bkOf('pbf');
+  h += '<div class="card"><div class="ct">요약<small>평균 · 지난 기간 대비</small></div><table class="btab bsum"><tr><th></th><th>측정</th><th>체중</th><th>골격근량</th><th>체지방률</th></tr>' + SP.map(function (p) {
+    var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
+    var cellA = function (xx) { var a1 = avgOf(xx.k, p[1], p[2]), a0 = avgOf(xx.k, p[3], p[4]); return '<td>' + (a1 == null ? '<span class="mute">-</span>' : '<b>' + bfmt(xx, a1) + '</b><small>' + (a0 == null ? p[5] + ' -' : bDelta(xx, a1, a0)) + '</small>') + '</td>'; };
+    return '<tr><td>' + p[0] + '</td><td>' + n2 + '회</td>' + cellA(wX) + cellA(sX) + cellA(pX) + '</tr>';
+  }).join('') + '</table></div>';
+  // 1) 최저 · 최고
   var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
   var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
   var cnt = bList().filter(function (r) { return (!rg[0] || r.d >= rg[0]) && (!rg[1] || r.d <= rg[1]); }).length;
@@ -2495,6 +2501,15 @@ function bdHome() {
       ss.forEach(function (r) { if (!lo || r[kk] < lo[kk]) lo = r; if (!hi || r[kk] > hi[kk]) hi = r; sum += r[kk]; });
       return '<tr><td>' + xx.n + (xx.u && kk !== 'vfl' ? ' <small>' + xx.u + '</small>' : '') + '</td><td>' + cell(xx, lo) + '</td><td>' + cell(xx, hi) + '</td><td>' + (ss.length ? '<b>' + bfmt(xx, sum / ss.length) + '</b>' : '<span class="mute">-</span>') + '</td></tr>';
     }).join('') + '</table></div>';
+  // 2) 항목별 그래프
+  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
+  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
+  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
+  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
+  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
+  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
+    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
+    bChart(pts, x) + bSum(s, k, x) + '</div>';
   // 3) 기간별 변화 (최근 기록 기준)
   var per = [['1주', 7], ['1개월', 30], ['3개월', 91], ['1년', 365], ['첫 기록', 99999]], ks = ['w', 'smm', 'pbf'];
   h += '<div class="card"><div class="ct">기간별 변화<small>최근 측정 기준</small></div><table class="btab"><tr><th></th>' + ks.map(function (kk) { return '<th>' + bkOf(kk).n + '</th>'; }).join('') + '</tr>' +
@@ -2508,23 +2523,6 @@ function bdHome() {
   $('#main').innerHTML = h; bindBody();
   $$('[data-bp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bp = b.dataset.bp; render(); window.scrollTo(0, y0); }; });
   $$('[data-bmm]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bmm = b.dataset.bmm; render(); window.scrollTo(0, y0); }; });
-}
-// BODY DAY: 그날 측정 전체 수치
-function bRecCard(r) {
-  var grp = function (title, xs) {
-    var rows = xs.filter(function (x) { return r[x.k] != null; });
-    if (!rows.length) return '';
-    return (title ? '<div class="sub2">' + title + '</div>' : '') + '<ul class="brow">' + rows.map(function (x) {
-      var pv = bPrevVal(r, x.k);
-      return '<li><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(x, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(x, r[x.k], pv) : '') + '</span></li>';
-    }).join('') + '</ul>';
-  };
-  var sg = [['오른팔', 'ra'], ['왼팔', 'la'], ['몸통', 'tr'], ['오른다리', 'rl'], ['왼다리', 'll']].filter(function (q) { return r['m' + q[1]] != null || r['f' + q[1]] != null; });
-  var cell = function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bfmt(bkOf(k), r[k]) + ' ' + bDelta(bkOf(k), r[k], bPrevVal(r, k))) + '</td>'; };
-  var seg = sg.length ? '<div class="sub2">부위별</div><table class="btab bseg"><tr><th></th><th>근육 kg</th><th>지방 kg</th></tr>' + sg.map(function (q) { return '<tr><td>' + q[0] + '</td>' + cell('m' + q[1]) + cell('f' + q[1]) + '</tr>'; }).join('') + '</table>' : '';
-  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + (r.dev ? ' <small>' + esc(devName(r.dev)) + '</small>' : '') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
-    grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) + seg +
-    (r.memo ? '<p class="mnote">' + esc(r.memo) + '</p>' : '') + '<div class="legend" style="justify-content:flex-start">▲▼ 지난 측정 대비 · 파랑 좋아짐 · 빨강 나빠짐</div></div>';
 }
 // BODY DAY: 그날 측정 — 위에 주요 6개 + 최근 14회 그래프, 아래 전체 수치
 function bTopCard(r, day) {
