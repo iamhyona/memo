@@ -555,6 +555,8 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .kg em { display:block; font-style:normal; font-size:11px; font-weight:600; color:var(--mute); white-space:nowrap; } .kg em .up { color:#f0506e; } .kg em .dn { color:#3182f6; }
 .kg .kgm { position:absolute; right:6px; bottom:6px; width:26px; height:26px; border:0; border-radius:50%; background:rgba(255,255,255,.7); color:var(--sub); display:flex; align-items:center; justify-content:center; padding:0; } .kg .kgm svg { width:13px; height:13px; }
 small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; letter-spacing:0; }
+.kg.dk .kgt, .kg.dk b, .kg.dk b small, .kg.dk em, .kg.dk em .up, .kg.dk em .dn { color:#fff; } .kg.dk .hico { filter:brightness(0) invert(1); }
+.kc.dk { color:#fff; } .kc.dk .kn2 small { color:rgba(255,255,255,.8); }
 </style>
 </head>
 <body>
@@ -763,7 +765,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x1';
+var APP_VER = '20261005x2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1004,6 +1006,9 @@ function deep(hex) {
 // 진한 색(토스 팔레트)은 그대로, 연한 파스텔은 진하게 바꿔서 — 아이콘·그래프·체크 배경 모두 같은 색
 function isLight(hex) { var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return (r * .299 + g * .587 + b * .114) / 255 > .72; }
 function dc(x) { var c = x.color || '#d5dbe3'; return isLight(c) ? deep(c) : c; }
+// COUNT: 횟수가 많을수록 진하게 (1회 = 연한 기본색 → 6회 이상 = 가장 진함) — 2026.10.05
+function kMix(a, b, t) { var p = function (h, i) { return parseInt(h.slice(i, i + 2), 16); }; return '#' + [1, 3, 5].map(function (i) { return ('0' + Math.round(p(a, i) + (p(b, i) - p(a, i)) * t).toString(16)).slice(-2); }).join(''); }
+function kShade(x, v) { var c = x.color || '#CFE3FA', t = Math.max(0, Math.min(1, (v - 1) / 5)); return { bg: kMix(c, deep(c), t * 0.9), dk: t >= 0.5 }; }
 var HCOLORS = ['#BAE0FD', '#FBC4D8', '#FDE68A', '#FDC89A', '#D9CCFB', '#CDEFB0', '#B6EBDD', '#E3CDB8', '#DCDFA8', '#FBC1B7', '#C9D3F5', '#E8D3F0'];   // 파스텔: 하늘 분홍 노랑 귤 보라 연두 민트 브라운 올리브 코랄 블루그레이 라일락
 function hPath(x) {
   var n = String(x.name || '');
@@ -2189,7 +2194,8 @@ var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 function kcard(x, d) {
   var v = kv(d, x.id), ok = kok(d, x), g = x.goal || 0;
   var bar = g ? '<span class="kbar"><i style="width:' + Math.min(100, v / g * 100) + '%;background:' + dc(x) + '"></i></span>' : '';
-  return '<div class="kc' + (ok ? ' ok' : '') + '" data-k="' + x.id + '" style="background:' + x.color + '">' +
+  var sh = kShade(x, v);
+  return '<div class="kc' + (ok ? ' ok' : '') + (v && sh.dk ? ' dk' : '') + '" data-k="' + x.id + '" style="background:' + (v ? sh.bg : x.color) + '">' +
     '<span class="hi">' + hIco(x) + '</span>' +
     '<span class="m"><div>' + esc(x.name) + (ok && g ? '<em class="kok">' + CHK + '</em>' : '') + '</div>' + bar + '</span>' +
     '<span class="kn2"><b>' + v + '</b>' + (g ? '<small>/' + g + '</small>' : '') + '</span>' +
@@ -2222,13 +2228,14 @@ function ctHome() {
     var sub;
     if (p === 'd') sub = c0 ? (c > c0 ? '<span class="up">▲' + (c - c0) + '</span>' : c < c0 ? '<span class="dn">▼' + (c0 - c) + '</span>' : '어제와 같음') + '' : '어제 0';
     else { var a = c / nd, a0 = c0 / pnd; sub = '하루 ' + kavg(a) + (c0 ? (a > a0 + .05 ? ' <span class="up">▲</span>' : a < a0 - .05 ? ' <span class="dn">▼</span>' : '') : ''); }
-    return '<div class="kg' + (c ? ' on' : '') + '" data-kg="' + x.id + '"' + (c ? ' style="background:' + x.color + '"' : '') + '>' +
+    var sh = kShade(x, p === 'd' ? c : c / nd);
+    return '<div class="kg' + (c ? ' on' : '') + (c && sh.dk ? ' dk' : '') + '" data-kg="' + x.id + '"' + (c ? ' style="background:' + sh.bg + '"' : '') + '>' +
       '<div class="kgt">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></div><b>' + c + '<small>회</small></b><em>' + sub + '</em>' +
       (p === 'd' && c ? '<button class="kgm" data-kgm="' + x.id + '" aria-label="한 번 빼기">' + MINUS + '</button>' : '') + '</div>';
   }).join('');
   h += '<div class="card"><div class="ct">' + PP[0] + ' 요약<small>' + (p === 'd' ? bShort(TODAY) : bYmd(PP[1]) + ' ~ ' + bYmd(lastDay(PP[1], PP[2]))) + ' · 총 ' + tot + '회</small></div>' +
     bSeg('data-ksp', [['d', '오늘'], ['w', '주'], ['m', '월'], ['y', '연']], p) + '<div class="kgrid">' + cells + '</div>' +
-    '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (p === 'd' ? '카드를 누르면 +1 · − 로 빼기 · ▲▼ 어제 대비' : '하루 평균 · ▲▼ ' + PP[5] + ' 대비') + '</div></div>';
+    '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (p === 'd' ? '카드를 누르면 +1 · − 로 빼기 · 많을수록 진하게' : '하루 평균 · 많을수록 진하게 · ▲▼ ' + PP[5] + ' 대비') + '</div></div>';
   // 이번 주 날마다 총 횟수
   var wv = weekDays(R.ws).map(function (d) { return d > TODAY ? 0 : ks.reduce(function (q, x) { return q + kv(d, x.id); }, 0); });
   h += '<div class="card"><div class="ct">이번 주 기록<a href="#" data-go="week">자세히 ›</a></div>' + bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '<div class="legend" style="justify-content:flex-start">막대: 그날 전체 횟수</div></div>';
@@ -2267,7 +2274,7 @@ function ctWeek() {
     h += '<button class="hn kname" data-e="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span></button>';
     days.forEach(function (d) {
       var v = kv(d, x.id), ok = kok(d, x), g = x.goal || 1;
-      var st = v ? ' style="background:' + (ok ? dc(x) : x.color) + (ok ? ';color:#fff' : '') + '"' : '';
+      var sh = kShade(x, v), st = v ? ' style="background:' + sh.bg + (sh.dk ? ';color:#fff' : '') + '"' : '';
       h += '<button class="ck kcell' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '"' + st + '>' + (v || '') + '</button>';
     });
   });
