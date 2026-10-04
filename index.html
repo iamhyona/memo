@@ -729,7 +729,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v1';
+var APP_VER = '20261004v2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2501,6 +2501,15 @@ function bdHome() {
       return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
     }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">▲▼ ' + p[5] + ' 평균 대비</div></div>';
   }).join('');
+  // 2) 항목별 그래프
+  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
+  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
+  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
+  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
+  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
+  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
+    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
+    bChart(pts, x) + bSum(s, k, x) + '</div>';
   // 1) 최저 · 최고
   var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
   var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
@@ -2512,15 +2521,6 @@ function bdHome() {
       ss.forEach(function (r) { if (!lo || r[kk] < lo[kk]) lo = r; if (!hi || r[kk] > hi[kk]) hi = r; sum += r[kk]; });
       return '<tr><td>' + xx.n + '</td><td>' + cell(xx, lo) + '</td><td>' + cell(xx, hi) + '</td><td>' + (ss.length ? '<b>' + bfmt(xx, sum / ss.length) + bU(xx) + '</b>' : '<span class="mute">-</span>') + '</td></tr>';
     }).join('') + '</table></div>';
-  // 2) 항목별 그래프
-  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
-  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
-  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
-  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
-  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
-  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
-    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
-    bChart(pts, x) + bSum(s, k, x) + '</div>';
   // 3) 기간별 변화 (최근 기록 기준)
   var per = [['1주', 7], ['1개월', 30], ['3개월', 91], ['1년', 365], ['첫 기록', 99999]], ks = ['w', 'smm', 'bfm', 'pbf', 'vfl'], KSN = { w: '체중', smm: '골격근량', bfm: '체지방량', pbf: '체지방률', vfl: '내장지방' };
   h += '<div class="card"><div class="ct">기간별 변화<small>최근 측정 기준</small></div><table class="btab bper"><tr><th></th>' + ks.map(function (kk) { var u = bkOf(kk).u; return '<th>' + KSN[kk] + '<small>' + (u || '&nbsp;') + '</small></th>'; }).join('') + '</tr>' +
