@@ -584,6 +584,9 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .lbar .lbd { position:absolute; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:#2fb67c; border:2.5px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.18); }
 .lbar.bad .lbd { background:#f0506e; }
 .mlst li { align-items:center; } .mlst .n { padding-right:10px; } .mlst .mv { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; text-align:right; } .mlst .d2 { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; }
+/* 참고치 밖: 높음 빨강 · 낮음 오렌지 (2026.10.05) */
+.mf.l { background:#ff8a3d; } .mtab td.ml, .lbv b.ml, b.ml { color:#f07a2b; } b.mh { color:#e5484d; }
+.lbar.lo .lbf { background:#ffd3b4; } .lbar.lo .lbd { background:#ff8a3d; }
 </style>
 </head>
 <body>
@@ -792,7 +795,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zd';
+var APP_VER = '20261005ze';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3439,7 +3442,7 @@ function labBar(l) {
   else return '';
   p = Math.max(2, Math.min(98, p));
   var bad = p < a || p > b, fl = bad ? (p < a ? '<i class="lbf" style="left:' + p + '%;width:' + (a - p) + '%"></i>' : '<i class="lbf" style="left:' + b + '%;width:' + (p - b) + '%"></i>') : '';
-  return '<div class="lbar' + (bad ? ' bad' : '') + '"><i class="lbb" style="left:' + a + '%;width:' + (b - a) + '%"></i>' + fl + '<b class="lbd" style="left:' + p + '%"></b></div>';
+  return '<div class="lbar' + (bad ? (p < a ? ' bad lo' : ' bad') : '') + '"><i class="lbb" style="left:' + a + '%;width:' + (b - a) + '%"></i>' + fl + '<b class="lbd" style="left:' + p + '%"></b></div>';
 }
 function labTable(ls) {
   return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.slice().sort(labSort).map(function (l) {
@@ -3598,7 +3601,7 @@ function mdYear() {
       var l = o.last, f = labFlag(l), ko = labKo(o.n);
       return '<li class="tap" data-lid="' + esc(l.id) + '"><span class="n"><span class="mlt">' + esc(ko || o.n) + (ko ? '<small>' + esc(o.n) + '</small>' : '') + '</span>' +
         '<small class="dt">' + (l.ref ? '참고치 ' + esc(l.ref) + (l.unit ? ' ' + esc(l.unit) : '') : '참고치 없음') + ' · 검사 ' + o.t + '회' + (o.b ? ' 중 <b class="dn">' + o.b + '회 벗어남</b>' : '') + '</small></span>' +
-        '<span class="v"><b class="' + (f === 'H' || f === 'A' ? 'dn' : f === 'L' ? 'up' : '') + '">' + (f === 'H' ? '▲' : f === 'L' ? '▼' : '') + esc(l.val == null ? '-' : l.val) + '</b>' + (l.unit ? '<small>' + esc(l.unit) + '</small>' : '') + '<small class="dt" style="display:block;text-align:right">' + bYmd(l.d) + '</small></span></li>';
+        '<span class="v"><b class="' + (f === 'H' || f === 'A' ? 'mh' : f === 'L' ? 'ml' : '') + '">' + (f === 'H' ? '▲' : f === 'L' ? '▼' : '') + esc(l.val == null ? '-' : l.val) + '</b>' + (l.unit ? '<small>' + esc(l.unit) + '</small>' : '') + '<small class="dt" style="display:block;text-align:right">' + bYmd(l.d) + '</small></span></li>';
     }).join('') + '</ul>' : '<div class="empty">' + y + '년에는 참고치를 벗어난 항목이 없어요</div>') + '</div>';
   h += vListCard(y + '년 방문', vs);
   $('#main').innerHTML = h; bindYear(); bindMd();
