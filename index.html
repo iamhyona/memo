@@ -173,7 +173,8 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .hg .hs button { border:0; background:var(--chip); border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700; color:var(--sub); }
 .hg .ln { grid-column:1 / -1; border-top:1px solid var(--line); margin:4px -14px 12px; }
 .hg { row-gap:4px; } @media (min-width:420px) { .hg { row-gap:6px; } }
-.hg .ck { border-radius:4.5px; } .hg .hh { padding-bottom:0; } .hg .hn { padding:2px; }
+.hg .ck { border-radius:4.5px; }
+.card.wk { padding:18px 14px 8px; } .hg .hh { padding-bottom:0; } .hg .hn { padding:2px; }
 .hn { border:0; background:none; text-align:left; padding:8px 2px; min-width:0; display:flex; flex-direction:column; gap:2px; }
 .hn .n { display:flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; min-width:0; }
 .hn .n span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -586,7 +587,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004r9';
+var APP_VER = '20261004s1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1152,7 +1153,7 @@ function trDaily() {
 function trWeek() {
   var hs = S.D.habits, ws = monOf(S.day), we = addD(ws, 6), days = weekDays(ws);
   var h = weekNav();
-  h += '<div class="card wk"><div class="wh"><div class="t">주간 습관<span class="cnt">' + hs.length + '</span></div></div>';
+  h += '<div class="card wk">';
   h += '<div class="hg"><div class="hs"></div>';
   days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
   h += '<div class="ln"></div>';
@@ -2003,7 +2004,7 @@ function ctDaily() {
 function ctWeek() {
   var ks = S.D.counters, ws = monOf(S.day), we = addD(ws, 6), days = weekDays(ws);
   var h = weekNav();
-  h += '<div class="card wk"><div class="wh"><div class="t">주간 횟수<span class="cnt">' + ks.length + '</span></div></div>';
+  h += '<div class="card wk">';
   h += '<div class="hg"><div class="hs"></div>';
   days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
   h += '<div class="ln"></div>';
