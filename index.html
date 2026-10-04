@@ -732,7 +732,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v3';
+var APP_VER = '20261004v4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1020,9 +1020,9 @@ function renderMonth() {
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
   for (d = from; d <= to; d = addD(d, 1)) {
     var dots = S.D.habits.filter(function (x) { return on(d, x.id); }).map(function (x) { return '<i style="background:' + dc(x) + '"></i>'; }).join('');
-    h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + (d === S.sel ? ' sel' : '') + (diaryOf(d) ? ' dy' : '') + '"><span class="dnum">' + P(d).getDate() + '</span><span class="dts">' + dots + '</span></button>';
+    h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + (d === S.sel ? ' sel' : '') + '"><span class="dnum">' + P(d).getDate() + '</span><span class="dts">' + dots + '</span></button>';
   }
-  h += '</div><div class="legend">날짜를 누르면 그날 기록을 고칠 수 있어요 · <span class="dyk"></span> 일기</div>';
+  h += '</div><div class="legend">날짜를 누르면 그날 기록을 고칠 수 있어요</div>';
   if (S.sel && S.sel.slice(0, 7) === ym) {
     var dr = diaryOf(S.sel), cnt = S.D.habits.filter(function (x) { return on(S.sel, x.id); }).length;
     h += '<div class="selh"><b>' + mdw(S.sel) + '</b><small>' + cnt + '개 습관을 해냈어요</small></div><div class="dchk">' + S.D.habits.map(function (x) {
