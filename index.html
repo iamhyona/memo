@@ -427,6 +427,7 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .seg3 { display:flex; gap:6px; margin:0 0 12px; }
 .seg3 button { flex:1; border:0; background:var(--chip); border-radius:10px; padding:7px 0; font-size:13px; font-weight:600; color:var(--sub); }
 .seg3 button.on { background:var(--txt); color:#fff; }
+.bu2 { font-style:normal; font-size:11px; font-weight:600; color:var(--mute); margin-left:1px; }
 .bsum td b { display:block; font-size:14px; } .bsum td small { display:block; font-size:11px; font-weight:600; margin-top:2px; } .bsum td { padding:10px 0; }
 .bmm td b { display:block; font-size:14px; } .bmm td small { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; } .bmm td { padding:9px 0; }
 .ballo { width:100%; border:0; background:none; display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:700; color:var(--txt); padding:2px 0; }
@@ -722,7 +723,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u4';
+var APP_VER = '20261004u5';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2385,7 +2386,7 @@ function bLast(k) { var s = bSeries(k); return s.length ? s[s.length - 1] : null
 function bPrevVal(r, k) { var s = bSeries(k), p = null; for (var i = 0; i < s.length; i++) { if (s[i].id === r.id) break; p = s[i]; } return p ? p[k] : null; }
 function bAt(k, d) { var s = bSeries(k, null, d); return s.length ? s[s.length - 1] : null; }
 function bWhen(r) { return r.d.slice(2).replace(/-/g, '.') + (r.t ? ' ' + r.t : ''); }
-function bShort(d) { return d.slice(0, 4) === TODAY.slice(0, 4) ? d.slice(5).replace('-', '.') : d.slice(2).replace(/-/g, '.'); }
+function bShort(d) { return d.slice(2, 10).replace(/-/g, '.'); }   // 날짜는 항상 yy.mm.dd
 function bDelta(x, v, pv) {
   if (v == null || pv == null) return '<span class="mute">-</span>';
   var m = Math.pow(10, x.dp == null ? 1 : x.dp), d = Math.round((v - pv) * m) / m;
@@ -2430,7 +2431,7 @@ function bChart(pts, x) {
   var xl = '', step = n <= 7 ? 1 : Math.ceil(n / 5);
   pts.forEach(function (q, i) {
     if (i % step && i !== n - 1) return;
-    if (i !== n - 1 && n > 7 && n - 1 - i < step * .6) return;
+    if (i !== n - 1 && n > 7 && n - 1 - i < step) return;
     xl += '<text x="' + px(i) + '" y="' + (H - 6) + '" text-anchor="' + (n > 1 && i === 0 ? 'start' : n > 1 && i === n - 1 ? 'end' : 'middle') + '">' + q.l + '</text>';
   });
   return '<svg class="bch" viewBox="0 0 ' + W + ' ' + H + '">' + g + (n > 1 ? '<path d="' + d + '" fill="none" stroke="' + c + '" stroke-opacity=".35" stroke-width="2.2" stroke-linecap="round"/>' : '') + dots + xl + '</svg>';
@@ -2469,6 +2470,7 @@ function bTable(recs) {
 var BMK = ['w', 'smm', 'bfm', 'pbf', 'vfl', 'bmi'];
 var BPER = [['1m', '1개월'], ['3m', '3개월'], ['1y', '1년'], ['all', '전체']];
 function devName(d) { d = String(d || ''); return /^H20/i.test(d) ? '인바디다이얼' : /^\d/.test(d) ? 'InBody ' + d : /^etc$/i.test(d) ? '기타' : d; }
+function bU(x) { return x.u && x.k !== 'vfl' && x.k !== 'bmi' ? '<em class="bu2">' + x.u + '</em>' : ''; }
 function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); }
 // 묶어서 평균 (주·월) — 점이 너무 많을 때
 function bAgg(s, k, by) {
@@ -2487,19 +2489,19 @@ function bdHome() {
   var wX = bkOf('w'), sX = bkOf('smm'), pX = bkOf('pbf');
   h += '<div class="card"><div class="ct">요약<small>평균 · 지난 기간 대비</small></div><table class="btab bsum"><tr><th></th><th>측정</th><th>체중</th><th>골격근량</th><th>체지방률</th></tr>' + SP.map(function (p) {
     var n2 = bList().filter(function (r) { return r.d >= p[1] && r.d <= p[2]; }).length;
-    var cellA = function (xx) { var a1 = avgOf(xx.k, p[1], p[2]), a0 = avgOf(xx.k, p[3], p[4]); return '<td>' + (a1 == null ? '<span class="mute">-</span>' : '<b>' + bfmt(xx, a1) + '</b><small>' + (a0 == null ? p[5] + ' -' : bDelta(xx, a1, a0)) + '</small>') + '</td>'; };
+    var cellA = function (xx) { var a1 = avgOf(xx.k, p[1], p[2]), a0 = avgOf(xx.k, p[3], p[4]); return '<td>' + (a1 == null ? '<span class="mute">-</span>' : '<b>' + bfmt(xx, a1) + bU(xx) + '</b><small>' + (a0 == null ? p[5] + ' -' : bDelta(xx, a1, a0)) + '</small>') + '</td>'; };
     return '<tr><td>' + p[0] + '</td><td>' + n2 + '회</td>' + cellA(wX) + cellA(sX) + cellA(pX) + '</tr>';
   }).join('') + '</table></div>';
   // 1) 최저 · 최고
   var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
   var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
   var cnt = bList().filter(function (r) { return (!rg[0] || r.d >= rg[0]) && (!rg[1] || r.d <= rg[1]); }).length;
-  var cell = function (xx, r) { return r ? '<b>' + bfmt(xx, r[xx.k]) + '</b><small>' + bShort(r.d) + '</small>' : '<span class="mute">-</span>'; };
+  var cell = function (xx, r) { return r ? '<b>' + bfmt(xx, r[xx.k]) + bU(xx) + '</b><small>' + bShort(r.d) + '</small>' : '<span class="mute">-</span>'; };
   h += '<div class="card"><div class="ct">최저 · 최고<small>' + rg[2] + ' · 측정 ' + cnt + '회</small></div>' + bSeg('data-bmm', [['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']], bm) +
     '<table class="btab bmm"><tr><th></th><th>최저</th><th>최고</th><th>평균</th></tr>' + BMK.map(function (kk) {
       var xx = bkOf(kk), ss = bSeries(kk, rg[0], rg[1]), lo = null, hi = null, sum = 0;
       ss.forEach(function (r) { if (!lo || r[kk] < lo[kk]) lo = r; if (!hi || r[kk] > hi[kk]) hi = r; sum += r[kk]; });
-      return '<tr><td>' + xx.n + (xx.u && kk !== 'vfl' ? ' <small>' + xx.u + '</small>' : '') + '</td><td>' + cell(xx, lo) + '</td><td>' + cell(xx, hi) + '</td><td>' + (ss.length ? '<b>' + bfmt(xx, sum / ss.length) + '</b>' : '<span class="mute">-</span>') + '</td></tr>';
+      return '<tr><td>' + xx.n + '</td><td>' + cell(xx, lo) + '</td><td>' + cell(xx, hi) + '</td><td>' + (ss.length ? '<b>' + bfmt(xx, sum / ss.length) + bU(xx) + '</b>' : '<span class="mute">-</span>') + '</td></tr>';
     }).join('') + '</table></div>';
   // 2) 항목별 그래프
   var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
