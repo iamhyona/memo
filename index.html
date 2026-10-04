@@ -427,6 +427,7 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .seg3 { display:flex; gap:6px; margin:0 0 12px; }
 .seg3 button { flex:1; border:0; background:var(--chip); border-radius:10px; padding:7px 0; font-size:13px; font-weight:600; color:var(--sub); }
 .seg3 button.on { background:var(--txt); color:#fff; }
+.st3 .lo { color:#e5484d; } .st3 .hi { color:#3182f6; } .st3 .sl { color:var(--faint); font-weight:500; margin:0 5px; } .st3 .mm { font-size:17px; } .st3 .mm small.bu { margin-left:1px; font-size:11px; }
 .bu2 { font-style:normal; font-size:11px; font-weight:600; color:var(--mute); margin-left:1px; }
 .bsum td b { display:block; font-size:14px; } .bsum td small { display:block; font-size:11px; font-weight:600; margin-top:2px; } .bsum td { padding:10px 0; }
 .bmm td b { display:block; font-size:14px; }
@@ -726,7 +727,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u8';
+var APP_VER = '20261004u9';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2431,7 +2432,7 @@ function bChart(pts, x) {
     if (lab || last || i === ix || i === iy) s += '<text class="vl" x="' + q[0] + '" y="' + (q[1] - 9) + '" text-anchor="middle">' + bfmt(x, pts[i].v) + '</text>';
     return s;
   }).join('');
-  var xl = '', step = n <= 7 ? 1 : Math.ceil(n / 5);
+  var xl = '', step = n <= 5 ? 1 : Math.ceil((n - 1) / 4);   // 날짜가 겹치지 않게 최대 5개
   pts.forEach(function (q, i) {
     if (i % step && i !== n - 1) return;
     if (i !== n - 1 && n > 7 && n - 1 - i < step) return;
@@ -2443,9 +2444,9 @@ function bChart(pts, x) {
 function bSum(s, k, x) {
   if (!s.length) return '';
   var vs = s.map(function (r) { return r[k]; }), avg = vs.reduce(function (a, b) { return a + b; }, 0) / vs.length;
-  return '<div class="st3" style="margin-top:14px">' + stat('변화', s.length > 1 ? bDelta(x, vs[vs.length - 1], vs[0]) : '<span class="mute">-</span>', s.length > 1 ? bfmt(x, vs[0]) + ' → ' + bfmt(x, vs[vs.length - 1]) : '측정 1회') +
+  return '<div class="st3" style="margin-top:14px;grid-template-columns:.9fr .9fr 1.4fr">' + stat('변화', s.length > 1 ? bDelta(x, vs[vs.length - 1], vs[0]) : '<span class="mute">-</span>', s.length > 1 ? bfmt(x, vs[0]) + ' → ' + bfmt(x, vs[vs.length - 1]) : '측정 1회') +
     stat('평균', bfmt(x, avg) + '<small class="bu">' + x.u + '</small>', s.length + '회 측정') +
-    stat('최저 · 최고', bfmt(x, Math.min.apply(null, vs)) + '–' + bfmt(x, Math.max.apply(null, vs))) + '</div>';
+    stat('최저 / 최고', '<span class="mm"><span class="lo">' + bfmt(x, Math.min.apply(null, vs)) + bU2(x) + '</span><span class="sl">/</span><span class="hi">' + bfmt(x, Math.max.apply(null, vs)) + bU2(x) + '</span></span>') + '</div>';
 }
 // 항목 고르기 칩 (기간 안에 기록이 있는 항목만)
 function bKeys(from, to) { return BK.filter(function (x) { return !x.seg && bSeries(x.k, from, to).length; }).map(function (x) { return x.k; }); }
@@ -2474,6 +2475,7 @@ var BMK = ['w', 'smm', 'bfm', 'pbf', 'vfl', 'bmi'];
 var BPER = [['1m', '1개월'], ['3m', '3개월'], ['1y', '1년'], ['all', '전체']];
 function devName(d) { d = String(d || ''); return /^H20/i.test(d) ? '인바디다이얼' : /^\d/.test(d) ? 'InBody ' + d : /^etc$/i.test(d) ? '기타' : d; }
 function bU(x) { return x.u && x.k !== 'bmi' ? '<em class="bu2">' + x.u + '</em>' : ''; }
+function bU2(x) { return x.u && x.k !== 'bmi' ? '<small class="bu">' + x.u + '</small>' : ''; }
 function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); }
 // 묶어서 평균 (주·월) — 점이 너무 많을 때
 function bAgg(s, k, by) {
