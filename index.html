@@ -427,6 +427,8 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .nav2 { margin:6px 0 12px; min-height:36px; }
 .nav2 .lbl { font-size:16px; font-weight:800; padding:0 4px; letter-spacing:-0.01em; }
 .dpw { position:relative; cursor:pointer; }
+.rxn { flex-direction:column; align-items:flex-start !important; gap:2px; } .rxn b { font-size:15px; color:var(--txt); font-weight:700; } .rxn small { font-size:12px; color:var(--mute); } .rxn em { font-style:normal; font-size:12.5px; color:var(--sub); }
+.rxoff .rxn b { color:var(--mute); }
 .lsel { display:inline-flex; align-items:center; } .lsel .dpk { color:var(--txt); }
 #ltc { transition:transform .12s, opacity .12s; } #ltc.swl { transform:translateX(-24px); opacity:.4; } #ltc.swr { transform:translateX(24px); opacity:.4; }
 .dpw::after { content:''; display:inline-block; width:5px; height:5px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); margin:0 2px 4px 8px; opacity:.35; vertical-align:middle; }
@@ -738,7 +740,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w1';
+var APP_VER = '20261004w2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -759,7 +761,7 @@ function hdDate() { if (!$('#hdt')) return; var d = P(TODAY); $('#hdt').textCont
 
 /* ───── 데이터 ───── */
 function setData(d) {
-  d.notes = d.notes || {}; d.body = d.body || []; d.workouts = d.workouts || []; d.visits = d.visits || []; d.labs = d.labs || []; d.counters = d.counters || []; d.counts = d.counts || {};
+  d.notes = d.notes || {}; d.body = d.body || []; d.workouts = d.workouts || []; d.visits = d.visits || []; d.labs = d.labs || []; d.rx = d.rx || []; d.counters = d.counters || []; d.counts = d.counts || {};
   S.D = d; S.ck = {}; S.kc = {};
   Object.keys(d.counts).forEach(function (k) { S.kc[k] = {}; Object.keys(d.counts[k]).forEach(function (h) { S.kc[k][h] = +d.counts[k][h] || 0; }); });
   (S.kfl || []).concat(S.kq).forEach(function (o) { kraw(o.d, o.h, o.n); });
@@ -773,7 +775,7 @@ function saveCache() {
   Object.keys(S.ck).forEach(function (k) { var a = Object.keys(S.ck[k]); if (a.length) checks[k] = a; });
   var counts = {};
   Object.keys(S.kc).forEach(function (k) { if (Object.keys(S.kc[k]).length) counts[k] = S.kc[k]; });
-  var d = { habits: S.D.habits, checks: checks, counters: S.D.counters || [], counts: counts, body: S.D.body || [], workouts: S.D.workouts || [], visits: S.D.visits || [], labs: S.D.labs || [], diary: S.D.diary, cats: S.D.cats, url: S.D.url, notes: S.D.notes || {},
+  var d = { habits: S.D.habits, checks: checks, counters: S.D.counters || [], counts: counts, body: S.D.body || [], workouts: S.D.workouts || [], visits: S.D.visits || [], labs: S.D.labs || [], rx: S.D.rx || [], diary: S.D.diary, cats: S.D.cats, url: S.D.url, notes: S.D.notes || {},
     photos: S.D.photos.filter(function (p) { return p.fid; }).map(function (p) { return { id: p.id, d: p.d, cat: p.cat, fid: p.fid, memo: p.memo, ts: p.ts }; }) };
   ls.set('memo:data', JSON.stringify(d));
 }
@@ -910,7 +912,7 @@ function syncView(v) {
   if (v === 'month') { S.y = +S.day.slice(0, 4); S.m = +S.day.slice(5, 7); S.sel = null; }
   if (v === 'year') S.yy = +S.day.slice(0, 4);
 }
-var NAVL = { _: ['HOME', 'DAY', 'WEEK', 'MONTH', 'YEAR'], medical: ['홈', '기록', '항목', '달력', '요약'] };
+var NAVL = { _: ['HOME', 'DAY', 'WEEK', 'MONTH', 'YEAR'], medical: ['홈', '처방', '항목', '달력', '요약'] };
 $$('#nav button').forEach(function (b) { b.onclick = function () { S.bAll = 0; if (b.dataset.v === 'daily') S.mdl = true; S.view = b.dataset.v; syncView(S.view); ls.set('memo:view', S.view); window.scrollTo(0, 0); render(); }; });
 $$('#mode button').forEach(function (b) { b.onclick = function () { S.mode = b.dataset.m; if (S.view === 'all') S.view = 'home'; ls.set('memo:mode', S.mode); ls.set('memo:view', S.view); window.scrollTo(0, 0); render(); }; });
 $('#brand').onclick = function () { S.view = 'all'; S.day = TODAY; ls.set('memo:view', 'all'); window.scrollTo(0, 0); render(); };
@@ -1751,7 +1753,7 @@ $('#fab').onclick = function () {
   else if (S.mode === 'feed' || S.mode === 'food') openUpload(null);
   else if (S.mode === 'body') openBody(null);
   else if (S.mode === 'workout') openWorkout(null);
-  else if (S.mode === 'medical') openVisit(null);
+  else if (S.mode === 'medical') { if (S.view === 'daily' && S.mdl !== false) openRx(null); else openVisit(null); }
   else openDiary(S.view === 'daily' ? S.day : TODAY);
 };
 
@@ -3169,14 +3171,14 @@ function mdNav() {
     '<button id="nP" aria-label="이전 기록"' + (pv ? ' data-go="' + pv.d + '"' : ' disabled') + '>‹</button><button id="nN" aria-label="다음 기록"' + (nx ? ' data-go="' + nx.d + '"' : ' disabled') + '>›</button></div></div>';
 }
 function mdDaily() {
-  if (S.mdl !== false) return mdList();
+  if (S.mdl !== false) return mdRx();
   var day = S.day, vs = vIn(day, day), h = mdNav();
   var nx = vList().filter(function (v) { return v.next === day; });
   if (nx.length) h += '<div class="card"><div class="ct">이 날 예약</div><ul class="brow">' + nx.map(function (v) { return '<li class="tap" data-bd="' + v.d + '"><span class="n">' + vTitle(v) + '</span><span class="d"><span class="mute">' + bShort(v.d) + ' 방문 때 잡은 예약</span></span></li>'; }).join('') + '</ul></div>';
   if (!vs.length) h += '<div class="card empty">이 날은 병원 기록이 없어요<br><button class="lnk" id="vAdd">기록 추가</button></div>';
   h += vs.map(vCard).join('');
   $('#main').innerHTML = h; bindMd();
-  $('#mL').onclick = function () { S.mdl = true; window.scrollTo(0, 0); render(); };
+  $('#mL').onclick = function () { S.view = 'week'; ls.set('memo:view', 'week'); window.scrollTo(0, 0); render(); };
   ['#nP', '#nN'].forEach(function (q) { var b = $(q); if (b.dataset.go) b.onclick = function () { S.day = b.dataset.go; window.scrollTo(0, 0); render(); }; });
 }
 function mdList() {
@@ -3208,6 +3210,9 @@ function mdWeek() {
     var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
     return '<li class="tap' + (n === it ? ' on' : '') + '" data-lt2="' + esc(n) + '"><span class="n">' + labName(l) + '</span><span class="v"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b><small>' + esc(u) + '</small></span><span class="d">' + flagHtml(f) + '<span class="mute">' + ss.length + '회</span></span></li>';
   }).join('') + '</ul></div>';
+  var vsA = vList(), ysA = {}; vsA.forEach(function (v) { (ysA[v.d.slice(0, 4)] = ysA[v.d.slice(0, 4)] || []).push(v); });
+  h += '<div class="sec">검사일 · 병원 기록</div>';
+  Object.keys(ysA).sort().reverse().forEach(function (y) { h += vListCard(y + '년', ysA[y]); });
   $('#main').innerHTML = h; bindMd();
   $$('[data-lt2]').forEach(function (b) { b.onclick = function () { S.lt = b.dataset.lt2; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }; });
   // 항목 이름 누르면 고르기 · 카드를 옆으로 밀면 이전/다음 항목
@@ -3251,6 +3256,72 @@ function mdYear() {
   h += vListCard(y + '년 방문', vs);
   $('#main').innerHTML = h; bindYear(); bindMd();
 }
+
+
+/* ───── MEDICAL 처방: 복용 중인 약을 진료과별로 (2026.10.04) — 'Daily Archive_병원 기록' 시트 '처방' 탭 ───── */
+function rxOn(r) { return !r.end || r.end >= TODAY; }
+function rxRow(r) {
+  var sub = [r.dose, r.how].filter(Boolean).join(' · ');
+  return '<li class="tap" data-rx="' + r.id + '"><span class="n rxn"><b>' + esc(r.name || '약') + '</b>' + (r.ing ? '<small>' + esc(r.ing) + '</small>' : '') + (sub ? '<em>' + esc(sub) + '</em>' : '') + '</span>' +
+    '<span class="d"><span class="mute">' + (rxOn(r) ? bShort(r.d) + '~' : bShort(r.d) + '~' + bShort(r.end)) + '</span></span></li>';
+}
+function mdRx() {
+  var L = (S.D.rx || []).slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }), on = L.filter(rxOn), off = L.filter(function (r) { return !rxOn(r); });
+  var h = '<div class="hm"><small>MEDICAL</small><b>처방 · 복용 중인 약</b></div>';
+  if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">복용 중인 약이 아직 없어요<br><button class="lnk" id="rxAdd">약 추가</button></div>'; $('#rxAdd').onclick = function () { openRx(null); }; return; }
+  var depts = {}, order = [];
+  on.forEach(function (r) { var k = r.dept || '기타'; if (!depts[k]) { depts[k] = []; order.push(k); } depts[k].push(r); });
+  h += '<div class="mini">' + stat('복용 중', on.length + '개') + stat('진료과', order.length + '곳') + stat('지난 약', off.length + '개') + '</div>';
+  order.forEach(function (k) {
+    var hs = []; depts[k].forEach(function (r) { if (r.hosp && hs.indexOf(r.hosp) < 0) hs.push(r.hosp); });
+    h += '<div class="card"><div class="ct"><span class="wct"><span class="mk2">' + esc(k) + '</span>' + esc(hs.join(', ')) + '</span><small>' + depts[k].length + '개</small></div><ul class="brow">' + depts[k].map(rxRow).join('') + '</ul></div>';
+  });
+  if (off.length) h += '<div class="card"><div class="ct">지난 약<small>복용 끝 · ' + off.length + '개</small></div><ul class="brow rxoff">' + off.map(rxRow).join('') + '</ul></div>';
+  $('#main').innerHTML = h;
+  $$('[data-rx]').forEach(function (b) { b.onclick = function () { openRx(b.dataset.rx); }; });
+}
+// 약 추가 · 수정 (시트 하나 재사용)
+var RXB = null;
+(function () {
+  var d = document.createElement('div'); d.className = 'bs'; d.id = 'rxb';
+  d.innerHTML = '<h3 id="rxT">약 추가</h3>' +
+    '<div class="frow"><div class="f"><label>진료과</label><input id="rxDp" list="rxDl" placeholder="예: 신장내과" maxlength="20"><datalist id="rxDl"></datalist></div><div class="f"><label>병원</label><input id="rxH" list="vbHl" placeholder="병원 이름" maxlength="30"></div></div>' +
+    '<div class="frow"><div class="f"><label>약 이름</label><input id="rxN" placeholder="예: 프레드니솔론정 5mg" maxlength="40"></div></div>' +
+    '<div class="frow"><div class="f"><label>성분 · 효능 (선택)</label><input id="rxI" placeholder="예: 스테로이드 · 염증 억제" maxlength="60"></div></div>' +
+    '<div class="frow"><div class="f"><label>용량</label><input id="rxDo" placeholder="예: 1정" maxlength="20"></div><div class="f"><label>복용법</label><input id="rxHw" placeholder="예: 하루 2번 아침·저녁 식후" maxlength="40"></div></div>' +
+    '<div class="frow"><div class="f"><label>시작일</label><input id="rxD" type="date"></div><div class="f"><label>종료일 (끊으면)</label><input id="rxE" type="date"></div></div>' +
+    '<div class="frow"><div class="f"><label>메모</label><input id="rxM" placeholder="한 줄 메모 (선택)"></div></div>' +
+    '<div class="acts"><button class="del" id="rxX">삭제</button><button class="save" id="rxS">저장</button></div>';
+  document.body.appendChild(d);
+})();
+function openRx(id) {
+  var r = id ? (S.D.rx || []).filter(function (x) { return x.id === id; })[0] : null;
+  RXB = { id: r ? r.id : null };
+  $('#rxT').textContent = r ? '약 수정' : '약 추가';
+  var ds = {}; (S.D.rx || []).forEach(function (x) { if (x.dept) ds[x.dept] = 1; }); (S.D.visits || []).forEach(function (x) { if (x.dept) ds[x.dept] = 1; });
+  $('#rxDl').innerHTML = Object.keys(ds).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
+  var hs = {}; (S.D.visits || []).concat(S.D.rx || []).forEach(function (x) { if (x.hosp) hs[x.hosp] = 1; });
+  if ($('#vbHl')) $('#vbHl').innerHTML = Object.keys(hs).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
+  $('#rxDp').value = r ? r.dept || '' : ''; $('#rxH').value = r ? r.hosp || '' : ''; $('#rxN').value = r ? r.name || '' : ''; $('#rxI').value = r ? r.ing || '' : '';
+  $('#rxDo').value = r ? r.dose || '' : ''; $('#rxHw').value = r ? r.how || '' : ''; $('#rxD').value = r ? r.d : TODAY; $('#rxE').value = r ? r.end || '' : ''; $('#rxM').value = r ? r.memo || '' : '';
+  $('#rxX').classList.toggle('hide', !r); unsure($('#rxX'));
+  openBs('#rxb');
+}
+$('#rxS').onclick = function () {
+  var rec = { id: RXB.id || uid('r'), d: $('#rxD').value, dept: $('#rxDp').value.trim(), hosp: $('#rxH').value.trim(), name: $('#rxN').value.trim(), ing: $('#rxI').value.trim(),
+    dose: $('#rxDo').value.trim(), how: $('#rxHw').value.trim(), end: $('#rxE').value || '', memo: $('#rxM').value.trim() };
+  if (!rec.name) return toast('약 이름을 입력해 주세요');
+  if (!rec.d) return toast('시작일을 선택해 주세요');
+  S.D.rx = (S.D.rx || []).filter(function (x) { return x.id !== rec.id; }).concat([rec]);
+  closeBs(); render(); saveCache(); toast('저장했어요');
+  call('appRec', S.pin, 'rx', rec).catch(function (e) { toast(errMsg(e)); load(); });
+};
+sure($('#rxX'), function () {
+  var id = RXB.id;
+  S.D.rx = (S.D.rx || []).filter(function (x) { return x.id !== id; });
+  closeBs(); render(); saveCache(); toast('삭제했어요');
+  call('appRecDel', S.pin, 'rx', id).catch(function (e) { toast(errMsg(e)); load(); });
+});
 
 /* 병원 기록 추가·수정 + 혈액검사 캡처 → 항목 표 */
 // 검사 결과 캡처 글자 → 항목 표 (한 줄에 한 항목 / 칸마다 한 줄 / 열마다 묶인 경우 모두)
