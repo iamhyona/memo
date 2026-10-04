@@ -558,7 +558,9 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .kg.dk .kgt, .kg.dk b, .kg.dk b small, .kg.dk em, .kg.dk em .up, .kg.dk em .dn { color:#fff; } .kg.dk .hico { filter:brightness(0) invert(1); }
 .kc { padding:7px 8px 7px 10px; margin-bottom:6px; border-radius:15px; } .kc .hi { width:31px; height:31px; border-radius:9px; } .kc .hi .hico { width:19px; height:19px; } .kc .m div { font-size:15px; } .kc .kn2 b { font-size:20px; } .kc .kb { width:31px; height:31px; } .kc .kb svg { width:14px; height:14px; }
 .kc.dk { color:#fff; } .kc.dk .kn2 small { color:rgba(255,255,255,.8); }
-.wctl { padding-top:14px; padding-bottom:14px; } .wctl .seg3 { margin:0; } .wctl .seg3 + .seg3 { margin-top:8px; }
+.wctl2 { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 2px 12px; }
+.wps { display:flex; background:#e5e8eb; border-radius:10px; padding:3px; } .wps button { border:0; background:none; font-size:13px; font-weight:700; color:#8b95a1; padding:6px 13px; border-radius:8px; } .wps button.on { background:#fff; color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.wmt { display:flex; gap:13px; } .wmt button { border:0; background:none; font-size:13.5px; font-weight:700; color:#b0b8c1; padding:6px 0 5px; } .wmt button.on { color:var(--txt); box-shadow:inset 0 -2px 0 var(--txt); }
 </style>
 </head>
 <body>
@@ -767,7 +769,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x6';
+var APP_VER = '20261005x7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2990,7 +2992,8 @@ function wTot(t, R) {
 // WORKOUT HOME 분석: 운동 종류별 카드 (주·월·연 · 항목 단추는 위에서 한 번에) — 2026.10.05
 function wAnalysis(all) {
   var types = wTypes(all).map(function (o) { return o.n; }), p = S.wp || 'm', k = S.wmk || 'dist';
-  var h = '<div class="card wctl">' + bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], p) + bSeg('data-wmk', WMET, k) + '</div>';
+  var h = '<div class="wctl2"><div class="wps">' + [['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-wp="' + o[0] + '" class="' + (o[0] === p ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="wmt">' + WMET.map(function (o) { return '<button data-wmk="' + o[0] + '" class="' + (o[0] === k ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
   types.forEach(function (t) { h += wTypeCard(t, p, k); });
   return h;
 }
