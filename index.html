@@ -563,10 +563,10 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .wps { display:flex; background:#e5e8eb; border-radius:10px; padding:3px; } .wps button { border:0; background:none; font-size:13px; font-weight:700; color:#8b95a1; padding:6px 13px; border-radius:8px; } .wps button.on { background:#fff; color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.08); }
 .wmt { display:flex; gap:13px; } .wmt button { border:0; background:none; font-size:13.5px; font-weight:700; color:#b0b8c1; padding:6px 0 5px; } .wmt button.on { color:var(--txt); box-shadow:inset 0 -2px 0 var(--txt); }
 .bper td i.ar { font-style:normal; font-size:.8em; margin-right:2px; vertical-align:1px; }
-.ymx { margin-top:4px; } .ymh, .ymr { display:grid; grid-template-columns:76px repeat(12,1fr); gap:2px; align-items:center; }
+.ymx { margin-top:4px; display:flex; flex-direction:column; gap:3px; } .ymh, .ymr { display:grid; grid-template-columns:76px repeat(12,1fr); gap:3px; align-items:center; }
 .ymh b { font-size:10px; color:var(--faint); text-align:center; font-weight:600; padding-bottom:4px; } .ymh b.cur { color:var(--txt); font-weight:800; }
-.ymr { padding:3px 0; } .ymr .n { display:flex; align-items:center; gap:4px; min-width:0; } .ymr .n em { font-style:normal; font-size:11.5px; letter-spacing:-0.04em; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ymr i { font-style:normal; height:24px; border-radius:5px; background:#f2f4f6; font-size:8.5px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
+.ymr { padding:0; } .ymr .n { display:flex; align-items:center; gap:4px; min-width:0; } .ymr .n em { font-style:normal; font-size:11.5px; letter-spacing:-0.04em; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ymr i { font-style:normal; aspect-ratio:1; height:auto; border-radius:5px; background:#f2f4f6; font-size:8.5px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
 .kgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .kgrid2 .kc { margin:0; padding:8px 6px 8px 8px; gap:6px; border-radius:14px; min-width:0; }
 .kgrid2 .kc .hi { width:28px; height:28px; border-radius:8px; } .kgrid2 .kc .hi .hico { width:17px; height:17px; }
@@ -780,7 +780,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y8';
+var APP_VER = '20261005y9';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1151,7 +1151,7 @@ function renderYear() {
     hsY.map(function (x) {
       return '<div class="ymr tapd" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<em>' + esc(x.name) + '</em></span>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (m) {
         var rr = mrate(x, m);
-        return '<i' + (rr ? ' style="background:' + kMix('#f2f4f6', deep(x.color), Math.max(.18, rr) * .85) + (rr >= .55 ? ';color:#fff' : '') + '"' : rr == null ? ' class="fu"' : '') + '>' + (rr != null ? pct(rr) : '') + '</i>';
+        return '<i' + (rr ? ' style="background:' + kMix('#f2f4f6', deep(x.color), .12 + rr * .78) + (rr >= .6 ? ';color:#fff' : '') + '"' : rr == null ? ' class="fu"' : '') + '>' + (rr != null ? pct(rr) : '') + '</i>';
       }).join('') + '</div>';
     }).join('') + '</div>';
   h += '</div>';
