@@ -487,6 +487,15 @@ header .mtabs button { flex:none; padding:12px 13px 10px; }
 textarea.dx.sm2 { min-height:96px; height:96px; }
 #wbDrop small, #vbDrop small { font-weight:500; font-size:12px; }
 #wbC { margin-bottom:6px; }
+/* 검사 항목 설명 (2026.10.04) */
+.mtab .lk { display:block; font-weight:700; color:var(--txt); font-size:14px; } .mtab .le { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; }
+.mtab td { vertical-align:middle; } .mtab tr[data-lid] { cursor:pointer; }
+.lbh small { font-size:13px; color:var(--mute); font-weight:600; } .lbh h3 { margin:2px 0 14px; }
+.lbv { display:flex; align-items:baseline; gap:6px; } .lbv b { font-size:34px; font-weight:800; letter-spacing:-0.02em; } .lbv span { font-size:15px; color:var(--mute); font-weight:600; } .lbv .mf { align-self:center; margin-left:4px; }
+.lbv b.mh { color:#e5484d; } .lbv b.ml { color:#3182f6; }
+.lbr { font-size:13px; color:var(--sub); margin:6px 0 4px; }
+.lbd p { margin:4px 2px 0; font-size:15px; line-height:1.65; color:var(--txt); }
+#lb .sub2 { margin-top:18px; }
 </style>
 </head>
 <body>
@@ -579,6 +588,9 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
   <button class="bmore" id="vbLa">+ 항목 추가</button>
   <div class="acts"><button class="del" id="vbX">삭제</button><button class="save" id="vbS">저장</button></div>
 </div>
+
+<!-- 검사 항목 설명 -->
+<div class="bs" id="lb"><div id="lbB"></div></div>
 
 <!-- 사진 올리기·수정 -->
 <div class="bs" id="ph">
@@ -692,7 +704,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t3';
+var APP_VER = '20261004t4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2800,50 +2812,150 @@ sure($('#wbX'), function () {
   call('appRecDel', S.pin, 'workout', id).catch(function (e) { toast(errMsg(e)); load(); });
 });
 
+/* 검사 항목 사전: [표준 이름, 한글 이름, 단위, 앞글자(잘린 이름도 찾게), 무슨 검사, 높으면, 낮으면]  · 앞글자 '=' 는 정확히 같을 때만 */
+var LABS = [
+  ['Anti-dsDNA', '항 DNA 항체', 'IU/mL', ['antidna', 'antids', 'anti-dna', 'anti-ds', 'dsdna'], '루푸스(전신홍반루푸스)에 특이적인 자가항체예요. 질환 활동성과 함께 오르내리는 경우가 많아 추적 검사로 봐요.', '자가면역 활동이 늘었을 때 올라갈 수 있어요.', ''],
+  ['WBC (Urine)', '소변 백혈구', '/HPF', ['wbc(u'], '현미경으로 본 소변 속 백혈구 수예요.', '요로감염·방광염이나 신장·요로의 염증이 있을 때 늘어요.', ''],
+  ['RBC (Urine)', '소변 적혈구', '/HPF', ['rbc(u'], '현미경으로 본 소변 속 적혈구(혈뇨) 수예요.', '요로 출혈·결석·사구체(신장 거름망) 질환, 생리 중 채취 등에서 늘어요.', ''],
+  ['Glucose (Urine)', '요당', '', ['glucose(', 'glu(u'], '혈당이 아주 높을 때 소변으로 당이 나오는지 보는 시험지 검사예요.', '고혈당일 때 양성이 될 수 있어요.', ''],
+  ['Bilirubin (Urine)', '소변 빌리루빈', '', ['bilirubin('], '간·담도 문제를 보는 소변 시험지 검사예요.', '간·담도 질환에서 양성이 될 수 있어요.', ''],
+  ['Protein (Urine)', '소변 단백(시험지)', '', ['protein(', 'pro(u'], '소변으로 단백이 새는지 보는 시험지 검사예요.', '양성이면 단백뇨 정밀 확인(PC ratio 등)이 필요해요.', ''],
+  ['Creatinine (Urine)', '소변 크레아티닌', 'mg/dL', ['creatinine(u', 'ucr'], '소변 농도를 보정하는 값이에요. 단독으론 의미가 적고 단백/크레아티닌 비(PC ratio) 계산에 써요.', '', ''],
+  ['Total Protein (Urine)', '소변 단백량', 'mg/dL', ['totalprotein(u', 'upro'], '소변으로 나온 단백의 양이에요.', '단백뇨가 있을 때 올라가요.', ''],
+  ['PC ratio', '소변 단백/크레아티닌 비', 'mg/mg', ['pcratio', 'upcr', 'proteincreat'], '하루 소변 단백 배출량을 추정하는 값이에요. 보통 0.2 미만이 정상이에요.', '신장 사구체(거름망) 손상으로 단백이 샐 때 올라가요.', ''],
+  ['Bacteria (Urine)', '소변 세균', '', ['bacteria'], '현미경으로 본 소변 속 세균이에요.', '요로감염이나 채취할 때 오염이 있으면 보여요.', ''],
+  ['Color (Urine)', '소변 색', '', ['color'], '소변 색깔이에요. 노란색이 일반적이에요.', '', ''],
+  ['Leukocyte esterase', '소변 백혈구 반응', '', ['leukocyt', 'leu(u', 'wbcesterase'], '백혈구가 내는 효소를 시험지로 본 검사예요. +가 많을수록 백혈구가 많아요.', '양성이면 요로감염·염증을 시사해요.', ''],
+  ['Ketone (Urine)', '소변 케톤', '', ['ketone'], '지방을 에너지로 쓸 때 생기는 물질이에요.', '공복이 길거나 저탄수 식사, 구토, 혈당 조절이 안 될 때 양성이 돼요.', ''],
+  ['Specific Gravity', '소변 비중', '', ['specificg', 's.g', 'sg(u'], '소변이 얼마나 진한지예요.', '수분이 부족하면(탈수) 높아져요.', '물을 많이 마셨거나 신장의 농축 기능이 떨어지면 낮아져요.'],
+  ['Occult Blood (Urine)', '소변 잠혈', '', ['occult', 'blood(u'], '눈에 안 보이는 피가 소변에 있는지 보는 시험지 검사예요.', '양성이면 혈뇨 — 결석·감염·사구체 질환·생리 등을 확인해요.', ''],
+  ['pH (Urine)', '소변 산도', '', ['ph(', 'ph(u'], '소변의 산성도예요. 식사와 대사에 따라 변해요.', '알칼리성 소변은 일부 요로감염·채식 등에서 보여요.', '산성 소변은 고단백 식사·탈수 등에서 보여요.'],
+  ['Urobilinogen', '유로빌리노겐', '', ['urobilin'], '빌리루빈이 장에서 바뀐 물질이에요. 미량(Trace)은 정상이에요.', '간 질환·용혈에서 늘 수 있어요.', ''],
+  ['Nitrite (Urine)', '아질산염', '', ['nitrite', 'nit(u'], '일부 세균이 만드는 물질을 시험지로 보는 검사예요.', '양성이면 세균성 요로감염을 시사해요.', ''],
+  ['WBC Count', '백혈구 수', '10³/µL', ['wbccount', '=wbc'], '감염과 싸우는 백혈구의 수예요.', '감염·염증·스트레스·스테로이드 약 등에서 늘어요.', '바이러스 감염·약물 영향·면역 관련 원인 등에서 줄어요.'],
+  ['RBC Count', '적혈구 수', '10⁶/µL', ['rbccount', '=rbc'], '산소를 나르는 적혈구의 수예요.', '탈수 등에서 높게 나올 수 있어요.', '빈혈 — 철·비타민 부족, 출혈, 만성 염증, 신장 기능 저하 등에서 낮아요.'],
+  ['HbA1c', '당화혈색소', '%', ['hba1c', 'a1c'], '최근 2~3개월 평균 혈당이에요. 5.7% 이상은 당뇨 전단계, 6.5% 이상은 당뇨 기준이에요.', '혈당 조절이 안 될 때 올라가요.', '빈혈이나 적혈구 수명이 짧을 때 실제보다 낮게 나올 수 있어요.'],
+  ['Hemoglobin', '혈색소', 'g/dL', ['hemoglo', '=hb', '=hgb', '혈색소'], '적혈구 속에서 산소를 나르는 단백질이에요. 빈혈을 판단하는 기본 지표예요.', '탈수·흡연 등에서 높을 수 있어요.', '빈혈 — 철 부족, 출혈, 만성 염증, 신장 기능 저하(조혈 호르몬 감소) 등에서 낮아요.'],
+  ['Hematocrit', '적혈구 용적률', '%', ['hematocrit', '=hct'], '혈액 중 적혈구가 차지하는 비율이에요.', '탈수 등에서 높아요.', '빈혈일 때 낮아요.'],
+  ['MCV', '평균 적혈구 크기', 'fL', ['=mcv'], '적혈구 하나의 평균 크기예요.', '비타민 B12·엽산 부족 등에서 커져요.', '철 결핍 등에서 작아져요.'],
+  ['MCH', '평균 적혈구 혈색소량', 'pg', ['=mch'], '적혈구 하나에 든 혈색소 양이에요.', '', '철 결핍에서 낮아요.'],
+  ['MCHC', '평균 적혈구 혈색소 농도', 'g/dL', ['=mchc'], '적혈구 속 혈색소 농도예요.', '', '철 결핍에서 낮아요.'],
+  ['RDW', '적혈구 크기 분포', '%', ['=rdw'], '적혈구 크기가 얼마나 들쭉날쭉한지예요.', '철·비타민 결핍 초기 등에서 올라가요.', ''],
+  ['Platelet count', '혈소판 수', '10³/µL', ['platelet', '=plt'], '피를 멈추게 하는 혈소판의 수예요.', '염증·철 결핍 등에서 반응성으로 늘 수 있어요.', '면역 관련 감소, 약물 영향 등에서 줄고, 많이 낮으면 멍·출혈이 쉬워요.'],
+  ['Seg. neutrophils', '호중구', '%', ['seg', 'neutro'], '세균 감염에 먼저 반응하는 백혈구의 비율이에요.', '세균 감염·염증·스테로이드 약에서 늘어요.', '바이러스 감염·약물 영향 등에서 줄어요.'],
+  ['Lymphocytes', '림프구', '%', ['lymph'], '면역(항체·바이러스 방어)을 맡는 백혈구의 비율이에요.', '바이러스 감염 회복기 등에서 늘어요.', '스트레스·스테로이드·면역억제제 등에서 줄어요.'],
+  ['Monocytes', '단핵구', '%', ['mono'], '염증·만성 감염 때 늘어나는 백혈구의 비율이에요.', '만성 염증이나 감염 회복기에 늘어요.', ''],
+  ['Eosinophils', '호산구', '%', ['eosin'], '알레르기·기생충 반응에 관여하는 백혈구예요.', '알레르기·천식·기생충 감염에서 늘어요.', '스테로이드 약을 쓰면 줄 수 있어요.'],
+  ['Basophils', '호염기구', '%', ['baso'], '알레르기 반응에 관여하는 백혈구예요.', '알레르기 등에서 늘 수 있어요.', ''],
+  ['ANC', '절대 호중구 수', '10³/µL', ['anc'], '백혈구 수 × 호중구 비율로 계산한 값이에요. 세균을 막는 힘의 지표예요.', '세균 감염 등에서 늘어요.', '1.5 미만이면 감염에 취약할 수 있어요.'],
+  ['ESR', '적혈구 침강 속도', 'mm/hr', ['esr'], '몸 안 염증 정도를 보는 느린 지표예요.', '염증·감염·자가면역 질환 활동·빈혈 등에서 올라가요.', ''],
+  ['CRP', 'C-반응 단백', 'mg/dL', ['crp', 'c-reactive', 'c-r'], '급성 염증·감염 때 빠르게 오르는 단백이에요.', '감염이나 급성 염증이 있을 때 올라가요.', ''],
+  ['Ferritin', '페리틴 (저장철)', 'ng/mL', ['ferritin'], '몸에 저장된 철의 양이에요. 염증이 있을 때도 함께 오르는 성질이 있어요.', '철 과다, 염증, 간 질환, 철분 주사 후 등에서 올라가요.', '철 결핍일 때 낮아요.'],
+  ['Iron', '혈청 철', 'µg/dL', ['=iron', '=fe', 'serumiron'], '혈액 속 철의 양이에요. 식사·시간에 따라 변해요.', '철분 보충 직후 등에서 높아요.', '철 결핍·만성 염증에서 낮아요.'],
+  ['TIBC', '총 철결합능', 'µg/dL', ['tibc'], '혈액이 철을 실어 나를 수 있는 능력이에요.', '철이 부족하면 올라가요.', '염증·영양 부족에서 낮아요.'],
+  ['Glucose', '혈당', 'mg/dL', ['glucose', '=glu', 'fbs'], '혈액 속 당 농도예요. 공복 기준 70~99가 정상이에요.', '공복이 아니었거나 당뇨·스트레스·스테로이드 약 등에서 올라가요.', '저혈당 — 오래 굶었을 때 등.'],
+  ['Urea Nitrogen (BUN)', '요소질소', 'mg/dL', ['urea', '=bun'], '단백질이 분해되며 생기는 노폐물이에요. 신장 기능과 수분 상태를 같이 봐요.', '신장 기능 저하, 탈수, 고단백 식사, 스테로이드 약 등에서 올라가요.', '단백 섭취가 적거나 간 기능 저하 때 낮아요.'],
+  ['Creatinine', '크레아티닌', 'mg/dL', ['creatinin', '=cr'], '근육에서 나오는 노폐물로 신장이 걸러내요. 신장 기능의 대표 지표예요.', '신장 기능이 떨어지거나 탈수일 때 올라가요.', '근육량이 적으면 낮게 나와요.'],
+  ['eGFR', '사구체 여과율 (추정)', 'mL/min/1.73㎡', ['egfr', 'gfr'], '크레아티닌·나이·성별로 계산한 신장의 거르는 능력이에요. 90 이상 정상, 60~89 경도 감소, 30~59 중등도 감소, 15~29 고도 감소로 나눠요.', '', '낮을수록 신장이 거르는 힘이 약하다는 뜻이에요.'],
+  ['eGFR (MDRD)', '사구체 여과율 (MDRD)', 'mL/min/1.73㎡', ['idms', 'mdrd'], '다른 계산식(MDRD)으로 구한 사구체 여과율이에요. 의미는 eGFR과 같아요.', '', '낮을수록 신장이 거르는 힘이 약하다는 뜻이에요.'],
+  ['Uric acid', '요산', 'mg/dL', ['uric', '=ua'], '퓨린이 분해되며 생기는 물질이에요.', '통풍, 신장 기능 저하, 이뇨제 등에서 올라가요.', ''],
+  ['C3', '보체 C3', 'mg/dL', ['=c3', 'complementc3'], '면역 반응에 쓰이는 보체 단백이에요. 자가면역 질환의 활동성을 볼 때 많이 써요.', '염증이 있을 때 올라갈 수 있어요.', '면역 반응에 보체가 많이 소모될 때(예: 루푸스 활동기) 낮아져요.'],
+  ['C4', '보체 C4', 'mg/dL', ['=c4', 'complementc4'], '면역 반응에 쓰이는 보체 단백이에요. C3와 함께 봐요.', '염증이 있을 때 올라갈 수 있어요.', '보체가 소모되는 자가면역 활동기에 낮아져요.'],
+  ['Total Protein', '총단백', 'g/dL', ['totalprot', '=tp'], '혈액 속 단백질의 총량(알부민+글로불린)이에요.', '탈수·만성 염증에서 올라가요.', '영양 부족, 간 질환, 단백뇨로 빠져나갈 때 낮아요.'],
+  ['Albumin', '알부민', 'g/dL', ['albumin', '=alb'], '간에서 만드는 대표 단백이에요. 영양 상태와 단백 손실을 봐요.', '탈수 때 높게 나와요.', '영양 부족, 간 질환, 소변으로 단백이 샐 때 낮아요.'],
+  ['AST (GOT)', '간수치 AST', 'U/L', ['ast', 'got', 'sgot'], '간·근육 세포가 손상되면 나오는 효소예요.', '간 손상, 근육 손상, 음주, 약물 등에서 올라가요.', ''],
+  ['ALT (GPT)', '간수치 ALT', 'U/L', ['=alt', 'alt(', 'gpt', 'sgpt'], '주로 간세포가 손상될 때 오르는 효소예요.', '지방간, 간염, 약물 등에서 올라가요.', ''],
+  ['Total Bilirubin', '총 빌리루빈', 'mg/dL', ['totalbilir', 't.bil', 'tbil'], '적혈구가 분해되며 생기는 노란 색소예요.', '간·담도 질환, 용혈, 길버트 증후군 등에서 올라가요.', ''],
+  ['Alkaline Phosphatase', '알칼리성 인산분해효소 (ALP)', 'U/L', ['alkaline', '=alp'], '간·담도와 뼈에 있는 효소예요.', '담도 질환, 뼈 질환 등에서 올라가요.', '아연·마그네슘 부족, 영양 부족, 갑상선 기능 저하 등에서 낮을 수 있어요. 약간 낮은 건 큰 의미가 없는 경우가 많아요.'],
+  ['γ-GTP', '감마지티피', 'U/L', ['γ-gtp', 'r-gtp', 'y-gtp', 'γgtp', 'ggt', 'gamma'], '담도·음주와 관련된 간 효소예요.', '음주, 지방간, 담도 질환, 약물 등에서 올라가요.', ''],
+  ['Calcium', '칼슘', 'mg/dL', ['calcium', '=ca'], '뼈·근육·신경 기능에 필요한 무기질이에요. 알부민 수치의 영향을 받아요.', '부갑상선 기능 항진, 비타민 D 과다 등에서 올라가요.', '비타민 D 부족, 신장 기능 저하, 알부민 저하 등에서 낮아요.'],
+  ['Phosphorus', '인', 'mg/dL', ['phosph', '=ip'], '뼈와 에너지 대사에 쓰이는 무기질이에요.', '신장 기능이 떨어지면 올라가요.', '영양 부족 등에서 낮아요.'],
+  ['Sodium', '나트륨', 'mmol/L', ['sodium', '=na'], '몸의 수분·염분 균형을 보여줘요.', '탈수 때 올라가요.', '수분 과다, 일부 약물 등에서 낮아요.'],
+  ['Potassium', '칼륨', 'mmol/L', ['potassium', '=k'], '근육과 심장 리듬에 중요한 무기질이에요.', '신장 기능 저하, 일부 혈압약, 채혈 중 용혈 등에서 올라가요.', '구토·설사, 이뇨제 등에서 낮아요.'],
+  ['Chloride', '염소', 'mmol/L', ['chlor', '=cl'], '나트륨과 함께 수분·산염기 균형을 맞춰요.', '탈수, 설사, 신장의 산 배출 문제 등에서 올라가요.', '구토 등에서 낮아요.'],
+  ['Magnesium', '마그네슘', 'mg/dL', ['magnes', '=mg'], '근육·신경 기능에 필요한 무기질이에요.', '신장 기능 저하 때 올라가요.', '설사, 일부 약물 등에서 낮아요.'],
+  ['LDH', '젖산탈수소효소', 'U/L', ['=ldh', 'ld(', 'lactate'], '여러 조직이 손상될 때 오르는 효소예요.', '조직 손상, 용혈 등에서 올라가요.', ''],
+  ['CPK', '크레아틴키나아제', 'U/L', ['cpk', '=ck'], '근육 손상을 보는 효소예요.', '격한 운동, 근육 손상, 근육 염증 등에서 올라가요.', '근육량이 적으면 낮아요.'],
+  ['Total Cholesterol', '총콜레스테롤', 'mg/dL', ['totalcho', '=tc', 'cholesterol'], '혈액 속 콜레스테롤 총량이에요. 200 미만을 권장해요.', '이상지질혈증, 일부 약물·단백뇨 등에서 올라가요.', ''],
+  ['Triglyceride', '중성지방', 'mg/dL', ['triglycer', '=tg'], '식사·당·음주의 영향을 크게 받는 지방이에요.', '탄수화물·음주·비만, 공복이 아닐 때 올라가요.', ''],
+  ['HDL-Cholesterol', 'HDL (좋은 콜레스테롤)', 'mg/dL', ['hdl'], '혈관의 콜레스테롤을 회수하는 좋은 콜레스테롤이에요. 40 이상이 좋아요.', '높은 건 좋은 쪽이에요.', '낮으면 심혈관 위험이 올라가요.'],
+  ['LDL-Cholesterol', 'LDL (나쁜 콜레스테롤)', 'mg/dL', ['ldl'], '혈관벽에 쌓이는 콜레스테롤이에요.', '높으면 심혈관 위험이 올라가요.', '낮은 건 좋은 쪽이에요.'],
+  ['25-OH Vitamin D', '비타민 D', 'ng/mL', ['25-oh', '25oh', 'vitamind', 'vitd'], '몸에 저장된 비타민 D예요. 보통 20 미만 결핍, 20~30 부족, 30 이상 충분으로 봐요.', '과다 보충 때 올라가요.', '햇빛 부족·흡수 저하 등에서 낮아요.'],
+  ['TSH', '갑상선 자극 호르몬', 'µIU/mL', ['tsh'], '갑상선 기능을 조절하는 호르몬이에요.', '갑상선 기능 저하 때 올라가요.', '갑상선 기능 항진 때 낮아요.'],
+  ['Free T4', '유리 갑상선 호르몬', 'ng/dL', ['freet4', 'ft4'], '실제로 작용하는 갑상선 호르몬이에요.', '갑상선 기능 항진 때 올라가요.', '갑상선 기능 저하 때 낮아요.'],
+  ['Vitamin B12', '비타민 B12', 'pg/mL', ['vitaminb12', 'b12'], '적혈구·신경에 필요한 비타민이에요.', '', '부족하면 빈혈·저림이 생길 수 있어요.'],
+  ['Folate', '엽산', 'ng/mL', ['folate', 'folic'], '적혈구를 만드는 데 필요한 비타민이에요.', '', '부족하면 빈혈이 생길 수 있어요.'],
+  ['ANA', '항핵항체', '', ['=ana', 'antinuclear'], '자가면역 질환을 선별할 때 보는 자가항체예요.', '자가면역 질환에서 양성이 많아요.', '']
+];
+function labKey(s) { return String(s || '').toLowerCase().replace(/[…]|\.{2,}|\s+/g, '').replace(/[〈＜]/g, '<').replace(/[〉＞]/g, '>'); }
+// 잘린 이름 · 다른 표기도 사전 항목으로 (소변/혈액이 같은 이름이면 값·참고치로 구분)
+function labInfo(name, val, ref) {
+  var k = labKey(name), cut = /…|\.{2,}/.test(String(name || '')); if (!k) return null;
+  if (/^creatinin/.test(k) && labNum(val) > 20) k = 'creatinine(u';
+  if (/^totalprot/.test(k) && /</.test(String(ref || '').replace(/[〈＜]/g, '<'))) k = 'totalprotein(u';
+  for (var i = 0; i < LABS.length; i++) {
+    var ps = LABS[i][3];
+    for (var j = 0; j < ps.length; j++) {
+      var p = ps[j];
+      if (p.charAt(0) === '=') { var q = p.slice(1); if (k === q || k.replace(/[()\-.]/g, '') === q || k.indexOf(q + '(') === 0) return LABS[i]; }
+      else if (k.indexOf(p) === 0 || (cut && k.length >= 3 && p.indexOf(k) === 0 && (p.indexOf('(') < 0 || k.indexOf('(') >= 0))) return LABS[i];
+    }
+    if (labKey(LABS[i][0]) === k) return LABS[i];
+  }
+  return null;
+}
+function labNum(v) { var m = String(v == null ? '' : v).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : NaN; }
+function labKo(item) { var x = labInfo(item); return x ? x[1] : ''; }
+
 /* ───── MEDICAL: 병원 방문 · 혈액검사 (2026.10.04) — 'Daily Archive_병원 기록' 시트 (병원 · 혈액검사 탭) ───── */
 var MKINDS = ['진료', '검사', '검진', '치과', '한의원', '약국', '기타'];
 function vList() { return (S.D.visits || []).slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }); }
 function vIn(a, b) { return vList().filter(function (v) { return inR(v.d, a, b); }); }
 function labsOf(vid) { return (S.D.labs || []).filter(function (l) { return l.vid === vid; }); }
 function labFlag(l) {
-  if (l.flag === 'H' || l.flag === 'L') return l.flag;
-  var m = String(l.ref || '').match(/(\d+(?:\.\d+)?)\s*[~\-–]\s*(\d+(?:\.\d+)?)/), v = l.val;
-  if (m && v != null && !isNaN(v)) return v < +m[1] ? 'L' : v > +m[2] ? 'H' : '';
-  m = String(l.ref || '').match(/^\s*[<≤]\s*=?\s*(\d+(?:\.\d+)?)/); if (m && v > +m[1]) return 'H';
-  m = String(l.ref || '').match(/^\s*[>≥]\s*=?\s*(\d+(?:\.\d+)?)/); if (m && v < +m[1]) return 'L';
+  if (l.flag === 'H' || l.flag === 'L' || l.flag === 'A') return l.flag;
+  var ref = String(l.ref || '').replace(/[〈＜]/g, '<').replace(/[〉＞]/g, '>'), vs = String(l.val == null ? '' : l.val), v = labNum(vs), m;
+  // 음성이 정상인 글자 결과 (Neg / Pos / 2+ …)
+  if (/neg|음성/i.test(ref) && vs && !/^\s*(neg|negative|음성|-)\s*$/i.test(vs)) return 'A';
+  if (isNaN(v)) return '';
+  if (/…/.test(ref) && (m = ref.match(/(-?\d+(?:\.\d+)?)\s*[~\-–]/))) return v < +m[1] ? 'L' : '';
+  if ((m = ref.match(/(-?\d+(?:\.\d+)?)\s*[~\-–]\s*(\d+(?:\.\d+)?)/))) return v < +m[1] ? 'L' : v > +m[2] ? 'H' : '';
+  if ((m = ref.match(/^\s*[<≤]\s*=?\s*(\d+(?:\.\d+)?)/))) return v > +m[1] ? 'H' : '';
+  if ((m = ref.match(/^\s*[>≥]\s*=?\s*(\d+(?:\.\d+)?)/))) return v < +m[1] ? 'L' : '';
   return '';
 }
-function flagHtml(f) { return f === 'H' ? '<i class="mf h">높음</i>' : f === 'L' ? '<i class="mf l">낮음</i>' : ''; }
+function flagHtml(f) { return f === 'H' ? '<i class="mf h">높음</i>' : f === 'L' ? '<i class="mf l">낮음</i>' : f === 'A' ? '<i class="mf h">이상</i>' : ''; }
 function vTitle(v) { return esc(v.hosp || '병원') + (v.dept ? ' <small>' + esc(v.dept) + '</small>' : ''); }
 function vRow(v) {
   var ls = labsOf(v.id), bad = ls.filter(function (l) { return labFlag(l); }).length;
   return '<li class="tap" data-bd="' + v.d + '"><span class="n"><span class="mk2">' + esc(v.kind || '진료') + '</span>' + vTitle(v) + '<small class="dt">' + bShort(v.d) + '</small></span>' +
     '<span class="d">' + (ls.length ? '<span class="mute">검사 ' + ls.length + '</span>' + (bad ? '<i class="mf h">' + bad + '</i>' : '') : '') + '</span></li>';
 }
+function labName(l) { var x = labInfo(l.item, l.val, l.ref); return x ? '<b class="lk">' + esc(x[1]) + '</b><small class="le">' + esc(l.item) + '</small>' : '<b class="lk">' + esc(l.item) + '</b>'; }
 function labTable(ls) {
   return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.map(function (l) {
-    var f = labFlag(l);
-    return '<tr data-li="' + esc(l.item) + '"><td>' + esc(l.item) + '</td><td class="' + (f === 'H' ? 'mh' : f === 'L' ? 'ml' : '') + '">' + (l.val == null ? '-' : l.val) + ' <small>' + esc(l.unit || '') + '</small>' + (f ? (f === 'H' ? ' ▲' : ' ▼') : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
+    var f = labFlag(l), x = labInfo(l.item, l.val, l.ref), u = l.unit || (x ? x[2] : '');
+    return '<tr data-lid="' + esc(l.id) + '"><td>' + labName(l) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
   }).join('') + '</table>';
 }
-function labItems() { var m = {}; (S.D.labs || []).forEach(function (l) { if (l.val != null) m[l.item] = (m[l.item] || 0) + 1; }); return Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }); }
-function labSeries(item) { return (S.D.labs || []).filter(function (l) { return l.item === item && l.val != null; }).sort(function (a, b) { return a.d < b.d ? -1 : 1; }); }
+function labItems() { var m = {}; (S.D.labs || []).forEach(function (l) { if (!isNaN(labNum(l.val))) m[l.item] = (m[l.item] || 0) + 1; }); return Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }); }
+function labSeries(item) { return (S.D.labs || []).filter(function (l) { return l.item === item && !isNaN(labNum(l.val)); }).sort(function (a, b) { return a.d < b.d ? -1 : 1; }); }
 function bindMd() {
   $$('[data-bd]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); goDaily(b.dataset.bd); }; });
   $$('[data-ve]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openVisit(b.dataset.ve); }; });
   $$('[data-lt]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.lt = b.dataset.lt; render(); window.scrollTo(0, y0); }; });
-  $$('tr[data-li]').forEach(function (b) { b.onclick = function () { S.lt = b.dataset.li; S.view = 'home'; ls.set('memo:view', 'home'); render(); var c = $('#ltrend'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }; });
+  $$('[data-lid]').forEach(function (b) { b.onclick = function () { openLab(b.dataset.lid); }; });
   if ($('#vAdd')) $('#vAdd').onclick = function () { openVisit(null, S.day); };
 }
 // 검사 항목 추이 (그래프)
 function labTrend() {
   var its = labItems(); if (!its.length) return '';
   var it = its.indexOf(S.lt) >= 0 ? S.lt : its[0], s = labSeries(it), last = s[s.length - 1];
-  var dp = s.reduce(function (a, l) { var p = String(l.val).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
-  var x = { n: it, u: last.unit || '', dp: Math.min(dp, 3), c: '#e5484d' };
-  return '<div class="card" id="ltrend"><div class="ct">검사 항목 추이<small>' + s.length + '회</small></div><div class="chips bkc">' + its.map(function (n) { return '<button data-lt="' + esc(n) + '" class="' + (n === it ? 'on' : '') + '">' + esc(n) + '</button>'; }).join('') + '</div>' +
-    '<div class="bsel"><span>' + esc(it) + '</span><b>' + last.val + ' ' + esc(last.unit || '') + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
-    bChart(s.map(function (l) { return { v: l.val, l: bShort(l.d) }; }), x) + '</div>';
+  var info = labInfo(it, last.val, last.ref), dp = s.reduce(function (a, l) { var p = String(labNum(l.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
+  var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
+  return '<div class="card" id="ltrend"><div class="ct">검사 항목 추이<small>' + s.length + '회</small></div><div class="chips bkc">' + its.map(function (n) { return '<button data-lt="' + esc(n) + '" class="' + (n === it ? 'on' : '') + '">' + esc(labKo(n) || n) + '</button>'; }).join('') + '</div>' +
+    '<div class="bsel"><span>' + esc(info ? info[1] : it) + '</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) + '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info ? info[1] : it) + ' 설명 보기 ›</button></div>';
 }
 // MEDICAL HOME
 function mdHome() {
@@ -2870,7 +2982,7 @@ function vCard(v) {
   var ls = labsOf(v.id), row = function (n, t) { return t ? '<li><span class="n">' + n + '</span><span class="mv">' + esc(t).replace(/\n/g, '<br>') + '</span></li>' : ''; };
   return '<div class="card"><div class="ct"><span class="wct"><span class="mk2">' + esc(v.kind || '진료') + '</span>' + vTitle(v) + '</span><a href="#" data-ve="' + v.id + '">수정 ›</a></div>' +
     '<ul class="brow mrows">' + row('내용', v.note) + row('처방', v.rx) + (v.next ? row('다음 예약', mdw(v.next)) : '') + '</ul>' +
-    (ls.length ? '<div class="sub2">혈액검사 ' + ls.length + '개 항목 · 누르면 추이</div>' + labTable(ls) : '') + '</div>';
+    (ls.length ? '<div class="sub2">혈액검사 ' + ls.length + '개 항목 · 누르면 설명</div>' + labTable(ls) : '') + '</div>';
 }
 function mdDaily() {
   var day = S.day, vs = vIn(day, day), h = dayNav();
@@ -2916,22 +3028,44 @@ function mdYear() {
 }
 
 /* 병원 기록 추가·수정 + 혈액검사 캡처 → 항목 표 */
+// 검사 결과 캡처 글자 → 항목 표 (한 줄에 한 항목 / 칸마다 한 줄 / 열마다 묶인 경우 모두)
+var LVAL = /^(?:[<>≤≥〈〉]?\s?-?\d[\d,]*(?:\.\d+)?(?:\s?[-~]\s?\d+(?:\.\d+)?)?\s*(?:이하|이상|미만|초과)?|\d\+|[+]{1,4}|neg(?:ative)?|pos(?:itive)?|trace|many|few|moderate|none|clear|yellow|straw|amber|음성|양성|정상)$/i;
+var LREF = /^(?:[<>≤≥〈〉]\s?=?\s?\d[\d.]*|-?\d[\d.]*\s?[~～∼]\s?\d[\d.…]*|\d[\d.]*\s?[~～∼]\s?\d?[\d.]*…|\d[\d.]*\s?-\s?\d[\d.]*|negative|trace|소견란\s?참조)$/i;
+var LSKIP = /^(검사명|결과|참고치|상세|검사일자|검사결과|진료카드|외래|입원|홈|건강|알림|영문|검사결과\s?이용안내|이용안내|단위|항목|판정)$/;
 function labParse(txt) {
-  var out = [], seen = {};
-  String(txt || '').replace(/\r/g, '').split('\n').forEach(function (line) {
-    var s = line.replace(/[ \t ]+/g, ' ').trim();
-    if (s.length < 3 || /\d{2,4}[.\-\/]\d{1,2}[.\-\/]\d{1,2}/.test(s) || /\d{1,2}:\d{2}/.test(s)) return;
-    var m = s.match(/^([A-Za-z가-힣][A-Za-z가-힣0-9 .,'()\-\/γ·%*+]*?)\s*[:：]?\s+([<>]?\s?\d+(?:\.\d+)?)\s*([A-Za-zµμ㎕%㎎㎗㎖/\^0-9×.\-]*)?\s*(?:\(?\s*((?:\d+(?:\.\d+)?\s*[~\-–]\s*\d+(?:\.\d+)?)|(?:[<>≤≥]\s*=?\s*\d+(?:\.\d+)?))\s*\)?)?\s*([HL↑↓]|높음|낮음)?\s*$/);
-    if (!m) return;
-    var item = m[1].replace(/\s+$/, ''), v = parseFloat(m[2].replace(/[<>\s]/g, ''));
-    if (!/[A-Za-z가-힣]{2,}|[A-Za-z]{2,}/.test(item) || item.length > 28 || isNaN(v) || seen[item]) return;
-    if (/^(검사|결과|단위|참고|항목|날짜|병원|환자|성별|나이|페이지)/.test(item)) return;
-    seen[item] = 1;
-    var unit = (m[3] || '').replace(/^[.\-]+|[.\-]+$/g, ''), fl = m[5] ? (/[H↑]|높음/.test(m[5]) ? 'H' : 'L') : '';
-    if (/^\d+(\.\d+)?$/.test(unit)) unit = '';
-    out.push({ item: item, val: v, unit: unit, ref: (m[4] || '').replace(/\s+/g, ''), flag: fl });
+  var out = [], cur = null, date = '', names = [], vals = [], refs = [];
+  var push = function (o) { o.ok = 1; o._d = date; out.push(o); return o; };
+  String(txt || '').replace(/\r/g, '').replace(/[〈＜]/g, '<').replace(/[〉＞]/g, '>').split('\n').forEach(function (raw) {
+    var s = raw.replace(/[ \t ]+/g, ' ').trim(), m;
+    if (!s) return;
+    if ((m = s.match(/(20\d{2})\s?[.\-\/년]\s?(\d{1,2})\s?[.\-\/월]\s?(\d{1,2})/))) { date = m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]); cur = null; return; }
+    if (/^\d{1,2}:\d{2}/.test(s) || LSKIP.test(s.replace(/[\s(]*\(?i\)?$/, ''))) return;
+    // 한 줄에 이름 · 결과 · 참고치가 다 있는 경우
+    var toks = s.split(' '), k;
+    for (k = 1; k < toks.length; k++) {
+      var nm = toks.slice(0, k).join(' '), rest = toks.slice(k).join(' ');
+      if (!/[A-Za-z가-힣γ]/.test(nm) || LVAL.test(nm) || LREF.test(nm)) continue;
+      var rm = rest.match(/^(.+?)(?:\s+(\S.*))?$/), val = null, ref = '';
+      for (var j = toks.length; j > k; j--) { var a = toks.slice(k, j).join(' '), b = toks.slice(j).join(' '); if (LVAL.test(a) && (!b || LREF.test(b))) { val = a; ref = b; break; } }
+      if (val != null) { cur = push({ item: nm, val: val, unit: '', ref: ref }); return; }
+    }
+    if (LREF.test(s) && cur && cur.val != null && !cur.ref) { cur.ref = s; return; }
+    if (LVAL.test(s)) { if (cur && cur.val == null) cur.val = s; else vals.push(s); return; }
+    if (LREF.test(s)) { if (cur && !cur.ref) cur.ref = s; else refs.push(s); return; }
+    if (/[A-Za-z가-힣γ]/.test(s) && s.length <= 40) { cur = push({ item: s, val: null, unit: '', ref: '' }); names.push(cur); }
   });
-  return out;
+  // 열마다 묶여서 읽힌 경우: 결과 없는 이름에 남은 결과를 차례로
+  var empty = out.filter(function (o) { return o.val == null; });
+  if (empty.length >= 3) empty.forEach(function (o, i) { if (i < vals.length) o.val = vals[i]; });
+  if (empty.length && empty.length === refs.length) empty.forEach(function (o, i) { if (!o.ref) o.ref = refs[i]; });
+  // 이름 정리 (잘린 이름 → 사전의 표준 이름) · 같은 이름은 결과가 같으면 하나만
+  var seen = {};
+  return out.filter(function (o) { return o.val != null; }).map(function (o) {
+    var x = labInfo(o.item, o.val, o.ref);
+    o.item = x ? x[0] : o.item.replace(/\s*(…|\.{2,})\s*$/, '').trim();
+    o.val = String(o.val).trim(); o.ref = String(o.ref || '').replace(/\s+/g, '');
+    return o;
+  }).filter(function (o) { var key = o._d + '|' + o.item + '|' + o.val; if (seen[key]) return false; seen[key] = 1; return true; });
 }
 var VB = null;
 function drawKinds() {
@@ -2940,11 +3074,11 @@ function drawKinds() {
 }
 function drawLabs() {
   $('#vbL').innerHTML = VB.labs.length ? '<div class="lrow lh"><span>항목</span><span>결과</span><span>단위</span><span>참고치</span><span></span></div>' + VB.labs.map(function (l, i) {
-    return '<div class="lrow' + (l.ok ? ' ok' : '') + '" data-i="' + i + '"><input data-f="item" value="' + esc(l.item) + '" placeholder="항목"><input data-f="val" inputmode="decimal" value="' + (l.val == null ? '' : l.val) + '" placeholder="0"><input data-f="unit" value="' + esc(l.unit || '') + '" placeholder="단위"><input data-f="ref" value="' + esc(l.ref || '') + '" placeholder="예: 12~16"><button class="lx" aria-label="빼기">×</button></div>';
+    return '<div class="lrow' + (l.ok ? ' ok' : '') + '" data-i="' + i + '"><input data-f="item" value="' + esc(l.item) + '" placeholder="항목"><input data-f="val" value="' + esc(l.val == null ? '' : l.val) + '" placeholder="결과"><input data-f="unit" value="' + esc(l.unit || '') + '" placeholder="단위"><input data-f="ref" value="' + esc(l.ref || '') + '" placeholder="예: 12~16"><button class="lx" aria-label="빼기">×</button></div>';
   }).join('') : '';
   $$('#vbL .lrow[data-i]').forEach(function (r) {
     var i = +r.dataset.i;
-    r.querySelectorAll('input').forEach(function (inp) { inp.oninput = function () { var f = inp.dataset.f, v = inp.value; VB.labs[i][f] = f === 'val' ? (v === '' ? null : numOf(v)) : v; if (f === 'val' || f === 'ref') VB.labs[i].flag = ''; }; });
+    r.querySelectorAll('input').forEach(function (inp) { inp.oninput = function () { var f = inp.dataset.f, v = inp.value; VB.labs[i][f] = f === 'val' ? (v === '' ? null : v) : v; if (f === 'val' || f === 'ref') VB.labs[i].flag = ''; }; });
     r.querySelector('.lx').onclick = function () { VB.labs.splice(i, 1); drawLabs(); };
   });
 }
@@ -2952,6 +3086,7 @@ $('#vbLa').onclick = function () { VB.labs.push({ item: '', val: null, unit: '',
 function openVisit(id, d) {
   var v = id ? (S.D.visits || []).filter(function (x) { return x.id === id; })[0] : null;
   VB = { id: v ? v.id : null, kind: v ? v.kind || '진료' : '진료', labs: v ? labsOf(v.id).map(function (l) { return { id: l.id, item: l.item, val: l.val, unit: l.unit, ref: l.ref, flag: l.flag }; }) : [], busy: 0 };
+  VB.d0 = v ? v.d : '';
   $('#vbT').textContent = v ? '병원 기록 수정' : '병원 기록';
   $('#vbD').value = v ? v.d : (d || (S.view === 'daily' ? S.day : TODAY));
   $('#vbH').value = v ? v.hosp || '' : ''; $('#vbDp').value = v ? v.dept || '' : '';
@@ -2966,15 +3101,15 @@ $('#vbIn').onchange = function () {
   var files = Array.prototype.slice.call(this.files || []); if (!files.length) return;
   var my = VB, add = 0, dd = ''; VB.busy++; $('#vbS').classList.add('busy'); ocrThumbs(files, $('#vbP'));
   ocrRun(files, $('#vbSt'), function (txt) {
-    var m = String(txt).match(/(20\d{2})\s?[.\-\/년]\s?(\d{1,2})\s?[.\-\/월]\s?(\d{1,2})/); if (m && !dd) dd = m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]);
-    labParse(txt).forEach(function (l) { if (VB.labs.some(function (x) { return x.item === l.item; })) return; l.ok = 1; VB.labs.push(l); add++; });
+    labParse(txt).forEach(function (l) { if (l._d && (!dd || l._d < dd)) dd = l._d; if (VB.labs.some(function (x) { return x.item === l.item && x.val === l.val && (x._d || '') === (l._d || ''); })) return; VB.labs.push(l); add++; });
   }, function () {
     if (VB !== my) return;
     VB.busy--; if (!VB.busy) $('#vbS').classList.remove('busy');
-    if (dd && dd <= TODAY && !VB.id) $('#vbD').value = dd;
+    if (!VB.id) { var cnt = {}, best = ''; VB.labs.forEach(function (l) { if (l._d) cnt[l._d] = (cnt[l._d] || 0) + 1; }); Object.keys(cnt).forEach(function (k) { if (!best || cnt[k] > cnt[best]) best = k; }); if (best && best <= TODAY) $('#vbD').value = best; }
     if (add && VB.kind === '진료') { VB.kind = '검사'; drawKinds(); }
     drawLabs();
-    $('#vbSt').textContent = add ? add + '개 항목을 읽었어요 · 초록 줄을 확인하고, 틀린 줄은 고치거나 × 로 빼 주세요' : '항목을 찾지 못했어요 · 아래 + 항목 추가로 직접 넣어 주세요';
+    var ds = {}, nd; VB.labs.forEach(function (l) { if (l._d) ds[l._d] = 1; }); nd = Object.keys(ds).length;
+    $('#vbSt').textContent = add ? add + '개 항목을 읽었어요' + (nd > 1 ? ' (검사일 ' + nd + '개 — 날짜별로 따로 저장돼요)' : '') + ' · 초록 줄을 확인하고, 틀린 줄은 고치거나 × 로 빼 주세요' : '항목을 찾지 못했어요 · 아래 + 항목 추가로 직접 넣어 주세요';
   });
 };
 $('#vbS').onclick = function () {
@@ -2983,14 +3118,23 @@ $('#vbS').onclick = function () {
   if (!d) return toast('날짜를 선택해 주세요');
   if (!hosp) return toast('병원 이름을 입력해 주세요');
   var v = { id: VB.id || uid('v'), d: d, hosp: hosp, dept: $('#vbDp').value.trim(), kind: VB.kind, note: $('#vbN').value.trim(), rx: $('#vbR').value.trim(), next: $('#vbNx').value || '' };
-  var labs = VB.labs.filter(function (l) { return String(l.item || '').trim() && l.val != null && !isNaN(l.val); }).map(function (l) {
-    var o = { id: l.id || uid('l'), d: d, hosp: hosp, item: String(l.item).trim(), val: l.val, unit: String(l.unit || '').trim(), ref: String(l.ref || '').trim(), flag: '', vid: v.id };
+  var mk = function (l, vis) {
+    var o = { id: l.id || uid('l'), d: vis.d, hosp: hosp, item: String(l.item).trim(), val: String(l.val).trim(), unit: String(l.unit || '').trim(), ref: String(l.ref || '').trim(), flag: '', vid: vis.id };
     o.flag = labFlag({ val: o.val, ref: o.ref, flag: l.flag }); return o;
+  };
+  var ok = VB.labs.filter(function (l) { return String(l.item || '').trim() && l.val != null && String(l.val).trim() !== ''; });
+  // 캡처에 다른 검사일이 섞여 있으면 그 날짜로 방문 기록을 따로 만듦
+  var main = ok.filter(function (l) { return !l._d || l._d === d || l._d === VB.d0; }), others = {};
+  ok.forEach(function (l) { if (main.indexOf(l) < 0) (others[l._d] = others[l._d] || []).push(l); });
+  var saves = [[v, main.map(function (l) { return mk(l, v); })]];
+  Object.keys(others).forEach(function (od) { var ov = { id: uid('v'), d: od, hosp: hosp, dept: v.dept, kind: '검사', note: '', rx: '', next: '' }; saves.push([ov, others[od].map(function (l) { return mk(l, ov); })]); });
+  saves.forEach(function (p) {
+    S.D.visits = (S.D.visits || []).filter(function (x) { return x.id !== p[0].id; }).concat([p[0]]);
+    S.D.labs = (S.D.labs || []).filter(function (x) { return x.vid !== p[0].id; }).concat(p[1]);
   });
-  S.D.visits = (S.D.visits || []).filter(function (x) { return x.id !== v.id; }).concat([v]);
-  S.D.labs = (S.D.labs || []).filter(function (x) { return x.vid !== v.id; }).concat(labs);
-  closeBs(); S.day = d > TODAY ? TODAY : d; render(); saveCache(); toast('저장했어요');
-  call('appVisit', S.pin, v, labs).catch(function (e) { toast(errMsg(e)); load(); });
+  closeBs(); S.day = d > TODAY ? TODAY : d; render(); saveCache(); toast(saves.length > 1 ? '검사일별로 ' + saves.length + '건 저장했어요' : '저장했어요');
+  var run = function (i) { if (i >= saves.length) return; call('appVisit', S.pin, saves[i][0], saves[i][1]).then(function () { run(i + 1); }).catch(function (e) { toast(errMsg(e)); load(); }); };
+  run(0);
 };
 sure($('#vbX'), function () {
   var id = VB.id;
@@ -2999,6 +3143,27 @@ sure($('#vbX'), function () {
   closeBs(); render(); saveCache(); toast('삭제했어요');
   call('appRecDel', S.pin, 'visit', id).catch(function (e) { toast(errMsg(e)); load(); });
 });
+
+/* 검사 항목 설명 */
+function openLab(id) {
+  var l = (S.D.labs || []).filter(function (x) { return x.id === id; })[0]; if (!l) return;
+  var x = labInfo(l.item, l.val, l.ref), f = labFlag(l), s = labSeries(l.item), u = l.unit || (x ? x[2] : '');
+  var h = '<div class="lbh"><small>' + esc(l.item) + '</small><h3>' + esc(x ? x[1] : l.item) + '</h3></div>' +
+    '<div class="lbv"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b>' + (isNaN(labNum(l.val)) ? '' : '<span>' + esc(u) + '</span>') + flagHtml(f) + '</div>' +
+    '<div class="lbr">참고치 ' + esc(l.ref || '-') + ' · ' + bShort(l.d) + ' ' + esc(l.hosp || '') + '</div>';
+  if (x) {
+    h += '<div class="lbd"><div class="sub2">어떤 검사예요?</div><p>' + x[4] + '</p>';
+    if (x[5]) h += '<div class="sub2">' + (f === 'H' || f === 'A' ? '<span class="dn">● </span>' : '') + (/^(소변|요당|아질산|유로)/.test(x[1]) || !x[6] && /양성/.test(x[5]) ? '양성·높을 때' : '높을 때') + '</div><p>' + x[5] + '</p>';
+    if (x[6]) h += '<div class="sub2">' + (f === 'L' ? '<span class="up">● </span>' : '') + '낮을 때</div><p>' + x[6] + '</p>';
+    h += '</div>';
+  } else h += '<p class="mnote">이 항목은 아직 설명 사전에 없어요.</p>';
+  if (s.length > 1) {
+    var dp = s.reduce(function (a, q) { var p = String(labNum(q.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
+    h += '<div class="sub2">지난 결과</div>' + bChart(s.map(function (q) { return { v: labNum(q.val), l: bShort(q.d) }; }), { n: l.item, u: u, dp: Math.min(dp, 3), c: '#e5484d' });
+  }
+  h += '<p class="mnote">일반적인 설명이에요. 결과 해석과 치료는 담당 의사와 상의해 주세요.</p>';
+  $('#lbB').innerHTML = h; openBs('#lb');
+}
 
 /* ───── 시작: PIN ───── */
 var pinMode = 'enter';
