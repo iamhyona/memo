@@ -765,7 +765,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x3';
+var APP_VER = '20261005x4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1064,7 +1064,7 @@ function renderMonth() {
   var lead = (P(from).getDay() + 6) % 7;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
   for (d = from; d <= to; d = addD(d, 1)) {
-    var dots = S.D.habits.filter(function (x) { return on(d, x.id); }).map(function (x) { return '<i style="background:' + dc(x) + '"></i>'; }).join('');
+    var dots = S.D.habits.filter(function (x) { return on(d, x.id); }).map(function (x) { return '<i style="background:' + x.color + '"></i>'; }).join('');
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + (d === S.sel ? ' sel' : '') + '"><span class="dnum">' + P(d).getDate() + '</span><span class="dts">' + dots + '</span></button>';
   }
   h += '</div><div class="legend">날짜를 누르면 그날 기록을 고칠 수 있어요</div>';
@@ -1253,14 +1253,14 @@ function trHome() {
   // 이번 달
   var tm = total(R.mf, R.mt), pm = total(R.pmf, R.pmt), days = 0;
   for (var d = R.mf; d <= R.mt && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
-  var top = hs.map(function (x) { var s = hstat(x, R.mf, R.mt); return { n: x.name, v: s.cnt, t: s.cnt + '회 · <b>' + pct(s.rate) + '%</b>', c: dc(x), ico: hIco(x, 'hico sm'), h: x.id }; })
+  var top = hs.map(function (x) { var s = hstat(x, R.mf, R.mt); return { n: x.name, v: s.cnt, t: s.cnt + '회 · <b>' + pct(s.rate) + '%</b>', c: x.color, ico: hIco(x, 'hico sm'), h: x.id }; })
     .sort(function (a, b) { return b.v - a.v; });
   h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">리뷰 ›</a></div><div class="st3">' +
     stat('달성률', pct(tm.rate) + '%', '지난달 ' + pct(pm.rate) + '%') + stat('체크', tm.cnt + '회', delta(tm.cnt, pm.cnt, '회')) + stat('기록한 날', days + '일') + '</div>' +
     '<div class="sub2">많이 한 습관</div>' + hlist(top.slice(0, 5)) + '</div>';
   // 연속 기록
   var st = hs.map(function (x) { return { x: x, s: streak(x.id) }; }).filter(function (o) { return o.s > 0; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 5);
-  h += '<div class="card"><div class="ct">연속 기록</div>' + (st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: dc(o.x), ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">오늘부터 연속 기록을 시작해 보세요</div>') + '</div>';
+  h += '<div class="card"><div class="ct">연속 기록</div>' + (st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: o.x.color, ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">오늘부터 연속 기록을 시작해 보세요</div>') + '</div>';
   // 부족한 습관
   var low = hs.map(function (x) { var c = weekCnt(x, R.ws); return { x: x, c: c, left: x.target - c }; }).filter(function (o) { return o.left > 0; }).sort(function (a, b) { return b.left - a.left; }).slice(0, 4);
   if (low.length) h += '<div class="card"><div class="ct">이번 주 남은 목표</div><ul class="leg lows">' + low.map(function (o) {
