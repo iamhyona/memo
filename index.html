@@ -722,7 +722,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u3';
+var APP_VER = '20261004u4';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2523,6 +2523,23 @@ function bdHome() {
   $('#main').innerHTML = h; bindBody();
   $$('[data-bp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bp = b.dataset.bp; render(); window.scrollTo(0, y0); }; });
   $$('[data-bmm]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bmm = b.dataset.bmm; render(); window.scrollTo(0, y0); }; });
+}
+// BODY DAY: 그날 측정 전체 수치
+function bRecCard(r) {
+  var grp = function (title, xs) {
+    var rows = xs.filter(function (x) { return r[x.k] != null; });
+    if (!rows.length) return '';
+    return (title ? '<div class="sub2">' + title + '</div>' : '') + '<ul class="brow">' + rows.map(function (x) {
+      var pv = bPrevVal(r, x.k);
+      return '<li><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(x, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(x, r[x.k], pv) : '') + '</span></li>';
+    }).join('') + '</ul>';
+  };
+  var sg = [['오른팔', 'ra'], ['왼팔', 'la'], ['몸통', 'tr'], ['오른다리', 'rl'], ['왼다리', 'll']].filter(function (q) { return r['m' + q[1]] != null || r['f' + q[1]] != null; });
+  var cell = function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bfmt(bkOf(k), r[k]) + ' ' + bDelta(bkOf(k), r[k], bPrevVal(r, k))) + '</td>'; };
+  var seg = sg.length ? '<div class="sub2">부위별</div><table class="btab bseg"><tr><th></th><th>근육 kg</th><th>지방 kg</th></tr>' + sg.map(function (q) { return '<tr><td>' + q[0] + '</td>' + cell('m' + q[1]) + cell('f' + q[1]) + '</tr>'; }).join('') + '</table>' : '';
+  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + (r.dev ? ' <small>' + esc(devName(r.dev)) + '</small>' : '') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
+    grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) + seg +
+    (r.memo ? '<p class="mnote">' + esc(r.memo) + '</p>' : '') + '<div class="legend" style="justify-content:flex-start">▲▼ 지난 측정 대비 · 파랑 좋아짐 · 빨강 나빠짐</div></div>';
 }
 // BODY DAY: 그날 측정 — 위에 주요 6개 + 최근 14회 그래프, 아래 전체 수치
 function bTopCard(r, day) {
