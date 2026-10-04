@@ -503,6 +503,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .cal .grid .bv { font-size:10.5px; font-weight:800; line-height:1; }
 .bjump { display:flex; justify-content:space-between; margin-top:18px; font-size:13px; }
 .bjump a { color:var(--acc); text-decoration:none; font-weight:600; }
+.empty .bjump { justify-content:center; gap:20px; border-top:1px solid #f2f4f6; padding-top:16px; margin:22px 0 0; } .empty .bjump span:empty { display:none; }
 .bgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .bf { display:flex; align-items:center; background:var(--chip); border-radius:12px; padding:0 12px; height:50px; gap:6px; min-width:0; }
 .bf span { font-size:13px; color:var(--sub); font-weight:600; white-space:nowrap; flex:none; }
@@ -769,7 +770,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x7';
+var APP_VER = '20261005x8';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
