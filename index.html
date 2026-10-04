@@ -63,6 +63,11 @@ header { position:sticky; top:0; z-index:10; background:var(--bg); padding:calc(
 .dyv .ph img { width:100%; height:100%; object-fit:cover; display:block; }
 .pg.ig { gap:2px; border-radius:0; margin:0 -16px 12px; }
 .pg.ig button { aspect-ratio:3/4; background:#e5e8eb; }
+.f1 { margin:0 -16px 18px; background:#fff; }
+.f1 .fi { border:0; padding:0; display:block; width:100%; background:#e5e8eb; min-height:120px; }
+.f1 .fi img { width:100%; height:auto; display:block; }
+.f1 .fm { padding:10px 16px 14px; } .f1 .fcat { font-size:12px; font-weight:700; color:var(--sub); background:var(--chip); border-radius:999px; padding:3px 9px; }
+.f1 .fm p { margin:8px 0 0; font-size:15px; line-height:1.5; white-space:pre-wrap; }
 .fcnt { display:flex; justify-content:space-between; align-items:baseline; margin:2px 2px 10px; font-size:13px; font-weight:600; color:var(--mute); }
 .fcnt b { color:var(--txt); font-size:15px; }
 .ym { gap:2px !important; margin:0 -16px; }
@@ -481,7 +486,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004g';
+var APP_VER = '20261004h';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -938,14 +943,19 @@ function catChips(list) {
 function byCat(list) { return S.pcat === '전체' ? list : list.filter(function (p) { return p.cat === S.pcat; }); }
 function bindFeed() {
   $$('#pTabs button').forEach(function (b) { b.onclick = function () { S.pcat = b.dataset.c; var y0 = window.scrollY; render(); window.scrollTo(0, y0); }; });
-  $$('.pg button, .fc .fi').forEach(function (b) { b.onclick = function () { openViewer(b.dataset.p); }; });
+  $$('.pg button, .fc .fi, .f1 .fi').forEach(function (b) { b.onclick = function () { openViewer(b.dataset.p); }; });
 }
 function feedGrid(l, label) {
   return '<div class="fcnt"><b>' + label + '</b><span>' + l.length + '장</span></div>' + (l.length ? gridHtml(l, 'ig') : '<div class="card empty">올린 사진이 없어요<br><button class="lnk" id="fUp">사진 올리기</button></div>');
 }
 function fdDaily() {
   var l = sortedPhotos(byCat(photosOf(S.day))); S.pl = l;
-  var h = dayNav() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; }) + catChips(photosOf(S.day)) + feedGrid(l, '사진');
+  var h = dayNav() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; }) + catChips(photosOf(S.day));
+  h += '<div class="fcnt"><b>사진</b><span>' + l.length + '장</span></div>';
+  h += l.length ? l.map(function (p) {
+    return '<div class="f1"><button class="fi" data-p="' + p.id + '"><img loading="lazy" src="' + esc(purl(p, true)) + '" alt=""></button>' +
+      '<div class="fm"><span class="fcat">' + esc(p.cat || '미분류') + '</span>' + (p.memo ? '<p>' + esc(p.memo) + '</p>' : '') + '</div></div>';
+  }).join('') : '<div class="card empty">올린 사진이 없어요<br><button class="lnk" id="fUp">사진 올리기</button></div>';
   $('#main').innerHTML = h;
   bindDay(); bindStrip(); bindFeed();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
