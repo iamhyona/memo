@@ -909,6 +909,7 @@ function bindYear() {
 function weekDays(ws) { var a = []; for (var i = 0; i < 7; i++) a.push(addD(ws, i)); return a; }
 // 한 주 날짜 띠 — mark(d) 가 {w:0~1, c:색} 을 돌려줌
 function dstrip(mark) {
+  return ''; // 2026.10.04: 데일리 상단 주간 날짜 줄 제거 (전 모드)
   return '<div class="dstrip">' + weekDays(monOf(S.day)).map(function (d, i) {
     var k = mark(d) || { w: 0 };
     return '<button data-d="' + d + '" class="' + (d === S.day ? 'on' : '') + (d > TODAY ? ' fu' : '') + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b><i><em style="width:' + Math.round(k.w * 100) + '%' + (k.c ? ';background:' + k.c : '') + '"></em></i></button>';
@@ -1088,7 +1089,7 @@ function trDaily() {
     var v = on(day, x.id), c = weekCnt(x, ws), st = streak(x.id);
     var sub = '이번 주 ' + c + '/' + x.target + (c >= x.target ? ' 달성' : '') + (st >= 2 ? ' · 연속 ' + st + '일' : '');
     return '<button class="hc' + (v ? ' done' : '') + '" data-h="' + x.id + '" style="background:' + x.color + '"><span class="cc">' + (v ? CHK : '') + '</span>' +
-      '<span class="hi">' + hIco(x) + '</span><span class="m"><div>' + esc(x.name) + '</div><small>' + sub + '</small></span></button>';
+      '<span class="hi">' + hIco(x) + '</span><span class="m"><div>' + esc(x.name) + '</div></span></button>';
   };
   var todo = hs.filter(function (x) { return !on(day, x.id); }), done = hs.filter(function (x) { return on(day, x.id); });
   if (!hs.length) h += '<div class="card empty">아직 습관이 없어요<br>오른쪽 아래 + 버튼으로 첫 습관을 추가해 보세요</div>';
@@ -1108,7 +1109,7 @@ function trWeek() {
   hs.forEach(function (x) {
     var c = weekCnt(x, ws), st = streak(x.id), ok = c >= x.target;
     h += '<button class="hn" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span>' +
-      '<small><b class="' + (ok ? 'ok' : '') + '">' + c + '/' + x.target + '</b>' + (st >= 2 ? ' · 연속 ' + st + '일' : '') + '</small></button>';
+      '</button>';
     days.forEach(function (d) {
       var v = on(d, x.id);
       h += '<button class="ck' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '" data-h="' + x.id + '"' + (v ? ' style="background:' + x.color + '"' : '') + ' aria-label="' + esc(x.name) + ' ' + d + '">' + CHK + '</button>';
