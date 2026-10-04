@@ -426,6 +426,10 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .hm b { font-size:16px; font-weight:800; letter-spacing:-0.01em; }
 /* BODY (2026.10.04) */
 header .mtabs button { font-size:12.5px; letter-spacing:.02em; }
+/* 탭이 많아져서 옆으로 밀기 (2026.10.04) */
+header .mtabs { overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; max-width:560px; }
+header .mtabs::-webkit-scrollbar { display:none; }
+header .mtabs button { flex:none; padding:12px 13px 10px; }
 .bc3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
 .bcd { border:1.5px solid transparent; background:var(--chip); border-radius:16px; padding:12px 4px 10px; text-align:center; min-width:0; }
 .bcd.on { background:#fff; border-color:var(--txt); }
@@ -485,7 +489,7 @@ header .mtabs button { font-size:12.5px; letter-spacing:.02em; }
       <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
-  <nav id="mode" class="mtabs"><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="feed">FEED</button><button data-m="diary">DIARY</button><button data-m="body">BODY</button></nav>
+  <nav id="mode" class="mtabs"><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="feed">OUTFIT</button><button data-m="diary">DIARY</button><button data-m="body">BODY</button><button data-m="food">FOOD</button></nav>
   <div class="mode vseg" id="nav"><button data-v="home">HOME</button><button data-v="daily">DAY</button><button data-v="week">WEEK</button><button data-v="month">MONTH</button><button data-v="year">YEAR</button></div>
 </header>
 <main id="main"><div class="ld">불러오는 중…</div></main>
@@ -618,7 +622,7 @@ var S = { pin: ls.get('memo:pin') || '', view: ls.get('memo:view') || 'home', mo
   yy: +TODAY.slice(0, 4), pcat: '전체', sel: null, D: null, ck: {}, q: [], fl: null, pl: [], kc: {}, kq: [], kfl: null, bk: ls.get('memo:bk') || 'w' };
 if (S.view === 'photo') { S.mode = 'feed'; S.view = 'month'; } else if (S.view === 'diary') { S.mode = 'diary'; S.view = 'month'; }
 if (['all', 'home', 'daily', 'week', 'month', 'year'].indexOf(S.view) < 0) S.view = 'home';
-if (['tracker', 'count', 'feed', 'diary', 'body'].indexOf(S.mode) < 0) S.mode = 'tracker';
+if (['tracker', 'count', 'feed', 'diary', 'body', 'food'].indexOf(S.mode) < 0) S.mode = 'tracker';
 
 // 서버: 구글 Apps Script (memo 트래커 시트와 연결)
 var API = 'https://script.google.com/macros/s/AKfycbwFtL_qIuUMOxdD5wzj6Eltc67OTIScR4yJjMZWxLyPzn8K7Y5JhOBTDlf4wp9Av6lqSQ/exec';
@@ -643,7 +647,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t1';
+var APP_VER = '20261004t2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -764,8 +768,21 @@ function render() {
   $$('#mode button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === S.mode); });
   $('#mode').classList.toggle('off', S.view === 'all');
   $('#fab').classList.toggle('hide', S.view === 'all' || (S.mode === 'tracker' && (S.view === 'month' || S.view === 'year')));
-  if (S.view === 'all') renderAll(); else VIEWS[S.mode][S.view]();
+  var mn = $('#mode'), mb = $('#mode button.on');
+  if (mb && S.view !== 'all') { var r1 = mn.getBoundingClientRect(), r2 = mb.getBoundingClientRect(); mn.scrollLeft += (r2.left + r2.width / 2) - (r1.left + r1.width / 2); }
+  if (S.view === 'all') return renderAll();
+  // OUTFIT(feed) · FOOD: 같은 사진 저장소를 카테고리로 나눠서 같은 화면을 씀
+  if (S.mode === 'feed' || S.mode === 'food') {
+    var allP = S.D.photos, allC = S.D.cats, fm = S.mode === 'food', uc = upCats();
+    S.D.photos = allP.filter(function (p) { return isFood(p) === fm; }); S.D.cats = uc;
+    try { VIEWS.feed[S.view](); } finally { S.D.photos = allP; S.D.cats = allC; }
+    return;
+  }
+  VIEWS[S.mode][S.view]();
 }
+var FOOD_CATS = ['아침', '점심', '저녁', '간식', '야식', '카페', '음식'];
+function isFood(p) { return FOOD_CATS.indexOf(p.cat) >= 0; }
+function upCats() { return S.mode === 'food' ? FOOD_CATS.slice() : S.D.cats.filter(function (c) { return FOOD_CATS.indexOf(c) < 0; }); }
 function syncView(v) {
   if (v === 'month') { S.y = +S.day.slice(0, 4); S.m = +S.day.slice(5, 7); S.sel = null; }
   if (v === 'year') S.yy = +S.day.slice(0, 4);
@@ -1164,10 +1181,11 @@ function renderAll() {
   var ks = S.D.counters, kw = ktotal(R.ws, R.we), km = ktotal(R.mf, R.mt), kbest = ks.map(krun).reduce(function (a, b) { return Math.max(a, b); }, 0);
   h += card('count', 'COUNT', [stat('오늘', kdayOk(TODAY) + '/' + ks.length), stat('이번 주', pct(kw.rate) + '%'), stat(R.m + '월 기록', km.cnt + '회'), stat('최고 연속', kbest + '일')],
     ks.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(kw.rate) + '%"></i></div>' : '');
-  var pw = pin(R.ws, R.we), pm = pin(R.mf, R.mt);
-  var lp = sortedPhotos(ps).slice(0, 4);
-  h += card('feed', 'FEED', [stat('오늘', photosOf(TODAY).length + '장'), stat('이번 주', pw.length + '장'), stat(R.m + '월', pm.length + '장'), stat('게시물', posts(ps).length + '개')],
-    lp.length ? '<div class="thumbs">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div>' : '');
+  [['feed', 'OUTFIT', false], ['food', 'FOOD', true]].forEach(function (o) {
+    var L2 = ps.filter(function (p) { return isFood(p) === o[2]; }), in2 = function (a, b) { return L2.filter(function (p) { return inR(p.d, a, b); }); }, lp = sortedPhotos(L2).slice(0, 4);
+    h += card(o[0], o[1], [stat('오늘', in2(TODAY, TODAY).length + '장'), stat('이번 주', in2(R.ws, R.we).length + '장'), stat(R.m + '월', in2(R.mf, R.mt).length + '장'), stat('게시물', posts(L2).length + '개')],
+      lp.length ? '<div class="thumbs">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div>' : '');
+  });
   var dw = din(R.ws, R.we), dm = din(R.mf, R.mt), xm = diaryOf(TODAY);
   h += card('diary', 'DIARY', [stat('오늘', xm ? (xm.mood || '작성') : '-'), stat('이번 주', dw.length + '/7일'), stat(R.m + '월', dm.length + '일'), stat('연속', dRun() + '일')],
     xm && xm.text ? '<p class="dprev sm">' + esc(xm.text) + '</p>' : '');
@@ -1597,7 +1615,7 @@ function unsure(btn) { if (btn.classList.contains('sure')) { btn.classList.remov
 $('#fab').onclick = function () {
   if (S.mode === 'tracker') openHabit(null);
   else if (S.mode === 'count') openCounter(null);
-  else if (S.mode === 'feed') openUpload(null);
+  else if (S.mode === 'feed' || S.mode === 'food') openUpload(null);
   else if (S.mode === 'body') openBody(null);
   else openDiary(S.view === 'daily' ? S.day : TODAY);
 };
@@ -1712,7 +1730,7 @@ sure($('#hbD'), function () {
 var UP = null;
 function openUpload(id) {
   var p = id ? S.D.photos.filter(function (x) { return x.id === id; })[0] : null;
-  UP = { id: id, files: [], cat: p ? p.cat : (S.pcat !== '전체' ? S.pcat : (S.D.cats[0] || '')), adding: false };
+  UP = { id: id, files: [], cat: p ? p.cat : (S.pcat !== '전체' && upCats().indexOf(S.pcat) >= 0 ? S.pcat : (upCats()[0] || '')), adding: false };
   $('#phT').textContent = p ? '사진 정보 수정' : '사진 올리기';
   $('#phS').textContent = p ? '저장' : '올리기';
   $('#phDrop').classList.toggle('hide', !!p);
@@ -1722,9 +1740,9 @@ function openUpload(id) {
   drawCats(); openBs('#ph');
 }
 function drawCats() {
-  var cats = S.D.cats.slice(); if (UP.cat && cats.indexOf(UP.cat) < 0) cats.push(UP.cat);
+  var cats = upCats(); if (UP.cat && cats.indexOf(UP.cat) < 0) cats.push(UP.cat);
   $('#phC').innerHTML = cats.map(function (c) { return '<button data-c="' + esc(c) + '" class="' + (UP.cat === c ? 'on' : '') + '">' + esc(c) + '</button>'; }).join('') +
-    (UP.adding ? '<input id="phNew" placeholder="새 카테고리" maxlength="12">' : '<button id="phAdd">+ 새 카테고리</button>');
+    (S.mode === 'food' ? '' : UP.adding ? '<input id="phNew" placeholder="새 카테고리" maxlength="12">' : '<button id="phAdd">+ 새 카테고리</button>');
   $$('#phC button[data-c]').forEach(function (b) { b.onclick = function () { UP.cat = b.dataset.c; drawCats(); }; });
   if ($('#phAdd')) $('#phAdd').onclick = function () { UP.adding = true; drawCats(); $('#phNew').focus(); };
   if ($('#phNew')) {
@@ -1783,7 +1801,7 @@ $('#phS').onclick = function () {
   Promise.all(files.map(function (f) { return shrink(f, 1200).catch(function () { return ''; }); })).then(function (urls) {
     var gid = uid('p'), orig = {}, items = urls.map(function (u, i) { orig[gid + i] = files[i]; return { id: gid + i, d: d, cat: cat, memo: memo, place: place, src: u, fid: '', ts: '9' }; });
     S.D.photos = S.D.photos.concat(items);
-    S.mode = 'feed'; if (S.view === 'all') S.view = 'daily'; S.day = d > TODAY ? TODAY : d;
+    S.mode = isFood({ cat: cat }) ? 'food' : 'feed'; if (S.view === 'all') S.view = 'daily'; S.day = d > TODAY ? TODAY : d;
     closeBs(); render();
     var i = 0;
     (function next() {
