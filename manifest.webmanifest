@@ -1,6 +1,6 @@
 {
-  "name": "Daily Archive",
-  "short_name": "Daily Archive",
+  "name": "ARCHIVE",
+  "short_name": "ARCHIVE",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
