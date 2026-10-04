@@ -572,6 +572,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .kgrid2 .kc .hi { width:28px; height:28px; border-radius:8px; } .kgrid2 .kc .hi .hico { width:17px; height:17px; }
 .kgrid2 .kc .m div { font-size:14px; } .kgrid2 .kn2 { min-width:0; } .kgrid2 .kc .kn2 b { font-size:18px; }
 .kgrid2 .kc .kplus { display:none; } .kgrid2 .kc .kb { width:26px; height:26px; } .kgrid2 .kc .kb svg { width:12px; height:12px; }
+.kc.k0 .hi { background:#fff; } .kc.k0 .hi .hico { opacity:.45; } .kc.k0 .m div, .kc.k0 .kn2 b { color:#8b95a1; } .kc.k0 .kb.kminus { background:#fff; }
 </style>
 </head>
 <body>
@@ -780,7 +781,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005z1';
+var APP_VER = '20261005z2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2244,7 +2245,7 @@ function kcard(x, d) {
   var v = kv(d, x.id), ok = kok(d, x), g = x.goal || 0;
   var bar = g ? '<span class="kbar"><i style="width:' + Math.min(100, v / g * 100) + '%;background:' + dc(x) + '"></i></span>' : '';
   var sh = kShade(x, v);
-  return '<div class="kc' + (ok ? ' ok' : '') + (v && sh.dk ? ' dk' : '') + '" data-k="' + x.id + '" style="background:' + (v ? sh.bg : x.color) + '">' +
+  return '<div class="kc' + (ok ? ' ok' : '') + (v ? '' : ' k0') + (v && sh.dk ? ' dk' : '') + '" data-k="' + x.id + '" style="background:' + (v ? sh.bg : '#eef0f3') + '">' +
     '<span class="hi">' + hIco(x) + '</span>' +
     '<span class="m"><div>' + esc(x.name) + (ok && g ? '<em class="kok">' + CHK + '</em>' : '') + '</div>' + bar + '</span>' +
     '<span class="kn2"><b>' + v + '</b>' + (g ? '<small>/' + g + '</small>' : '') + '</span>' +
