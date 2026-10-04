@@ -705,7 +705,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t7';
+var APP_VER = '20261004t8';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2415,9 +2415,9 @@ function bdHome() {
   var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   var r = bLast('w') || L[L.length - 1], k = S.bk, x = bkOf(k);
-  h += '<div class="card"><div class="ct">최근 측정<a href="#" data-bd="' + r.d + '">' + bWhen(r) + ' ›</a></div><div class="bc3">' + ['w', 'smm', 'pbf'].map(function (kk) {
+  h += '<div class="card"><div class="ct">최근 측정<a href="#" data-bd="' + r.d + '">' + bWhen(r) + ' ›</a></div><div class="bc3">' + ['w', 'smm', 'bfm', 'bmi', 'vfl', 'pbf'].map(function (kk) {
     var xx = bkOf(kk), pv = bPrevVal(r, kk);
-    return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + xx.n + ' (' + xx.u + ')</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
+    return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + xx.n + (xx.u && kk !== 'vfl' ? ' (' + xx.u + ')' : '') + '</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
   }).join('') + '</div>';
   var s = bSeries(k).slice(-14), lr = s[s.length - 1];
   h += '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
