@@ -554,6 +554,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .kg b { display:block; font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:6px 0 2px; } .kg b small { font-size:12px; font-weight:700; margin-left:1px; color:var(--mute); }
 .kg em { display:block; font-style:normal; font-size:11px; font-weight:600; color:var(--mute); white-space:nowrap; } .kg em .up { color:#f0506e; } .kg em .dn { color:#3182f6; }
 .kg .kgm { position:absolute; right:6px; bottom:6px; width:26px; height:26px; border:0; border-radius:50%; background:rgba(255,255,255,.7); color:var(--sub); display:flex; align-items:center; justify-content:center; padding:0; } .kg .kgm svg { width:13px; height:13px; }
+small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; letter-spacing:0; }
 </style>
 </head>
 <body>
@@ -762,7 +763,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w9';
+var APP_VER = '20261005x1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2525,7 +2526,7 @@ function bTable(recs) {
   var ks = BK5;
   return '<table class="btab bper"><tr><th>날짜</th>' + ks.map(bTh).join('') + '</tr>' +
     recs.slice().reverse().map(function (r) {
-      return '<tr data-bd="' + r.d + '"><td>' + bShort(r.d) + '<small class="wi">' + W[P(r.d).getDay()] + '</small></td>' + ks.map(function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bVal(k, r[k])) + '</td>'; }).join('') + '</tr>';
+      return '<tr data-bd="' + r.d + '"><td>' + bYmd(r.d) + '<small class="wi">' + W[P(r.d).getDay()] + '</small></td>' + ks.map(function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bVal(k, r[k])) + '</td>'; }).join('') + '</tr>';
     }).join('') + '</table>';
 }
 
@@ -2540,7 +2541,7 @@ function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); 
 function bAgg(s, k, by) {
   var g = {}, o = [];
   s.forEach(function (r) { var key = by === 'w' ? monOf(r.d) : r.d.slice(0, 7); if (!g[key]) { g[key] = []; o.push(key); } g[key].push(r[k]); });
-  return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bYmd(key) : key.slice(2).replace('-', '.') }; });
+  return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bShort(key) : key.slice(2).replace('-', '.') }; });
 }
 function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
@@ -2562,7 +2563,7 @@ function bdHome() {
   var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
   if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
   var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
-  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bYmd(q.d) }; });
+  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
   h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
     bChart(pts, x) + bSum(s, k, x) + '</div>';
@@ -2617,7 +2618,7 @@ function bTopCard(r, day) {
     return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
   }).join('') + '</div>' +
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
-    bChart(s.map(function (q) { return { v: q[k], l: bYmd(q.d) }; }), x) + '</div>';
+    bChart(s.map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x) + '</div>';
 }
 function bdDaily() {
   var day = S.day, L = bList(), recs = L.filter(function (r) { return r.d === day; });
@@ -2635,7 +2636,7 @@ function bdWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), recs = bList().filter(function (r) { return inR(r.d, ws, we); });
   var keys = bKeys(ws, we), k = bCur(keys), x = bkOf(k), s = bSeries(k, ws, we);
   var h = weekNav() + bChips(keys, k);
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bYmd(r.d) }; }), x) + bSum(s, k, x) + '</div>';
+  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindBody();
 }
@@ -2652,7 +2653,7 @@ function bdMonth() {
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dr ? '<span class="bv" style="color:' + bcol(x) + '">' + bfmt(x, dr[k]) + '</span>' : '') + '</button>';
   }
   h += '</div><div class="legend">' + x.n + ' 측정한 날 · 날짜를 누르면 그날 기록</div></div>';
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bYmd(r.d) }; }), x) + bSum(s, k, x) + '</div>';
+  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">' + m + '월 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindMonth(); bindBody();
   $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
@@ -3320,7 +3321,7 @@ function labTrend() {
   var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
   return '<div class="card" id="ltrend"><div class="ct">검사 항목 추이<small>' + s.length + '회</small></div><div class="chips bkc">' + its.map(function (n) { return '<button data-lt="' + esc(n) + '" class="' + (n === it ? 'on' : '') + '">' + esc(labKo(n) || n) + '</button>'; }).join('') + '</div>' +
     '<div class="bsel"><span>' + esc(info ? info[1] : it) + '</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
-    bChart(s.map(function (l) { return { v: labNum(l.val), l: bYmd(l.d) }; }), x) + '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info ? info[1] : it) + ' 설명 보기 ›</button></div>';
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) + '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info ? info[1] : it) + ' 설명 보기 ›</button></div>';
 }
 // MEDICAL HOME
 function mdHome() {
@@ -3388,9 +3389,9 @@ function mdWeek() {
   var ix = its.indexOf(it);
   var h = '<div class="card" id="ltc"><div class="ct"><span class="dpw lsel">' + esc(info ? info[1] : it) + '<select id="ltS" class="dpk" aria-label="검사 항목 선택">' + its.map(function (n) { var k = labKo(n); return '<option value="' + esc(n) + '"' + (n === it ? ' selected' : '') + '>' + esc(k ? k + ' · ' + n : n) + '</option>'; }).join('') + '</select></span><small>' + (ix + 1) + ' / ' + its.length + ' · ' + esc(it) + '</small></div>' +
     '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
-    bChart(s.map(function (l) { return { v: labNum(l.val), l: bYmd(l.d) }; }), x) +
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
     '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
-      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + bShort(l.d) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
+      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + bYmd(l.d) + '<small class="wi">' + W[P(l.d).getDay()] + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
     }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
   h += '<div class="card"><div class="ct">전체 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div><ul class="brow mlst">' + its.map(function (n) {
     var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
@@ -3641,7 +3642,7 @@ function openLab(id) {
   } else h += '<p class="mnote">이 항목은 아직 설명 사전에 없어요.</p>';
   if (s.length > 1) {
     var dp = s.reduce(function (a, q) { var p = String(labNum(q.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
-    h += '<div class="sub2">지난 결과</div>' + bChart(s.map(function (q) { return { v: labNum(q.val), l: bYmd(q.d) }; }), { n: l.item, u: u, dp: Math.min(dp, 3), c: '#e5484d' });
+    h += '<div class="sub2">지난 결과</div>' + bChart(s.map(function (q) { return { v: labNum(q.val), l: bShort(q.d) }; }), { n: l.item, u: u, dp: Math.min(dp, 3), c: '#e5484d' });
   }
   h += '<p class="mnote">일반적인 설명이에요. 결과 해석과 치료는 담당 의사와 상의해 주세요.</p>';
   $('#lbB').innerHTML = h; openBs('#lb');
