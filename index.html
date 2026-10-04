@@ -540,6 +540,12 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .lbr { font-size:13px; color:var(--sub); margin:6px 0 4px; }
 .lbd p { margin:4px 2px 0; font-size:15px; line-height:1.65; color:var(--txt); }
 #lb .sub2 { margin-top:18px; }
+.ycal { display:grid; grid-template-columns:repeat(3,1fr); gap:14px 10px; }
+.ycal .wym { display:flex; flex-direction:column; align-items:stretch; width:100%; border:0; background:none; padding:6px 4px; text-align:left; min-width:0; border-radius:10px; }
+.ycal .wym.cur { background:var(--chip); }
+.ycal .wym b { display:flex; align-items:baseline; gap:4px; font-size:13px; font-weight:800; color:var(--txt); margin:0 0 6px 2px; } .ycal .wym b small { font-size:10.5px; color:var(--mute); font-weight:600; }
+.ycal .wyg { display:grid; width:100%; grid-template-columns:repeat(7,1fr); gap:2px; }
+.ycal .wyg i { display:block; aspect-ratio:1; border-radius:3px; background:#eef0f3; } .ycal .wyg i.o { visibility:hidden; } .ycal .wyg i.fu { background:#f7f8fa; }
 </style>
 </head>
 <body>
@@ -748,7 +754,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w7';
+var APP_VER = '20261004w8';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2877,13 +2883,13 @@ function wkDaily() {
 // WORKOUT WEEK
 function wkWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), l = wIn(ws, we), pl = wIn(addD(ws, -7), addD(ws, -1)), x = wkOf(S.wk);
-  var h = weekNav() + wChips(x.k);
-  var vals = weekDays(ws).map(function (d) { var v = wAgg(wIn(d, d), x.k); return x.dp ? Math.round(v * 100) / 100 : Math.round(v); });
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (WSUM[x.k] ? '하루 합계' : '하루 평균') + '</small></div>' + bars7(vals, weekLabels(ws), todayIdx(ws)) +
+  var h = weekNav();
+  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">' + wCalCells(ws, we) + '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div>' +
     '<div class="st3" style="margin-top:14px">' + stat('운동', l.length + '회', delta(l.length, pl.length, '회')) + stat('시간', fmtMin(wSum(l, 'dur')), '지난주 ' + fmtMin(wSum(pl, 'dur'))) + stat('운동한 날', wDays(l) + '/7') + '</div></div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 운동<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindWk();
+  $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
 }
 // WORKOUT MONTH
 var STROKES = ['자유형', '평영', '배영', '접영', '혼영', '킥판', '드릴'];
@@ -2993,13 +2999,31 @@ function bindAnalysis() {
   $$('[data-wp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wp = b.dataset.wp; render(); window.scrollTo(0, y0); }; });
 }
 // WORKOUT MONTH: 달력 · 종류 · 기록
+// 달력 칸 (운동 종류 점) — WEEK·MONTH 공통
+function wCalCells(from, to) {
+  var h = '', d;
+  for (d = from; d <= to; d = addD(d, 1)) { var dl = wIn(d, d); h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dl.length ? '<span class="dts">' + dl.map(function (r) { return '<i style="background:' + deep(wTypeCol(r.type)) + '"></i>'; }).join('') + '</span>' : '') + '</button>'; }
+  return h;
+}
+// 연간 달력: 12개월 미니 달력 (운동한 날 = 그날 첫 운동 종류 색)
+function wYearCal(y) {
+  var h = '<div class="ycal">', m, d, i;
+  for (m = 1; m <= 12; m++) {
+    var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), lead = (P(f).getDay() + 6) % 7, n = wIn(f, e).length;
+    h += '<button class="wym' + (f.slice(0, 7) === TODAY.slice(0, 7) ? ' cur' : '') + '" data-wm="' + m + '"><b>' + m + '월<small>' + (n ? n + '회' : '') + '</small></b><span class="wyg">';
+    for (i = 0; i < lead; i++) h += '<i class="o"></i>';
+    for (d = f; d <= e; d = addD(d, 1)) { var dl = wIn(d, d); h += '<i' + (dl.length ? ' style="background:' + deep(wTypeCol(dl[0].type)) + '"' : d > TODAY ? ' class="fu"' : '') + '></i>'; }
+    h += '</span></button>';
+  }
+  return h + '</div>';
+}
 function wkMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), l = wIn(from, to), i, d;
   var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
-  for (d = from; d <= to; d = addD(d, 1)) { var dl = wIn(d, d); h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dl.length ? '<span class="dts">' + dl.map(function (r) { return '<i style="background:' + deep(wTypeCol(r.type)) + '"></i>'; }).join('') + '</span>' : '') + '</button>'; }
+  h += wCalCells(from, to);
   h += '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div></div>';
   h += '<div class="card big1"><small>' + m + '월 운동</small><b>' + l.length + '<span class="pct">회</span></b><div class="sub">' + fmtMin(wSum(l, 'dur')) + ' · 운동한 날 ' + wDays(l) + '일 · 활동 ' + Math.round(wSum(l, 'akcal')) + 'kcal</div></div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
@@ -3034,13 +3058,9 @@ function openSwimReport(s) {
 // WORKOUT YEAR
 function wkYear() {
   var y = S.yy, l = wIn(y + '-01-01', y + '-12-31'), pl = wIn((y - 1) + '-01-01', (y - 1) + '-12-31'), x = wkOf(S.wk);
-  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + wChips(x.k);
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
   h += '<div class="card big1"><small>' + y + '년 운동</small><b>' + l.length + '<span class="pct">회</span></b><div class="sub">' + fmtMin(wSum(l, 'dur')) + ' · 운동한 날 ' + wDays(l) + '일' + (pl.length ? ' · 작년 ' + pl.length + '회' : '') + '</div></div>';
-  var vals = [], mx = 0, mm;
-  for (mm = 1; mm <= 12; mm++) { var ml = wIn(y + '-' + pad(mm) + '-01', mEnd(y, mm)), v = ml.length ? wAgg(ml, x.k) : 0; vals.push(v); mx = Math.max(mx, v); }
-  h += '<div class="card"><div class="ct">월별 ' + x.n + '<small>' + (WSUM[x.k] ? '합계' : '평균') + (x.u ? ' · ' + x.u : '') + '</small></div><div class="mbar">' + vals.map(function (v, i) {
-    return '<div class="' + (y + '-' + pad(i + 1) === TODAY.slice(0, 7) ? 'cur' : '') + '" data-wm="' + (i + 1) + '"><em>' + (v ? wfmt(x, v) : '') + '</em><i style="height:' + (mx ? Math.max(2, v / mx * 100) : 2) + '%;background:' + x.c + '"></i><span>' + (i + 1) + '</span></div>';
-  }).join('') + '</div></div>';
+  h += '<div class="card"><div class="ct">' + y + '년 달력<small>칸 색: 운동 종류</small></div>' + wYearCal(y) + '</div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   $('#main').innerHTML = h; bindYear(); bindWk();
   $$('[data-wm]').forEach(function (b) { b.onclick = function () { S.y = y; S.m = +b.dataset.wm; S.view = 'month'; ls.set('memo:view', 'month'); window.scrollTo(0, 0); render(); }; });
