@@ -428,6 +428,8 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .seg3 button { flex:1; border:0; background:var(--chip); border-radius:10px; padding:7px 0; font-size:13px; font-weight:600; color:var(--sub); }
 .seg3 button.on { background:var(--txt); color:#fff; }
 .st3 .lo { color:#e5484d; } .st3 .hi { color:#3182f6; } .st3 .sl { color:var(--faint); font-weight:500; margin:0 5px; } .st3 .mm { font-size:17px; } .st3 .mm small.bu { margin-left:1px; font-size:11px; }
+.bper th { font-size:11.5px; letter-spacing:-0.03em; padding-left:2px; } .bper th small { display:block; font-size:10.5px; color:var(--faint); font-weight:500; margin-top:1px; }
+.bper td { font-size:13px; padding:12px 0 12px 2px; letter-spacing:-0.02em; } .bper td:first-child { font-size:13.5px; }
 .bu2 { font-style:normal; font-size:11px; font-weight:600; color:var(--mute); margin-left:1px; }
 .bsum td b { display:block; font-size:14px; } .bsum td small { display:block; font-size:11px; font-weight:600; margin-top:2px; } .bsum td { padding:10px 0; }
 .bmm td b { display:block; font-size:14px; }
@@ -727,7 +729,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u9';
+var APP_VER = '20261004v1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2520,10 +2522,10 @@ function bdHome() {
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
     bChart(pts, x) + bSum(s, k, x) + '</div>';
   // 3) 기간별 변화 (최근 기록 기준)
-  var per = [['1주', 7], ['1개월', 30], ['3개월', 91], ['1년', 365], ['첫 기록', 99999]], ks = ['w', 'smm', 'pbf'];
-  h += '<div class="card"><div class="ct">기간별 변화<small>최근 측정 기준</small></div><table class="btab"><tr><th></th>' + ks.map(function (kk) { return '<th>' + bkOf(kk).n + '</th>'; }).join('') + '</tr>' +
+  var per = [['1주', 7], ['1개월', 30], ['3개월', 91], ['1년', 365], ['첫 기록', 99999]], ks = ['w', 'smm', 'bfm', 'pbf', 'vfl'], KSN = { w: '체중', smm: '골격근량', bfm: '체지방량', pbf: '체지방률', vfl: '내장지방' };
+  h += '<div class="card"><div class="ct">기간별 변화<small>최근 측정 기준</small></div><table class="btab bper"><tr><th></th>' + ks.map(function (kk) { var u = bkOf(kk).u; return '<th>' + KSN[kk] + '<small>' + (u || '&nbsp;') + '</small></th>'; }).join('') + '</tr>' +
     per.map(function (p) {
-      return '<tr><td>' + p[0] + (p[1] > 9999 ? '보다' : ' 전보다') + '</td>' + ks.map(function (kk) {
+      return '<tr><td>' + p[0] + (p[1] > 9999 ? '' : ' 전') + '</td>' + ks.map(function (kk) {
         var lr2 = bLast(kk), base = lr2 && (p[1] > 9999 ? bSeries(kk)[0] : bAt(kk, addD(lr2.d, -p[1])));
         return '<td>' + (lr2 && base && base.id !== lr2.id ? bDelta(bkOf(kk), lr2[kk], base[kk]) : '<span class="mute">-</span>') + '</td>';
       }).join('') + '</tr>';
