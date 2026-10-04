@@ -422,6 +422,9 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 /* 날짜 제목 통일 (모든 모드·기간) */
 .nav2 { margin:6px 0 12px; min-height:36px; }
 .nav2 .lbl { font-size:16px; font-weight:800; padding:0 4px; letter-spacing:-0.01em; }
+.dpw { position:relative; cursor:pointer; }
+.dpw::after { content:''; display:inline-block; width:5px; height:5px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); margin:0 2px 4px 8px; opacity:.35; vertical-align:middle; }
+.dpk { position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; border:0; margin:0; padding:0; font-size:16px; -webkit-appearance:none; appearance:none; cursor:pointer; color:transparent; background:transparent; }
 .hm { display:flex; align-items:center; min-height:36px; margin:6px 0 12px; padding:0 4px; }
 .hm b { font-size:16px; font-weight:800; letter-spacing:-0.01em; }
 /* BODY (2026.10.04) */
@@ -705,7 +708,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t9';
+var APP_VER = '20261004u1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -821,7 +824,36 @@ var VIEWS = { tracker: { home: trHome, daily: trDaily, week: trWeek, month: rend
   body: { home: bdHome, daily: bdDaily, week: bdWeek, month: bdMonth, year: bdYear },
   workout: { home: wkHome, daily: wkDaily, week: wkWeek, month: wkMonth, year: wkYear },
   medical: { home: mdHome, daily: mdDaily, week: mdWeek, month: mdMonth, year: mdYear } };
-function render() {
+function render() { renderCore(); try { datePick(); } catch (e) {} }
+// 날짜 글자를 누르면 바로 날짜 고르기 (HOME·DAY·WEEK = 날짜, MONTH = 년·월, YEAR = 연도) — 2026.10.04
+function datePick() {
+  if (!S.D || S.view === 'all') return;
+  var v = S.view, el = v === 'home' ? $('#main .hm b') : $('#main .nav2 .lbl'), inp, y;
+  if (!el || el.querySelector('.dpk')) return;
+  if (v === 'year') {
+    inp = document.createElement('select');
+    for (y = +TODAY.slice(0, 4); y >= 2015; y--) inp.add(new Option(y + '년', String(y)));
+    inp.value = String(S.yy);
+  } else {
+    inp = document.createElement('input');
+    inp.type = v === 'month' ? 'month' : 'date';
+    inp.min = v === 'month' ? '2015-01' : '2015-01-01'; inp.max = v === 'month' ? TODAY.slice(0, 7) : TODAY;
+    inp.value = v === 'month' ? S.y + '-' + pad(S.m) : v === 'home' ? TODAY : S.day;
+  }
+  inp.className = 'dpk'; inp.setAttribute('aria-label', '날짜 선택');
+  el.classList.add('dpw'); el.appendChild(inp);
+  var go = function () {
+    var x = inp.value; if (!x) return;
+    if (v === 'year') { if (+x === S.yy) return; S.yy = +x; }
+    else if (v === 'month') { var yy = +x.slice(0, 4), mm = +x.slice(5, 7); if (yy === S.y && mm === S.m) return; S.y = yy; S.m = mm; S.sel = null; }
+    else { if (x > TODAY) x = TODAY; if (v === 'home') return goDaily(x); if (x === S.day) return; S.day = x; }
+    window.scrollTo(0, 0); render();
+  };
+  // 휴대폰은 휠을 돌리는 중에도 값이 바뀌므로 '완료'로 닫을 때(blur) 적용
+  var touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  inp.addEventListener(touch && v !== 'year' ? 'blur' : 'change', go);
+}
+function renderCore() {
   if (!S.D) return;
   hdDate(); clampDay();
   $$('#nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.view); });
