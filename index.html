@@ -469,7 +469,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bcd small { display:block; font-size:12px; color:var(--mute); white-space:nowrap; }
 .bcd b { display:block; font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:4px 0 3px; }
 .bcd em { display:block; font-style:normal; font-size:11.5px; font-weight:700; }
-.sumc .bcd b { white-space:nowrap; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
+.sumc .bcd b, .asm .bcd b { white-space:nowrap; } .asm .bc4 { margin-top:2px; } .asm { cursor:pointer; } .asm .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); } .asm .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .asum .seg3 { margin-top:2px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
 .bsel { display:flex; align-items:center; gap:6px; margin:0 2px 4px; }
 .bsel span { font-size:13px; color:var(--mute); font-weight:600; } .bsel b { font-size:15px; font-weight:800; } .bsel small { margin-left:auto; font-size:12px; color:var(--mute); }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
@@ -805,7 +805,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zq';
+var APP_VER = '20261005zr';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1378,12 +1378,29 @@ function bindHome() {
 
 // ARCHIVE 전체 요약
 function renderAll() {
-  var R = rng(), hs = S.D.habits, ps = S.D.photos, L = S.D.diary, y = String(R.y);
-  var tn = hs.filter(function (x) { return on(TODAY, x.id); }).length, tw = total(R.ws, R.we), tm = total(R.mf, R.mt);
-  var bestS = hs.map(function (x) { return streak(x.id); }).reduce(function (a, b) { return Math.max(a, b); }, 0);
-  var pin = function (a, b) { return ps.filter(function (p) { return inR(p.d, a, b); }); }, din = function (a, b) { return L.filter(function (e) { return inR(e.d, a, b); }); };
+  // 전체 요약: 일·주·월·연 단추 → 메뉴별 같은 형식(칸 4개 + ▲▼ 지난 기간 대비) — 2026.10.05
+  var R = rng(), ps = S.D.photos, sp = S.asp || 'w', y = String(R.y);
+  var P = sp === 'd' ? { f: TODAY, t: TODAY, pf: addD(TODAY, -1), pt: addD(TODAY, -1), lb: '오늘', pn: '어제', te: TODAY } : sPer(sp);
   var h = '<div class="hm"><small>' + y + ' ROUTINE</small><b>' + mdw(TODAY) + '</b></div>';
-  // 최근 5주 활동: 칸마다 그날 한 기록 종류 수(습관·사진·일기)
+  h += '<div class="card asum"><div class="ct">' + P.lb + ' 요약<small>' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + '</small></div>' +
+    bSeg('data-asp', [['d', '일간'], ['w', '주간'], ['m', '월간'], ['y', '연간']], sp) +
+    '<div class="legend" style="justify-content:flex-start;margin-top:10px">메뉴마다 칸 4개 · ▲▼ ' + P.pn + ' 대비 · 카드를 누르면 그 메뉴로</div></div>';
+  var card = function (mode, title, tiles, note) {
+    return '<div class="card mcard asm" data-amode="' + mode + '"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div>' +
+      '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' + (note ? '<div class="legend" style="justify-content:flex-start;margin-top:8px">' + note + '</div>' : '') + '</div>';
+  };
+  var withP = function (food, fn) { var all = S.D.photos; S.D.photos = all.filter(function (p) { return isFood(p) === food; }); try { return fn(); } finally { S.D.photos = all; } };
+  var CD = {};
+  if (bList().length) CD.body = card('body', 'BODY', sumB(P), '평균');
+  if ((S.D.workouts || []).length) CD.workout = card('workout', 'WORKOUT', sumW(P));
+  if (S.D.counters.length) CD.count = card('count', 'COUNT', sumK(P));
+  CD.food = card('food', 'FOOD', withP(true, function () { return sumF(P); }));
+  if (S.D.habits.length) CD.tracker = card('tracker', 'TRACKER', sumT(P));
+  CD.feed = card('feed', 'ME', withP(false, function () { return sumF(P); }));
+  CD.diary = card('diary', 'DIARY', sumD(P), '연속 작성 ' + dRun() + '일');
+  if (vList().length) CD.medical = card('medical', 'MEDICAL', sumM(P));
+  h += ['body', 'workout', 'count', 'food', 'tracker', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
+  // 활동 기록 (맨 아래): 칸마다 그날 한 기록 종류 수
   var start = addD(R.ws, -28), cells = '', act = 0, full = 0;
   for (var d = start; d <= R.we; d = addD(d, 1)) {
     var k = (S.ck[d] && Object.keys(S.ck[d]).length ? 1 : 0) + (S.kc[d] && Object.keys(S.kc[d]).length ? 1 : 0) + (photosOf(d).length ? 1 : 0) + (diaryOf(d) ? 1 : 0);
@@ -1391,44 +1408,11 @@ function renderAll() {
     cells += '<i class="' + (d > TODAY ? 'f' : 'a' + Math.min(k, 3)) + (d === TODAY ? ' td' : '') + '" title="' + d + '"></i>';
   }
   h += '<div class="card"><div class="ct">최근 5주 활동<small>' + act + '일 기록 · 네 가지 모두 ' + full + '일</small></div><div class="wdh">' + WM.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div><div class="act5">' + cells + '</div>' +
-    '<div class="legend">적음 <i class="a1"></i><i class="a2"></i><i class="a3"></i> 많음</div></div>';
-  // 모드별 요약
-  var CD = {}, card = function (mode, title, rows, foot) {
-    CD[mode] = '<div class="card mcard"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div><div class="st4">' + rows.join('') + '</div>' + (foot || '') + '</div>'; return '';
-  };
-  h += card('tracker', 'TRACKER', [stat('오늘', tn + '/' + hs.length), stat('이번 주', pct(tw.rate) + '%'), stat(R.m + '월 체크', tm.cnt + '회'), stat('최고 연속', bestS + '일')],
-    hs.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(tw.rate) + '%"></i></div>' : '');
-  var ks = S.D.counters, kw = ktotal(R.ws, R.we), km = ktotal(R.mf, R.mt), kbest = ks.map(krun).reduce(function (a, b) { return Math.max(a, b); }, 0);
-  h += card('count', 'COUNT', [stat('오늘', kdayOk(TODAY) + '/' + ks.length), stat('이번 주', pct(kw.rate) + '%'), stat(R.m + '월 기록', km.cnt + '회'), stat('최고 연속', kbest + '일')],
-    ks.length ? '<div class="pbar" style="margin:14px 0 0"><i style="width:' + pct(kw.rate) + '%"></i></div>' : '');
-  [['feed', 'ME', false], ['food', 'FOOD', true]].forEach(function (o) {
-    var L2 = ps.filter(function (p) { return isFood(p) === o[2]; }), in2 = function (a, b) { return L2.filter(function (p) { return inR(p.d, a, b); }); }, lp = sortedPhotos(L2).slice(0, 4);
-    h += card(o[0], o[1], [stat('오늘', in2(TODAY, TODAY).length + '장'), stat('이번 주', in2(R.ws, R.we).length + '장'), stat(R.m + '월', in2(R.mf, R.mt).length + '장'), stat('게시물', posts(L2).length + '개')],
-      lp.length ? '<div class="thumbs">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div>' : '');
-  });
-  var dw = din(R.ws, R.we), dm = din(R.mf, R.mt), xm = diaryOf(TODAY);
-  h += card('diary', 'DIARY', [stat('오늘', xm ? (xm.mood || '작성') : '-'), stat('이번 주', dw.length + '/7일'), stat(R.m + '월', dm.length + '일'), stat('연속', dRun() + '일')],
-    xm && xm.text ? '<p class="dprev sm">' + esc(xm.text) + '</p>' : '');
-  var wl = S.D.workouts || [];
-  if (wl.length) { var wwk = wIn(R.ws, R.we), wmo = wIn(R.mf, R.mt); h += card('workout', 'WORKOUT', [stat('오늘', wIn(TODAY, TODAY).length + '회'), stat('이번 주', wwk.length + '회'), stat('주간 시간', fmtMin(wSum(wwk, 'dur'))), stat(R.m + '월', wmo.length + '회')]); }
-  var vl = vList();
-  if (vl.length) { var vnx = vl.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; })[0]; h += card('medical', 'MEDICAL', [stat('최근 방문', bShort(vl[vl.length - 1].d)), stat('다음 예약', vnx ? bShort(vnx.next) : '-'), stat('올해', vIn(R.y + '-01-01', R.y + '-12-31').length + '회'), stat('혈액검사', vl.filter(function (v) { return labsOf(v.id).length; }).length + '회')]); }
-  var br = bLast('w');
-  if (br) h += card('body', 'BODY', [stat('최근 측정', bShort(br.d)), stat('체중', bfmt(bkOf('w'), br.w) + 'kg'), stat('골격근량', bfmt(bkOf('smm'), br.smm) + 'kg'), stat('체지방률', bfmt(bkOf('pbf'), br.pbf) + '%')]);
-  h += ['body', 'workout', 'count', 'food', 'tracker', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
-  // 올해
-  var ty = total(y + '-01-01', y + '-12-31');
-  h += '<div class="sec">' + y + '년</div><div class="mini">' + stat('습관 체크', ty.cnt + '회') + stat('사진', ps.filter(function (p) { return p.d.slice(0, 4) === y; }).length + '장') + stat('일기', L.filter(function (e) { return e.d.slice(0, 4) === y; }).length + '일') + '</div>';
-  // 월별 기록일
-  var mv = [], ml = [];
-  for (var mm = 1; mm <= 12; mm++) {
-    var f = y + '-' + pad(mm) + '-01', e = mEnd(R.y, mm), c = 0;
-    if (f <= TODAY) for (d = f; d <= e && d <= TODAY; d = addD(d, 1)) if ((S.ck[d] && Object.keys(S.ck[d]).length) || (S.kc[d] && Object.keys(S.kc[d]).length) || photosOf(d).length || diaryOf(d)) c++;
-    mv.push(c); ml.push(mm);
-  }
-  h += '<div class="card"><div class="ct">월별 기록한 날</div>' + bars7(mv, ml, R.m - 1) + '</div>';
+    '<div class="legend">적음 <i class="a1"></i><i class="a2"></i><i class="a3"></i> 많음 · 습관·횟수·사진·일기 중 기록한 종류 수</div></div>';
   $('#main').innerHTML = h;
-  $$('[data-mode]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); goMode(a.dataset.mode, 'home'); }; });
+  $$('[data-mode]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); e.stopPropagation(); goMode(a.dataset.mode, 'home'); }; });
+  $$('[data-amode]').forEach(function (c) { c.onclick = function () { goMode(c.dataset.amode, 'home'); }; });
+  $$('[data-asp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.asp = b.dataset.asp; render(); window.scrollTo(0, y0); }; });
 }
 
 /* ───── TRACKER ───── */
