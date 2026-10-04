@@ -573,6 +573,8 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .kgrid2 .kc .m div { font-size:14px; } .kgrid2 .kn2 { min-width:0; } .kgrid2 .kc .kn2 b { font-size:18px; }
 .kgrid2 .kc .kplus { display:none; } .kgrid2 .kc .kb { width:26px; height:26px; } .kgrid2 .kc .kb svg { width:12px; height:12px; }
 .kc.k0 .hi { background:#fff; } .kc.k0 .hi .hico { opacity:.45; } .kc.k0 .m div, .kc.k0 .kn2 b { color:#8b95a1; } .kc.k0 .kb.kminus { background:#fff; }
+.mlist .mlt { display:flex; align-items:baseline; gap:5px; font-weight:700; color:var(--txt); font-size:14.5px; min-width:0; } .mlist .mlt small { font-size:11px; color:var(--faint); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mlist .n { flex-direction:column; align-items:flex-start; gap:3px; } .mlist .dt b { font-weight:700; }
 </style>
 </head>
 <body>
@@ -781,7 +783,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005z8';
+var APP_VER = '20261005z9';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3513,10 +3515,22 @@ function mdYear() {
   var hr = Object.keys(hs).map(function (k) { return { n: k, v: hs[k], t: '<b>' + hs[k] + '회</b>', c: '#5b8def' }; }).sort(function (a, b) { return b.v - a.v; });
   if (hr.length) h += '<div class="card"><div class="ct">병원별</div>' + hlist(hr) + '</div>';
   var bd = {}; vs.forEach(function (v) { labsOf(v.id).forEach(function (l) { var o = bd[l.item] = bd[l.item] || { n: l.item, t: 0, b: 0 }; o.t++; if (labFlag(l)) o.b++; }); });
-  var br = Object.keys(bd).map(function (k) { return bd[k]; }).filter(function (o) { return o.b; }).sort(function (a, b) { return b.b - a.b || b.t - a.t; });
-  if (br.length) h += '<div class="card"><div class="ct">참고치를 벗어난 항목<small>' + y + '년 · ' + br.length + '개</small></div>' + hlist(br.map(function (o) { return { n: labKo(o.n) || o.n, v: o.b, t: '검사 ' + o.t + '회 중 <b>' + o.b + '회</b>', c: '#e5484d' }; })) + '</div>';
+  // 검사 항목 전체: 최근 값 · 참고치 · 벗어난 횟수 (루푸스신염 우선순위 순) — 2026.10.05
+  vs.forEach(function (v) { labsOf(v.id).forEach(function (l) { var o = bd[l.item]; if (!o.last || l.d >= o.last.d) o.last = l; }); });
+  var all = Object.keys(bd).map(function (k) { return bd[k]; }).sort(function (a, b) { return labRank(a.n) - labRank(b.n); });
+  var nb = all.filter(function (o) { return o.b; }).length, mf = S.mdf === 'bad' ? 'bad' : 'all';
+  var shown = mf === 'bad' ? all.filter(function (o) { return o.b; }) : all;
+  if (all.length) h += '<div class="card"><div class="ct">검사 항목<small>' + y + '년 · ' + all.length + '개 · 참고치 밖 ' + nb + '개</small></div>' +
+    bSeg('data-mdf', [['all', '전체 ' + all.length], ['bad', '참고치 밖 ' + nb]], mf) +
+    (shown.length ? '<ul class="brow mlist">' + shown.map(function (o) {
+      var l = o.last, f = labFlag(l), ko = labKo(o.n);
+      return '<li class="tap" data-lid="' + esc(l.id) + '"><span class="n"><span class="mlt">' + esc(ko || o.n) + (ko ? '<small>' + esc(o.n) + '</small>' : '') + '</span>' +
+        '<small class="dt">' + (l.ref ? '참고치 ' + esc(l.ref) + (l.unit ? ' ' + esc(l.unit) : '') : '참고치 없음') + ' · 검사 ' + o.t + '회' + (o.b ? ' 중 <b class="dn">' + o.b + '회 벗어남</b>' : '') + '</small></span>' +
+        '<span class="v"><b class="' + (f === 'H' || f === 'A' ? 'dn' : f === 'L' ? 'up' : '') + '">' + (f === 'H' ? '▲' : f === 'L' ? '▼' : '') + esc(l.val == null ? '-' : l.val) + '</b>' + (l.unit ? '<small>' + esc(l.unit) + '</small>' : '') + '<small class="dt" style="display:block;text-align:right">' + bYmd(l.d) + '</small></span></li>';
+    }).join('') + '</ul>' : '<div class="empty">' + y + '년에는 참고치를 벗어난 항목이 없어요</div>') + '</div>';
   h += vListCard(y + '년 방문', vs);
   $('#main').innerHTML = h; bindYear(); bindMd();
+  $$('[data-mdf]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.mdf = b.dataset.mdf; render(); window.scrollTo(0, y0); }; });
 }
 
 
