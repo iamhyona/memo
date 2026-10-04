@@ -438,7 +438,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004c';
+var APP_VER = '20261004d';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -754,7 +754,7 @@ function renderMonth() {
     '<div class="sub">' + (pt.cnt ? (diff > 0 ? '지난달보다 <span class="up">' + diff + '회 더</span> 해냈어요' : diff < 0 ? '지난달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난달과 같아요') : '첫 달 기록이에요') + '</div>' +
     '<div class="sub" style="margin-top:4px">달성률 ' + pct(t.rate) + '%' + (pt.goal ? diffHtml(t.rate, pt.rate, '지난달') : '') + ' · 기록한 날 ' + nd + '일 · 일기 ' + dd + '일</div></div>';
   var note = (S.D.notes || {})[ym] || '';
-  h += '<div class="card"><div class="ct">Notes<a href="#" id="ntE">' + (note ? '수정 ›' : '쓰기 ›') + '</a></div>' +
+  h += '<div class="card"><div class="ct">월간 메모<a href="#" id="ntE">' + (note ? '수정 ›' : '쓰기 ›') + '</a></div>' +
     (note ? '<p class="note">' + esc(note) + '</p>' : '<button class="ntb" id="ntB">' + m + '월은 어땠나요? 리뷰를 남겨 보세요.</button>') + '</div>';
   h += '<div class="card"><div class="ct">습관별 달성률</div>' + habitBars(from, to) + '</div>';
   $('#main').innerHTML = h;
@@ -1225,7 +1225,7 @@ function renderSettings() {
       S.D.cats.splice(+b.dataset.x, 1); saveCats({}); renderSettings(); render();
     };
   });
-  $('#stU').innerHTML = S.D.url ? '모든 기록은 구글 시트에 저장돼요 · <a href="' + esc(S.D.url) + '" target="_blank" rel="noopener">구글 시트 열기</a>' : '';
+  $('#stU').innerHTML = S.D.url ? '모든 기록은 구글 드라이브 저장 폴더의 시트(습관 트래커 · 사진 · 일기)에 저장돼요 · <a href="' + esc(S.D.url) + '" target="_blank" rel="noopener">저장 폴더 열기</a>' : '';
 }
 function saveCats(ren) { saveCache(); call('appCats', S.pin, S.D.cats, ren).catch(function (e) { toast(errMsg(e)); load(); }); }
 $('#stCa').onclick = function () {
