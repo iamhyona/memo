@@ -780,7 +780,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y6';
+var APP_VER = '20261005y7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1155,6 +1155,12 @@ function renderYear() {
       }).join('') + '</div>';
     }).join('') + '</div>';
   h += '</div>';
+  // Yearly Report (날짜별 칸)
+  h += '<div class="sec">Yearly Report<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
+  hsY.forEach(function (x) {
+    var s3 = hstat(x, from, to);
+    h += '<div class="yh tapd" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + esc(x.name) + '</span><small>' + s3.cnt + '회 · 최장 ' + s3.best + '일</small></div>' + yearGrid(x, y);
+  });
   $('#main').innerHTML = h;
   $('#nP').onclick = function () { S.yy--; render(); };
   $('#nN').onclick = function () { S.yy++; render(); };
