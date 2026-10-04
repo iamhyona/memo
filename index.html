@@ -425,6 +425,20 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .dpw { position:relative; cursor:pointer; }
 .dpw::after { content:''; display:inline-block; width:5px; height:5px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); margin:0 2px 4px 8px; opacity:.35; vertical-align:middle; }
 .dpk { position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; border:0; margin:0; padding:0; font-size:16px; -webkit-appearance:none; appearance:none; cursor:pointer; color:transparent; background:transparent; }
+.seg3 { display:flex; gap:6px; margin:0 0 12px; }
+.seg3 button { flex:1; border:0; background:var(--chip); border-radius:10px; padding:7px 0; font-size:13px; font-weight:600; color:var(--sub); }
+.seg3 button.on { background:var(--txt); color:#fff; }
+.bmm td b { display:block; font-size:14px; } .bmm td small { display:block; font-size:11px; color:var(--faint); font-weight:500; margin-top:1px; } .bmm td { padding:9px 0; }
+.ballo { width:100%; border:0; background:none; display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:700; color:var(--txt); padding:2px 0; }
+.ballo small { font-size:13px; color:var(--mute); font-weight:600; }
+.ballh { display:flex; align-items:center; gap:8px; min-height:36px; margin:6px 0 12px; }
+.ballh button { border:0; background:var(--card,#fff); width:36px; height:36px; border-radius:50%; font-size:20px; line-height:1; }
+.ballh b { font-size:16px; font-weight:800; } .ballh small { margin-left:auto; color:var(--mute); font-size:13px; font-weight:600; padding-right:4px; }
+.ball { padding-top:4px; padding-bottom:4px; } .ball ul { list-style:none; margin:0; padding:0; }
+.ball li { display:flex; align-items:center; gap:10px; padding:14px 0; border-top:1px solid #f2f4f6; cursor:pointer; } .ball li:first-child { border-top:0; }
+.ball .n { flex:1; min-width:0; } .ball .n b { display:block; font-size:15px; font-weight:600; } .ball small { display:block; font-size:12.5px; color:var(--mute); margin-top:3px; }
+.mlst .n { flex-direction:column; align-items:flex-start; gap:2px; } .mlst .n .lk { font-size:15px; } .mlst .n .le { font-size:11.5px; color:var(--mute); }
+.ball .v { text-align:right; } .ball .v b { font-size:15px; font-weight:700; } .ball i { font-style:normal; color:var(--faint); font-size:18px; }
 .hm { display:flex; align-items:center; min-height:36px; margin:6px 0 12px; padding:0 4px; }
 .hm b { font-size:16px; font-weight:800; letter-spacing:-0.01em; }
 /* BODY (2026.10.04) */
@@ -708,7 +722,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u1';
+var APP_VER = '20261004u2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -856,7 +870,8 @@ function datePick() {
 function renderCore() {
   if (!S.D) return;
   hdDate(); clampDay();
-  $$('#nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.view); });
+  var nl = NAVL[S.mode] || NAVL._;
+  $$('#nav button').forEach(function (b, i) { b.classList.toggle('on', b.dataset.v === S.view); if (b.textContent !== nl[i]) b.textContent = nl[i]; });
   $$('#mode button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === S.mode); });
   $('#mode').classList.toggle('off', S.view === 'all');
   $('#fab').classList.toggle('hide', S.view === 'all' || (S.mode === 'tracker' && (S.view === 'month' || S.view === 'year')));
@@ -879,7 +894,8 @@ function syncView(v) {
   if (v === 'month') { S.y = +S.day.slice(0, 4); S.m = +S.day.slice(5, 7); S.sel = null; }
   if (v === 'year') S.yy = +S.day.slice(0, 4);
 }
-$$('#nav button').forEach(function (b) { b.onclick = function () { S.view = b.dataset.v; syncView(S.view); ls.set('memo:view', S.view); window.scrollTo(0, 0); render(); }; });
+var NAVL = { _: ['HOME', 'DAY', 'WEEK', 'MONTH', 'YEAR'], medical: ['홈', '기록', '항목', '달력', '요약'] };
+$$('#nav button').forEach(function (b) { b.onclick = function () { S.bAll = 0; if (b.dataset.v === 'daily') S.mdl = true; S.view = b.dataset.v; syncView(S.view); ls.set('memo:view', S.view); window.scrollTo(0, 0); render(); }; });
 $$('#mode button').forEach(function (b) { b.onclick = function () { S.mode = b.dataset.m; if (S.view === 'all') S.view = 'home'; ls.set('memo:mode', S.mode); ls.set('memo:view', S.view); window.scrollTo(0, 0); render(); }; });
 $('#brand').onclick = function () { S.view = 'all'; S.day = TODAY; ls.set('memo:view', 'all'); window.scrollTo(0, 0); render(); };
 
@@ -1090,7 +1106,7 @@ function openPost(id) {
 function clampDay() { if (!S.day || S.day > TODAY) S.day = TODAY; }
 function dayNav() {
   var t = S.day === TODAY;
-  return '<div class="nav2"><span class="lbl">' + mdw(S.day) + '</span><div class="arw">' + (t ? '' : '<button class="tod" id="nT">오늘</button>') +
+  return '<div class="nav2"><span class="lbl">' + (S.day.slice(0, 4) !== TODAY.slice(0, 4) ? S.day.slice(0, 4) + '년 ' : '') + mdw(S.day) + '</span><div class="arw">' + (t ? '' : '<button class="tod" id="nT">오늘</button>') +
     '<button id="nP" aria-label="이전 날">‹</button><button id="nN" aria-label="다음 날"' + (t ? ' disabled' : '') + '>›</button></div></div>';
 }
 function bindDay() {
@@ -1132,7 +1148,7 @@ function dstrip(mark) {
 function bindStrip() {
   $$('.dstrip button').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; var y0 = window.scrollY; S.day = b.dataset.d; render(); window.scrollTo(0, y0); }; });
 }
-function goDaily(d) { S.day = d; S.view = 'daily'; ls.set('memo:view', 'daily'); window.scrollTo(0, 0); render(); }
+function goDaily(d) { S.bAll = 0; S.mdl = false; S.day = d; S.view = 'daily'; ls.set('memo:view', 'daily'); window.scrollTo(0, 0); render(); }
 var PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 
 /* ───── HOME 대시보드 (모드별) · ARCHIVE 전체 요약 ───── */
@@ -2390,8 +2406,10 @@ function bChart(pts, x) {
   var pd = (mx - mn) * .3 || Math.max(Math.abs(mx) * .03, .5); mn -= pd; mx += pd;
   var px = function (i) { return n > 1 ? L + (W - L - R) * i / (n - 1) : W / 2; };
   var py = function (v) { return T + (H - T - B) * (1 - (v - mn) / (mx - mn)); };
-  var g = '';
+  var g = '', av = vs.reduce(function (a, b) { return a + b; }, 0) / n, big = n > 40;
   [0, .5, 1].forEach(function (f) { var y = T + (H - T - B) * f; g += '<line x1="0" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="#f2f4f6"/>'; });
+  // 평균선 (점선)
+  if (n > 1) { var ya = py(av); g += '<line x1="0" x2="' + W + '" y1="' + ya + '" y2="' + ya + '" stroke="' + c + '" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 3"/><text x="2" y="' + (ya + 11) + '" style="fill:' + c + ';font-weight:700;font-size:9.5px">평균 ' + bfmt(x, av) + '</text>'; }
   var p = pts.map(function (q, i) { return [px(i), py(q.v)]; }), d = '';
   p.forEach(function (q, i) {
     if (!i) { d = 'M' + q[0] + ' ' + q[1]; return; }
@@ -2400,7 +2418,7 @@ function bChart(pts, x) {
   });
   var lab = n <= 10, ix = vs.indexOf(Math.max.apply(null, vs)), iy = vs.indexOf(Math.min.apply(null, vs));
   var dots = p.map(function (q, i) {
-    var last = i === n - 1, s = '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (last ? 4.5 : 3.2) + '" fill="' + (last ? c : '#fff') + '" stroke="' + c + '" stroke-width="2"/>';
+    var last = i === n - 1, s = big && !last ? '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.6" fill="' + c + '"/>' : '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (last ? 4.5 : 3.2) + '" fill="' + (last ? c : '#fff') + '" stroke="' + c + '" stroke-width="2"/>';
     if (lab || last || i === ix || i === iy) s += '<text class="vl" x="' + q[0] + '" y="' + (q[1] - 9) + '" text-anchor="middle">' + bfmt(x, pts[i].v) + '</text>';
     return s;
   }).join('');
@@ -2442,19 +2460,42 @@ function bTable(recs) {
     }).join('') + '</table>';
 }
 
-// BODY HOME
+// BODY HOME: 분석 — 항목별 그래프 · 최저/최고 · 기간별 변화 (2026.10.04 개편)
+var BMK = ['w', 'smm', 'bfm', 'pbf', 'vfl', 'bmi'];
+var BPER = [['1m', '1개월'], ['3m', '3개월'], ['1y', '1년'], ['all', '전체']];
+function devName(d) { d = String(d || ''); return /^H20/i.test(d) ? '인바디다이얼' : /^\d/.test(d) ? 'InBody ' + d : /^etc$/i.test(d) ? '기타' : d; }
+function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); }
+// 묶어서 평균 (주·월) — 점이 너무 많을 때
+function bAgg(s, k, by) {
+  var g = {}, o = [];
+  s.forEach(function (r) { var key = by === 'w' ? monOf(r.d) : r.d.slice(0, 7); if (!g[key]) { g[key] = []; o.push(key); } g[key].push(r[k]); });
+  return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bShort(key) : key.slice(2).replace('-', '.') }; });
+}
+function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
   var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
-  var r = bLast('w') || L[L.length - 1], k = S.bk, x = bkOf(k);
-  h += '<div class="card"><div class="ct">최근 측정<a href="#" data-bd="' + r.d + '">' + bWhen(r) + ' ›</a></div><div class="bc3">' + ['w', 'smm', 'bfm', 'bmi', 'vfl', 'pbf'].map(function (kk) {
-    var xx = bkOf(kk), pv = bPrevVal(r, kk);
-    return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + xx.n + (xx.u && kk !== 'vfl' ? ' (' + xx.u + ')' : '') + '</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
-  }).join('') + '</div>';
-  var s = bSeries(k).slice(-14), lr = s[s.length - 1];
-  h += '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
-    bChart(s.map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x) + '</div>';
-  // 기간별 변화 (최근 기록 기준)
+  // 1) 항목별 그래프
+  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
+  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
+  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
+  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
+  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
+  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
+    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
+    bChart(pts, x) + bSum(s, k, x) + '</div>';
+  // 2) 최저 · 최고
+  var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
+  var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
+  var cnt = bList().filter(function (r) { return (!rg[0] || r.d >= rg[0]) && (!rg[1] || r.d <= rg[1]); }).length;
+  var cell = function (xx, r) { return r ? '<b>' + bfmt(xx, r[xx.k]) + '</b><small>' + bShort(r.d) + '</small>' : '<span class="mute">-</span>'; };
+  h += '<div class="card"><div class="ct">최저 · 최고<small>' + rg[2] + ' · 측정 ' + cnt + '회</small></div>' + bSeg('data-bmm', [['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']], bm) +
+    '<table class="btab bmm"><tr><th></th><th>최저</th><th>최고</th><th>평균</th></tr>' + BMK.map(function (kk) {
+      var xx = bkOf(kk), ss = bSeries(kk, rg[0], rg[1]), lo = null, hi = null, sum = 0;
+      ss.forEach(function (r) { if (!lo || r[kk] < lo[kk]) lo = r; if (!hi || r[kk] > hi[kk]) hi = r; sum += r[kk]; });
+      return '<tr><td>' + xx.n + (xx.u && kk !== 'vfl' ? ' <small>' + xx.u + '</small>' : '') + '</td><td>' + cell(xx, lo) + '</td><td>' + cell(xx, hi) + '</td><td>' + (ss.length ? '<b>' + bfmt(xx, sum / ss.length) + '</b>' : '<span class="mute">-</span>') + '</td></tr>';
+    }).join('') + '</table></div>';
+  // 3) 기간별 변화 (최근 기록 기준)
   var per = [['1주', 7], ['1개월', 30], ['3개월', 91], ['1년', 365], ['첫 기록', 99999]], ks = ['w', 'smm', 'pbf'];
   h += '<div class="card"><div class="ct">기간별 변화<small>최근 측정 기준</small></div><table class="btab"><tr><th></th>' + ks.map(function (kk) { return '<th>' + bkOf(kk).n + '</th>'; }).join('') + '</tr>' +
     per.map(function (p) {
@@ -2463,17 +2504,10 @@ function bdHome() {
         return '<td>' + (lr2 && base && base.id !== lr2.id ? bDelta(bkOf(kk), lr2[kk], base[kk]) : '<span class="mute">-</span>') + '</td>';
       }).join('') + '</tr>';
     }).join('') + '</table></div>';
-  // 전체 항목 (누르면 위 그래프가 그 항목으로)
-  var row = function (xx) {
-    var lr3 = bLast(xx.k); if (!lr3) return '';
-    var pv = bPrevVal(lr3, xx.k);
-    return '<li class="tap' + (xx.k === k ? ' on' : '') + '" data-bk="' + xx.k + '"><span class="n">' + xx.n + (lr3.d !== r.d ? '<small class="dt">' + bShort(lr3.d) + '</small>' : '') + '</span><span class="v"><b>' + bfmt(xx, lr3[xx.k]) + '</b><small>' + xx.u + '</small></span><span class="d">' + bjHtml(xx.k, lr3) + (pv != null ? bDelta(xx, lr3[xx.k], pv) : '') + '</span></li>';
-  };
-  var core = BK.filter(function (xx) { return xx.core; }).map(row).join(''), ext = BK.filter(function (xx) { return !xx.core && !xx.seg; }).map(row).join('');
-  h += '<div class="card"><div class="ct">전체 항목<small>누르면 그래프로</small></div><ul class="brow">' + core + '</ul>' + (ext ? '<div class="sub2">추가 항목 · 측정한 기기에서만</div><ul class="brow">' + ext + '</ul>' : '') + '</div>';
-  h += '<p class="mnote" style="margin:0 6px 16px">판정은 여성 표준 범위 기준이에요 (BMI 18.5~25 · 체지방률 18~28% · 내장지방 10 미만 · 체중은 키로 계산한 표준체중의 85~115%).</p>';
+  h += '<p class="mnote" style="margin:0 6px 16px">판정은 여성 표준 범위 기준이에요 (BMI 18.5~25 · 체지방률 18~28% · 내장지방 10 미만 · 체중은 키로 계산한 표준체중의 85~115%). 그래프의 점선은 기간 평균이에요.</p>';
   $('#main').innerHTML = h; bindBody();
-  $$('.brow li[data-bk]').forEach(function (b) { b.onclick = function () { S.bk = b.dataset.bk; ls.set('memo:bk', S.bk); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; });
+  $$('[data-bp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bp = b.dataset.bp; render(); window.scrollTo(0, y0); }; });
+  $$('[data-bmm]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.bmm = b.dataset.bmm; render(); window.scrollTo(0, y0); }; });
 }
 // BODY DAY: 그날 측정 전체 수치
 function bRecCard(r) {
@@ -2488,9 +2522,19 @@ function bRecCard(r) {
   var sg = [['오른팔', 'ra'], ['왼팔', 'la'], ['몸통', 'tr'], ['오른다리', 'rl'], ['왼다리', 'll']].filter(function (q) { return r['m' + q[1]] != null || r['f' + q[1]] != null; });
   var cell = function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bfmt(bkOf(k), r[k]) + ' ' + bDelta(bkOf(k), r[k], bPrevVal(r, k))) + '</td>'; };
   var seg = sg.length ? '<div class="sub2">부위별</div><table class="btab bseg"><tr><th></th><th>근육 kg</th><th>지방 kg</th></tr>' + sg.map(function (q) { return '<tr><td>' + q[0] + '</td>' + cell('m' + q[1]) + cell('f' + q[1]) + '</tr>'; }).join('') + '</table>' : '';
-  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + (r.dev ? ' <small>' + esc(r.dev) + '</small>' : '') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
+  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + (r.dev ? ' <small>' + esc(devName(r.dev)) + '</small>' : '') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
     grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) + seg +
     (r.memo ? '<p class="mnote">' + esc(r.memo) + '</p>' : '') + '<div class="legend" style="justify-content:flex-start">▲▼ 지난 측정 대비 · 파랑 좋아짐 · 빨강 나빠짐</div></div>';
+}
+// BODY DAY: 그날 측정 — 위에 주요 6개 + 최근 14회 그래프, 아래 전체 수치
+function bTopCard(r, day) {
+  var k = BMK.indexOf(S.bk) >= 0 ? S.bk : 'w', x = bkOf(k), s = bSeries(k, null, day).slice(-14), lr = s[s.length - 1];
+  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정') + (r.dev ? ' <small>' + esc(devName(r.dev)) + '</small>' : '') + '</div><div class="bc3">' + BMK.map(function (kk) {
+    var xx = bkOf(kk), pv = r[kk] == null ? null : bPrevVal(r, kk);
+    return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + bfmt(xx, r[kk]) + '</b><em>' + (pv != null ? bDelta(xx, r[kk], pv) : '&nbsp;') + '</em></button>';
+  }).join('') + '</div>' +
+    '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
+    bChart(s.map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x) + '</div>';
 }
 function bdDaily() {
   var day = S.day, L = bList(), recs = L.filter(function (r) { return r.d === day; });
@@ -2499,7 +2543,7 @@ function bdDaily() {
     var pv = L.filter(function (r) { return r.d < day; }).pop(), nx = L.filter(function (r) { return r.d > day; })[0];
     h += '<div class="card empty">이 날은 인바디 기록이 없어요<br><button class="lnk" id="bAdd">기록 추가</button>' +
       '<div class="bjump">' + (pv ? '<a href="#" data-bd="' + pv.d + '">‹ 이전 측정 ' + bShort(pv.d) + '</a>' : '<span></span>') + (nx ? '<a href="#" data-bd="' + nx.d + '">다음 측정 ' + bShort(nx.d) + ' ›</a>' : '') + '</div></div>';
-  }
+  } else h += bTopCard(recs[recs.length - 1], day);
   h += recs.map(bRecCard).join('');
   $('#main').innerHTML = h; bindDay(); bindBody();
 }
@@ -2530,8 +2574,9 @@ function bdMonth() {
   $('#main').innerHTML = h; bindMonth(); bindBody();
   $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
 }
-// BODY YEAR: 월 평균
+// BODY YEAR: 월별 평균 + 전체 기록 목록
 function bdYear() {
+  if (S.bAll) return bdAll();
   var y = S.yy, from = y + '-01-01', to = y + '-12-31', keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + bChips(keys, k), ms = [], mm, ks = ['w', 'smm', 'pbf'];
   for (mm = 1; mm <= 12; mm++) {
@@ -2540,13 +2585,26 @@ function bdYear() {
     ms.push({ m: mm, n: rs.length, a: { k: av(k), w: av('w'), smm: av('smm'), pbf: av('pbf') } });
   }
   var pts = ms.filter(function (o) { return o.a.k != null; }).map(function (o) { return { v: o.a.k, l: o.m + '월' }; });
-  h += '<div class="card"><div class="ct">' + x.n + ' 월 평균<small>' + (x.u || '') + '</small></div>' + bChart(pts, x) + bSum(s, k, x) + '</div>';
+  h += '<div class="card"><div class="ct">' + y + '년 월별 평균 · ' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(pts, x) + bSum(s, k, x) + '</div>';
   var rows = ms.filter(function (o) { return o.n; });
-  h += '<div class="card"><div class="ct">' + y + '년 월별<small>측정 ' + rows.reduce(function (a, o) { return a + o.n; }, 0) + '회</small></div>' + (rows.length ? '<table class="btab"><tr><th>월</th><th>측정</th>' + ks.map(function (kk) { return '<th>' + bkOf(kk).n + '</th>'; }).join('') + '</tr>' +
+  h += '<div class="card"><div class="ct">' + y + '년 월별 평균<small>측정 ' + rows.reduce(function (a, o) { return a + o.n; }, 0) + '회</small></div>' + (rows.length ? '<table class="btab"><tr><th>월</th><th>측정</th>' + ks.map(function (kk) { return '<th>' + bkOf(kk).n + '</th>'; }).join('') + '</tr>' +
     rows.reverse().map(function (o) { return '<tr data-bm="' + o.m + '"><td>' + o.m + '월</td><td>' + o.n + '회</td>' + ks.map(function (kk) { return '<td>' + (o.a[kk] == null ? '<span class="mute">-</span>' : bfmt(bkOf(kk), o.a[kk])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
-    '<div class="legend" style="justify-content:flex-start">월 평균값 · 누르면 그 달로</div>' : '<div class="empty" style="padding:18px 0">기록이 없어요</div>') + '</div>';
+    '<div class="legend" style="justify-content:flex-start">그 달 측정값의 평균 · 누르면 그 달로</div>' : '<div class="empty" style="padding:18px 0">기록이 없어요</div>') + '</div>';
+  h += '<div class="card"><button class="ballo" id="bAllO"><span>전체 기록 보기</span><small>' + bList().length.toLocaleString() + '회 ›</small></button></div>';
   $('#main').innerHTML = h; bindYear(); bindBody();
   $$('[data-bm]').forEach(function (b) { b.onclick = function () { S.y = y; S.m = +b.dataset.bm; S.view = 'month'; ls.set('memo:view', 'month'); window.scrollTo(0, 0); render(); }; });
+  $('#bAllO').onclick = function () { S.bAll = 1; S.bAllN = 200; window.scrollTo(0, 0); render(); };
+}
+function bdAll() {
+  var L = bList().slice().reverse(), n = S.bAllN || 200, wk = bkOf('w'), pf = bkOf('pbf');
+  var h = '<div class="ballh"><button id="bAllX" aria-label="닫기">‹</button><b>인바디 전체 기록</b><small>' + L.length.toLocaleString() + '회</small></div>';
+  h += '<div class="card ball"><ul>' + L.slice(0, n).map(function (r) {
+    return '<li data-bd="' + r.d + '"><span class="n"><b>' + r.d.slice(2).replace(/-/g, '.') + '(' + W[P(r.d).getDay()] + ')' + (r.t ? ' ' + r.t : '') + '</b><small>' + esc(devName(r.dev) || '-') + '</small></span>' +
+      '<span class="v"><b>체중 ' + (r.w == null ? '-' : bfmt(wk, r.w) + 'kg') + '</b><small>체지방률 ' + (r.pbf == null ? '-' : bfmt(pf, r.pbf) + '%') + '</small></span><i>›</i></li>';
+  }).join('') + '</ul>' + (L.length > n ? '<button class="bmore" id="bAllM" style="width:100%">더 보기 (' + (L.length - n).toLocaleString() + '회 남음)</button>' : '') + '</div>';
+  $('#main').innerHTML = h; bindBody();
+  $('#bAllX').onclick = function () { S.bAll = 0; window.scrollTo(0, 0); render(); };
+  if ($('#bAllM')) $('#bAllM').onclick = function () { var y0 = window.scrollY; S.bAllN = n + 300; render(); window.scrollTo(0, y0); };
 }
 
 /* 인바디 기록 추가·수정: 사진 → 글자 읽기(OCR) → 칸 채우기 → 확인 후 저장 */
@@ -3061,22 +3119,55 @@ function vCard(v) {
     '<ul class="brow mrows">' + row('내용', v.note) + row('처방', v.rx) + (v.next ? row('다음 예약', mdw(v.next)) : '') + '</ul>' +
     (ls.length ? '<div class="sub2">혈액검사 ' + ls.length + '개 항목 · 누르면 설명</div>' + labTable(ls) : '') + '</div>';
 }
+// MEDICAL 기록: 전체 목록 → 누르면 그 날 상세 (2026.10.04)
+function mdNav() {
+  var vs = vList(), d = S.day, pv = vs.filter(function (v) { return v.d < d; }).pop(), nx = vs.filter(function (v) { return v.d > d; })[0];
+  return '<div class="nav2"><span class="lbl">' + (d.slice(0, 4) !== TODAY.slice(0, 4) ? d.slice(0, 4) + '년 ' : '') + mdw(d) + '</span><div class="arw"><button class="tod" id="mL">목록</button>' +
+    '<button id="nP" aria-label="이전 기록"' + (pv ? ' data-go="' + pv.d + '"' : ' disabled') + '>‹</button><button id="nN" aria-label="다음 기록"' + (nx ? ' data-go="' + nx.d + '"' : ' disabled') + '>›</button></div></div>';
+}
 function mdDaily() {
-  var day = S.day, vs = vIn(day, day), h = dayNav();
+  if (S.mdl !== false) return mdList();
+  var day = S.day, vs = vIn(day, day), h = mdNav();
   var nx = vList().filter(function (v) { return v.next === day; });
   if (nx.length) h += '<div class="card"><div class="ct">이 날 예약</div><ul class="brow">' + nx.map(function (v) { return '<li class="tap" data-bd="' + v.d + '"><span class="n">' + vTitle(v) + '</span><span class="d"><span class="mute">' + bShort(v.d) + ' 방문 때 잡은 예약</span></span></li>'; }).join('') + '</ul></div>';
   if (!vs.length) h += '<div class="card empty">이 날은 병원 기록이 없어요<br><button class="lnk" id="vAdd">기록 추가</button></div>';
   h += vs.map(vCard).join('');
-  $('#main').innerHTML = h; bindDay(); bindMd();
+  $('#main').innerHTML = h; bindMd();
+  $('#mL').onclick = function () { S.mdl = true; window.scrollTo(0, 0); render(); };
+  ['#nP', '#nN'].forEach(function (q) { var b = $(q); if (b.dataset.go) b.onclick = function () { S.day = b.dataset.go; window.scrollTo(0, 0); render(); }; });
+}
+function mdList() {
+  var vs = vList(), h = '';
+  if (!vs.length) { $('#main').innerHTML = '<div class="card empty">오른쪽 아래 + 버튼으로 병원 다녀온 기록과<br>혈액검사 결과 캡처를 남겨 보세요</div>'; return; }
+  var lv = vs.filter(function (v) { return labsOf(v.id).length; });
+  h += '<div class="card big1"><small>병원 기록</small><b>' + vs.length + '<span class="pct">회</span></b><div class="sub">혈액검사 ' + lv.length + '회 · 검사 결과 ' + (S.D.labs || []).length.toLocaleString() + '개 · ' + bShort(vs[0].d) + ' 부터</div></div>';
+  var ys = {}; vs.forEach(function (v) { (ys[v.d.slice(0, 4)] = ys[v.d.slice(0, 4)] || []).push(v); });
+  Object.keys(ys).sort().reverse().forEach(function (y) { h += vListCard(y + '년', ys[y]); });
+  $('#main').innerHTML = h; bindMd();
+}
+// MEDICAL 항목: 검사 항목별 추이 · 기록 · 전체 항목
+function mdWeek() {
+  var its = labItems();
+  if (!its.length) { $('#main').innerHTML = '<div class="card empty">혈액검사 결과를 넣으면<br>항목별로 변화를 볼 수 있어요</div>'; return; }
+  var ord = function (n) { var i = LABS.indexOf(labInfo(n)); return i < 0 ? 999 : i; };
+  its.sort(function (a, b) { return ord(a) - ord(b); });
+  var it = its.indexOf(S.lt) >= 0 ? S.lt : its[0], s = labSeries(it), last = s[s.length - 1], info = labInfo(it, last.val, last.ref);
+  var dp = s.reduce(function (a, l) { var p = String(labNum(l.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
+  var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
+  var h = '<div class="card"><div class="ct">' + esc(info ? info[1] : it) + '<small>' + esc(it) + '</small></div>' +
+    '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
+    bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
+    '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
+      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + l.d.slice(2).replace(/-/g, '.') + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
+    }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
+  h += '<div class="card"><div class="ct">전체 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div><ul class="brow mlst">' + its.map(function (n) {
+    var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
+    return '<li class="tap' + (n === it ? ' on' : '') + '" data-lt2="' + esc(n) + '"><span class="n">' + labName(l) + '</span><span class="v"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b><small>' + esc(u) + '</small></span><span class="d">' + flagHtml(f) + '<span class="mute">' + ss.length + '회</span></span></li>';
+  }).join('') + '</ul></div>';
+  $('#main').innerHTML = h; bindMd();
+  $$('[data-lt2]').forEach(function (b) { b.onclick = function () { S.lt = b.dataset.lt2; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }; });
 }
 function vListCard(title, vs) { return '<div class="card"><div class="ct">' + title + '<small>' + vs.length + '회</small></div>' + (vs.length ? '<ul class="brow">' + vs.slice().reverse().map(vRow).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>'; }
-function mdWeek() {
-  var ws = monOf(S.day), we = addD(ws, 6), h = weekNav();
-  h += vListCard('이번 주 방문', vIn(ws, we));
-  var nx = vList().filter(function (v) { return v.next && inR(v.next, ws, we); });
-  if (nx.length) h += '<div class="card"><div class="ct">이번 주 예약</div><ul class="brow">' + nx.map(function (v) { return '<li class="tap" data-bd="' + v.next + '"><span class="n">' + vTitle(v) + '</span><span class="v"><b>' + md(v.next) + '</b></span></li>'; }).join('') + '</ul></div>';
-  $('#main').innerHTML = h; bindWeek(); bindMd();
-}
 function mdMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), vs = vIn(from, to);
   var h = navMonth(y + '년 ' + m + '월', true, true);
@@ -3100,6 +3191,9 @@ function mdYear() {
   h += '<div class="card"><div class="ct">월별 방문</div>' + bars7(vals, vals.map(function (v, i) { return i + 1; }), y === +TODAY.slice(0, 4) ? +TODAY.slice(5, 7) - 1 : -1) + '</div>';
   var hr = Object.keys(hs).map(function (k) { return { n: k, v: hs[k], t: '<b>' + hs[k] + '회</b>', c: '#5b8def' }; }).sort(function (a, b) { return b.v - a.v; });
   if (hr.length) h += '<div class="card"><div class="ct">병원별</div>' + hlist(hr) + '</div>';
+  var bd = {}; vs.forEach(function (v) { labsOf(v.id).forEach(function (l) { var o = bd[l.item] = bd[l.item] || { n: l.item, t: 0, b: 0 }; o.t++; if (labFlag(l)) o.b++; }); });
+  var br = Object.keys(bd).map(function (k) { return bd[k]; }).filter(function (o) { return o.b; }).sort(function (a, b) { return b.b - a.b || b.t - a.t; });
+  if (br.length) h += '<div class="card"><div class="ct">참고치를 벗어난 항목<small>' + y + '년 · ' + br.length + '개</small></div>' + hlist(br.map(function (o) { return { n: labKo(o.n) || o.n, v: o.b, t: '검사 ' + o.t + '회 중 <b>' + o.b + '회</b>', c: '#e5484d' }; })) + '</div>';
   h += vListCard(y + '년 방문', vs);
   $('#main').innerHTML = h; bindYear(); bindMd();
 }
