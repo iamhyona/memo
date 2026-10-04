@@ -488,6 +488,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .btab th:first-child, .btab td:first-child { text-align:left; }
 .btab td:first-child { font-weight:500; color:var(--sub); } .btab td small { color:var(--faint); }
 .btab tr[data-bd], .btab tr[data-bm] { cursor:pointer; }
+.wtc .wbig b { color:var(--wc); } .wtc .mbar i { background:var(--wl); } .wtc .mbar div.cur i { background:var(--wc); } .wtc .mbar div.cur em { color:var(--wc); } .wtch { margin:-4px 0 14px; } .wct .wib { width:26px; height:26px; border-radius:8px; } .wct .wib .hico { width:15px; height:15px; } .wn2 .dt { margin-left:0 !important; }
 .wbig { font-size:22px; font-weight:800; line-height:1.35; letter-spacing:-0.02em; margin:6px 2px 4px; } .wbig b { color:#3182F6; font-size:30px; } .wbig b small { font-size:.6em; margin-left:1px; }
 .wsub { font-size:13.5px; color:var(--sub); margin:0 2px 10px; } .wsub b.wup { color:#F04452; } .wsub b.wdn { color:#3182F6; }
 .wcmp { margin-top:14px; } .wcmp td { font-size:13.5px; } .wcmp td small.wd { display:block; font-size:10.5px; color:var(--faint); font-weight:500; }
@@ -518,6 +519,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .wtab td { font-size:13px; } .wtab td[colspan] { text-align:center; }
 .brow .n:has(.wnm) { flex-direction:column; align-items:flex-start; gap:2px; min-width:0; } .wnm { display:flex; align-items:center; gap:7px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; } .brow .n:has(.wnm) .dt { margin-left:16px; }
 .wdot { width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; align-self:center; }
+.brow .n.wn2 { flex-direction:row; align-items:center; gap:10px; } .wn2 .wtx { display:flex; flex-direction:column; gap:2px; min-width:0; } .wib { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; } .wib .hico { width:18px; height:18px; }
 .wct { display:flex; align-items:center; gap:8px; min-width:0; } .wct small { font-size:13px; color:var(--mute); font-weight:500; }
 .mk2 { font-size:11px; font-weight:700; color:var(--sub); background:var(--chip); border-radius:6px; padding:2px 6px; flex:none; align-self:center; }
 .mf { font-style:normal; font-size:11px; font-weight:700; border-radius:999px; padding:2px 7px; color:#fff; white-space:nowrap; } .mf.h { background:#e5484d; } .mf.l { background:#3182f6; }
@@ -802,7 +804,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zm';
+var APP_VER = '20261005zo';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2942,7 +2944,24 @@ function wPace(r) {
   if (!isFinite(sec) || sec <= 0 || sec > 3600) return '';
   return Math.floor(sec / 60) + "'" + pad(Math.round(sec % 60) % 60) + '"<small>/' + (sw ? '100m' : 'km') + '</small>';
 }
-function wTypeCol(t) { var h = 0; String(t || '기타').split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return COLORS[h % COLORS.length]; }
+// 운동 종류별 색: 수영=파랑, 달리기=빨강, 자전거=초록, 그 외 핑크·보라·주황·노랑·민트 (2026.10.05)
+var W_COLS = [[/수영|swim/i, '#B9D3FB'], [/달리기|러닝|조깅|run/i, '#FBB9B9'], [/자전거|사이클|싸이클|바이크|bike|cycl/i, '#BDEBB8'],
+  [/요가|필라테스|스트레칭|명상/, '#D9CCFB'], [/헬스|웨이트|근력|pt|스쿼트|홈트/i, '#FDC89A'], [/걷기|산책|등산|하이킹/, '#FDE68A'], [/테니스|배드민턴|골프|탁구|댄스|춤/, '#FBC4D8']];
+var W_ETC = ['#FBC4D8', '#D9CCFB', '#FDC89A', '#FDE68A', '#B6EBDD'];
+function wTypeCol(t) {
+  t = String(t || '기타');
+  for (var i = 0; i < W_COLS.length; i++) if (W_COLS[i][0].test(t)) return W_COLS[i][1];
+  var h = 0; t.split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return W_ETC[h % W_ETC.length];
+}
+var W_BIKE = 'M5.5 20a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM18.5 20a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5.5 16.5L9 9h7l2.5 7.5M12 16.5L9 9M14 5h2.5L16 9M7.5 6h3';
+var W_DUMB = 'M3 10v4M6 7v10M18 7v10M21 10v4M6 12h12';
+function wIco(t) {
+  t = String(t || '운동');
+  var p = /자전거|사이클|싸이클|바이크|bike|cycl/i.test(t) ? W_BIKE : /달리기|러닝|조깅|run/i.test(t) ? hPath({ name: '달리기' }) : hPath({ name: t });
+  if (p === H_DEF) p = W_DUMB;
+  var c = wTypeCol(t);
+  return '<span class="wib" style="background:' + kMix('#ffffff', c, .55) + '"><svg class="hico" viewBox="0 0 24 24" fill="none" stroke="' + deep(c) + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + p + '"/></svg></span>';
+}
 function wTypes(l) {
   var m = {};
   l.forEach(function (r) { var t = r.type || '기타'; m[t] = m[t] || { n: t, c: 0, dur: 0 }; m[t].c++; m[t].dur += r.dur || 0; });
@@ -2954,7 +2973,7 @@ function wTypeList(l) {
 }
 function wDays(l) { var m = {}; l.forEach(function (r) { m[r.d] = 1; }); return Object.keys(m).length; }
 function wRow(r, showDate) {
-  return '<li class="tap" data-bd="' + r.d + '"><span class="n"><span class="wnm"><i class="wdot" style="background:' + deep(wTypeCol(r.type)) + '"></i>' + esc(r.type || '운동') + '</span>' + (showDate ? '<small class="dt">' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small>' : r.t ? '<small class="dt">' + r.t + '</small>' : '') + '</span>' +
+  return '<li class="tap" data-bd="' + r.d + '"><span class="n wn2">' + wIco(r.type) + '<span class="wtx"><span class="wnm">' + esc(r.type || '운동') + '</span>' + (showDate ? '<small class="dt">' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small>' : r.t ? '<small class="dt">' + r.t + '</small>' : '') + '</span></span>' +
     '<span class="v"><b>' + fmtMin(r.dur) + '</b></span><span class="d">' + (r.akcal != null ? '<span class="mute">' + wfmt(wkOf('akcal'), r.akcal) + 'kcal</span>' : '') + '</span></li>';
 }
 function wChips(cur) { return '<div class="chips bkc">' + WK.map(function (x) { return '<button data-wk="' + x.k + '" class="' + (x.k === cur ? 'on' : '') + '">' + x.n + '</button>'; }).join('') + '</div>'; }
@@ -3076,7 +3095,11 @@ function wAnalysis(all) {
   var types = wTypes(all).map(function (o) { return o.n; }), p = S.wp || 'm', k = S.wmk || 'dist';
   var h = '<div class="wctl2"><div class="wps">' + [['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-wp="' + o[0] + '" class="' + (o[0] === p ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
     '<div class="wmt">' + WMET.map(function (o) { return '<button data-wmk="' + o[0] + '" class="' + (o[0] === k ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
-  types.forEach(function (t) { h += wTypeCard(t, p, k); });
+  // 운동 종류는 카드 안 단추 + 좌우 스와이프로 선택 (2026.10.05)
+  if (!types.length) return h;
+  var sel = types.indexOf(S.wat) >= 0 ? S.wat : types[0], col = deep(wTypeCol(sel));
+  var chips = types.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wat">' + types.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === sel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '';
+  h += wTypeCard(sel, p, k).replace('<div class="card">', '<div class="card wtc" id="wtBox" style="--wc:' + col + ';--wl:' + kMix('#ffffff', col, .3) + '">' + chips);
   return h;
 }
 function wTypeCard(t, p, k) {
@@ -3086,7 +3109,7 @@ function wTypeCard(t, p, k) {
   var cmp = !prev[k] && !cur[k] ? C.nm + ' 기록이 아직 없어요' : !prev[k] ? Pv.nm + '엔 기록이 없었어요' : Math.abs(dv) < 1e-9 ? Pv.nm + '과 같아요' : Pv.nm + '보다 <b class="' + (dv > 0 ? 'wup' : 'wdn') + '">' + wmFmt(k, Math.abs(dv)) + (dv > 0 ? ' 더' : ' 덜') + '</b> 했어요';
   var endIdx = Math.min(dDiff(C.f, TODAY), C.n - 1);
   var cum = function (L, R) { var a = [], s = 0, i; for (i = 0; i < R.n; i++) { var d = addD(R.f, i); L.forEach(function (r) { if (r.d === d) s += k === 'cnt' ? 1 : k === 'kcal' ? (r.akcal || 0) : (r[k] || 0); }); a.push(s); } return a; };
-  var h = '<div class="card"><div class="ct"><span class="wct"><i class="wdot" style="background:' + deep(wTypeCol(t)) + '"></i>' + esc(t) + '</span><small>' + bYmd(C.f) + ' ~ ' + bYmd(C.t) + '</small></div>' +
+  var h = '<div class="card"><div class="ct"><span class="wct">' + wIco(t) + esc(t) + '</span><small>' + bYmd(C.f) + ' ~ ' + bYmd(C.t) + '</small></div>' +
     '<div class="wbig">' + C.nm + ' 총 ' + nm + ' ' + word + '<br><b>' + wmFmt(k, cur[k], 1) + '</b></div><p class="wsub">' + cmp + '</p>' +
     wCum(cum(l, C), cum(pl, Pv), endIdx, bYmd(C.f), bYmd(C.t), k) +
     '<table class="btab wcmp"><tr><th></th><th>횟수</th><th>1회 평균</th><th>합계</th></tr>' + [[C, cur, 1], [Pv, prev, 0]].map(function (o) {
@@ -3109,12 +3132,14 @@ function wTypeCard(t, p, k) {
   var hc = wHrChart(t, Rs.slice(-6)), pv = wPaceNum(l, sw);
   h += '<div class="st3" style="margin-top:18px">' + stat('평균 심박', hc.cur.av != null ? Math.round(hc.cur.av) + '<small class="bu">bpm</small>' : '-') + stat('최대 심박', hc.cur.mx != null ? hc.cur.mx + '<small class="bu">bpm</small>' : '-') +
     stat('최고 페이스', pv.length ? fmtPace(Math.min.apply(null, pv), sw) : '-') + '</div></div>';
-  return h;
+  var wc = deep(wTypeCol(t));   // 그래프 색 = 운동 종류 색
+  return h.split('#3182F6').join(wc).split('#cfe0fd').join(kMix('#ffffff', wc, .3));
 }
 function bindAnalysis() {
   $$('[data-wt]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wt = b.dataset.wt; render(); window.scrollTo(0, y0); }; });
   $$('[data-wmk]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wmk = b.dataset.wmk; render(); window.scrollTo(0, y0); }; });
   $$('[data-wp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.wp = b.dataset.wp; render(); window.scrollTo(0, y0); }; });
+  bindCat('wat', 'wtBox');
 }
 // WORKOUT MONTH: 달력 · 종류 · 기록
 // 달력 칸 (운동 종류 점) — WEEK·MONTH 공통
