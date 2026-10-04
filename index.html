@@ -723,7 +723,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004u5';
+var APP_VER = '20261004u6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2470,7 +2470,7 @@ function bTable(recs) {
 var BMK = ['w', 'smm', 'bfm', 'pbf', 'vfl', 'bmi'];
 var BPER = [['1m', '1개월'], ['3m', '3개월'], ['1y', '1년'], ['all', '전체']];
 function devName(d) { d = String(d || ''); return /^H20/i.test(d) ? '인바디다이얼' : /^\d/.test(d) ? 'InBody ' + d : /^etc$/i.test(d) ? '기타' : d; }
-function bU(x) { return x.u && x.k !== 'vfl' && x.k !== 'bmi' ? '<em class="bu2">' + x.u + '</em>' : ''; }
+function bU(x) { return x.u && x.k !== 'bmi' ? '<em class="bu2">' + x.u + '</em>' : ''; }
 function bLbl(x) { return x.n + (x.u && x.k !== 'vfl' ? ' (' + x.u + ')' : ''); }
 // 묶어서 평균 (주·월) — 점이 너무 많을 때
 function bAgg(s, k, by) {
