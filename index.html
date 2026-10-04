@@ -549,7 +549,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004n';
+var APP_VER = '20261004o';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1631,6 +1631,17 @@ $('#phIn').onchange = function () {
   $('#phP').innerHTML = UP.files.map(function (f) { return '<img src="' + URL.createObjectURL(f) + '" alt="">'; }).join('');
   if (UP.files.length) { $('#phGeo').textContent = '사진 위치 확인 중…'; findPlace(UP.files); }
 };
+// 원본 파일 → base64 (너무 크면 줄인 사진으로)
+function fileB64(f) {
+  var ext = ((f.name || '').match(/\.(\w+)$/) || [])[1] || ({ 'image/heic': 'heic', 'image/png': 'png', 'image/webp': 'webp' }[f.type] || 'jpg');
+  if (f.size > 40 * 1024 * 1024) return shrink(f, 2400).then(function (u) { return { b64: u.split(',')[1], mime: 'image/jpeg', ext: 'jpg' }; });
+  return new Promise(function (ok, no) {
+    var fr = new FileReader();
+    fr.onload = function () { ok({ b64: String(fr.result).split(',')[1], mime: f.type || 'image/jpeg', ext: ext }); };
+    fr.onerror = function () { no(new Error('사진을 읽지 못했어요')); };
+    fr.readAsDataURL(f);
+  });
+}
 function shrink(file, max) {
   return new Promise(function (ok, no) {
     var u = URL.createObjectURL(file), im = new Image();
@@ -1656,8 +1667,9 @@ $('#phS').onclick = function () {
   }
   if (!UP.files.length) return toast('사진을 선택해 주세요');
   var files = UP.files, cat = UP.cat, btn = $('#phS'); btn.classList.add('busy');
-  Promise.all(files.map(function (f) { return shrink(f, 1600); })).then(function (urls) {
-    var gid = uid('p'), items = urls.map(function (u, i) { return { id: gid + i, d: d, cat: cat, memo: memo, place: place, src: u, fid: '', ts: '9' }; });
+  // 화면에는 줄인 미리보기, 드라이브에는 원본 그대로 (화질 · GPS 유지)
+  Promise.all(files.map(function (f) { return shrink(f, 1200).catch(function () { return ''; }); })).then(function (urls) {
+    var gid = uid('p'), orig = {}, items = urls.map(function (u, i) { orig[gid + i] = files[i]; return { id: gid + i, d: d, cat: cat, memo: memo, place: place, src: u, fid: '', ts: '9' }; });
     S.D.photos = S.D.photos.concat(items);
     S.mode = 'feed'; if (S.view === 'all') S.view = 'daily'; S.day = d > TODAY ? TODAY : d;
     closeBs(); render();
@@ -1666,7 +1678,11 @@ $('#phS').onclick = function () {
       if (i >= items.length) { saveCache(); return toast(items.length + '장 올렸어요'); }
       var p = items[i++];
       toast('올리는 중 ' + i + '/' + items.length);
-      call('appPhotoAdd', S.pin, { id: p.id, d: p.d, cat: p.cat, memo: p.memo, place: p.place }, p.src.split(',')[1]).then(function (r) {
+      var f = orig[p.id];
+      fileB64(f).then(function (o) {
+        return call('appPhotoAdd', S.pin, { id: p.id, d: p.d, cat: p.cat, memo: p.memo, place: p.place }, o.b64, o.mime, o.ext);
+      }).then(function (r) {
+        delete orig[p.id];
         p.fid = r.fid; p.ts = r.ts; if (S.mode === 'feed' || S.view === 'all') render(); next();
       }).catch(function (e) {
         S.D.photos = S.D.photos.filter(function (x) { return x !== p; }); render();
