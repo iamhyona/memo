@@ -61,6 +61,12 @@ header { position:sticky; top:0; z-index:10; background:var(--bg); padding:calc(
 .dyv .ph { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:16px; }
 .dyv .ph button { border:0; padding:0; aspect-ratio:1; border-radius:10px; overflow:hidden; background:var(--chip); }
 .dyv .ph img { width:100%; height:100%; object-fit:cover; display:block; }
+.pg.ig { gap:2px; border-radius:0; margin:0 -16px 12px; }
+.pg.ig button { aspect-ratio:3/4; background:#e5e8eb; }
+.fcnt { display:flex; justify-content:space-between; align-items:baseline; margin:2px 2px 10px; font-size:13px; font-weight:600; color:var(--mute); }
+.fcnt b { color:var(--txt); font-size:15px; }
+.ym { gap:2px !important; margin:0 -16px; }
+.ym button { border-radius:0 !important; aspect-ratio:3/4 !important; }
 .dc.none { padding:14px 20px; background:rgba(255,255,255,.55); } .dc.none .dh { margin:0; }
 .hr { display:flex; align-items:center; gap:8px; }
 .hdt { font-size:13px; font-weight:600; color:var(--mute); }
@@ -476,7 +482,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004e';
+var APP_VER = '20261004f';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -779,8 +785,8 @@ function renderYear() {
 function sortedPhotos(list) {
   return list.slice().sort(function (a, b) { return a.d === b.d ? (a.ts < b.ts ? 1 : -1) : (a.d < b.d ? 1 : -1); });
 }
-function gridHtml(list) {
-  return '<div class="pg">' + list.map(function (p) {
+function gridHtml(list, cls) {
+  return '<div class="pg' + (cls ? ' ' + cls : '') + '">' + list.map(function (p) {
     return '<button data-p="' + p.id + '" class="' + (p.fid ? '' : 'up') + '"><img loading="lazy" src="' + esc(purl(p)) + '" alt=""></button>';
   }).join('') + '</div>';
 }
@@ -935,50 +941,29 @@ function bindFeed() {
   $$('#pTabs button').forEach(function (b) { b.onclick = function () { S.pcat = b.dataset.c; var y0 = window.scrollY; render(); window.scrollTo(0, y0); }; });
   $$('.pg button, .fc .fi').forEach(function (b) { b.onclick = function () { openViewer(b.dataset.p); }; });
 }
+function feedGrid(l, label) {
+  return '<div class="fcnt"><b>' + label + '</b><span>' + l.length + '장</span></div>' + (l.length ? gridHtml(l, 'ig') : '<div class="card empty">올린 사진이 없어요<br><button class="lnk" id="fUp">사진 올리기</button></div>');
+}
 function fdDaily() {
-  var l = sortedPhotos(photosOf(S.day)); S.pl = l;
-  var h = dayNav() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; });
-  if (!l.length) h += '<div class="card empty">이날 올린 사진이 없어요<br><button class="lnk" id="fUp">사진 올리기</button></div>';
-  h += l.map(function (p) {
-    return '<div class="fc"><button class="fi" data-p="' + p.id + '"><img loading="lazy" src="' + esc(purl(p, true)) + '" alt=""></button>' +
-      '<div class="fm"><span class="fcat">' + esc(p.cat || '미분류') + '</span>' + (p.memo ? '<p>' + esc(p.memo) + '</p>' : '') + '</div></div>';
-  }).join('');
+  var l = sortedPhotos(byCat(photosOf(S.day))); S.pl = l;
+  var h = dayNav() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; }) + catChips(photosOf(S.day)) + feedGrid(l, '사진');
   $('#main').innerHTML = h;
   bindDay(); bindStrip(); bindFeed();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdWeek() {
-  var ws = monOf(S.day), days = weekDays(ws).reverse(), all = S.D.photos.filter(function (p) { return p.d >= ws && p.d <= addD(ws, 6); });
-  var l = byCat(all), h = weekNav() + catChips(all), shown = [];
-  days.forEach(function (d) {
-    var dl = sortedPhotos(l.filter(function (p) { return p.d === d; }));
-    if (!dl.length) return;
-    shown = shown.concat(dl);
-    h += '<div class="pcat">' + mdw(d) + '<span class="mute" style="font-size:13px;font-weight:600">' + dl.length + '장</span></div>' + gridHtml(dl);
-  });
-  if (!shown.length) h += '<div class="card empty">이번 주에 올린 사진이 없어요</div>';
-  S.pl = shown;
-  $('#main').innerHTML = h;
+  var ws = monOf(S.day), all = S.D.photos.filter(function (p) { return p.d >= ws && p.d <= addD(ws, 6); });
+  var l = sortedPhotos(byCat(all)); S.pl = l;
+  $('#main').innerHTML = weekNav() + catChips(all) + feedGrid(l, '사진');
   bindWeek(); bindFeed();
-  $$('.pcat').forEach(function (e, i) { e.style.marginTop = i ? '' : '4px'; });
+  if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdMonth() {
-  var y = S.y, m = S.m, ym = y + '-' + pad(m), from = ym + '-01', to = mEnd(y, m), d, i;
+  var y = S.y, m = S.m, ym = y + '-' + pad(m);
   var all = S.D.photos.filter(function (p) { return p.d.slice(0, 7) === ym; }), l = sortedPhotos(byCat(all)); S.pl = l;
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + catChips(all);
-  h += '<div class="card cal pcal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
-  var lead = (P(from).getDay() + 6) % 7;
-  for (i = 0; i < lead; i++) h += '<button class="out"></button>';
-  for (d = from; d <= to; d = addD(d, 1)) {
-    var dl = l.filter(function (p) { return p.d === d; });
-    h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + (dl.length ? ' has' : '') + '">' +
-      (dl.length ? '<img loading="lazy" src="' + esc(purl(dl[0])) + '" alt="">' + (dl.length > 1 ? '<em>' + dl.length + '</em>' : '') : '') + '<span class="dnum">' + P(d).getDate() + '</span></button>';
-  }
-  h += '</div></div>';
-  h += '<div class="pcat">' + m + '월 사진<span class="mute" style="font-size:13px;font-weight:600">' + l.length + '장</span></div>' + (l.length ? gridHtml(l) : '<div class="card empty">이 달에 올린 사진이 없어요</div>');
-  $('#main').innerHTML = h;
+  $('#main').innerHTML = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + catChips(all) + feedGrid(l, '사진');
   bindMonth(); bindFeed();
-  $$('.pcal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d <= TODAY) goDaily(b.dataset.d); }; });
+  if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdYear() {
   var y = S.yy, all = S.D.photos.filter(function (p) { return p.d.slice(0, 4) === String(y); }), l = byCat(all), best = 0, bm = 0;
