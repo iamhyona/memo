@@ -825,7 +825,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zx';
+var APP_VER = '20261005zy';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1597,11 +1597,12 @@ function hbDaily() {
   var h = dayNav();
   h += dstrip(function (d) { return { w: us.length ? us.filter(function (u) { return uDone(u, d); }).length / us.length : 0 }; });
   if (!us.length) h += UEMPTY;
-  if (hs.length) h += '<div class="sec">체크<small>하루 한 번</small></div>' + hs.map(function (x) {
+  // 체크·횟수 나누지 않고 한 그리드 (2026.10.05: 체크형은 모두 횟수형으로 옮김) — 남은 체크형이 있으면 위에 따로
+  if (hs.length) h += hs.map(function (x) {
     var v = on(day, x.id);
     return '<button class="hc' + (v ? ' done' : '') + '" data-h="' + x.id + '"' + (v ? ' style="background:' + x.color + '"' : '') + '><span class="cc">' + (v ? CHK : '') + '</span><span class="hi">' + hIco(x) + '</span><span class="m"><div>' + esc(x.name) + '</div><small>이번 주 ' + weekCnt(x, ws) + '/' + x.target + '</small></span></button>';
   }).join('');
-  if (ks.length) h += '<div class="sec">횟수<small>누르면 +1 · − 로 빼기</small></div><div class="kgrid2">' + ks.map(function (x) { return kcard(x, day); }).join('') + '</div>';
+  if (ks.length) h += '<div class="kgrid2" style="margin-top:12px">' + ks.map(function (x) { return kcard(x, day); }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">누를 때마다 +1 · − 로 빼기 · 목표를 채우면 ✓</div>';
   $('#main').innerHTML = h;
   bindDay(); bindStrip(); bindKc(day);
   $$('.hc').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; toggle(S.day, b.dataset.h); render(); window.scrollTo(0, y0); }; });
