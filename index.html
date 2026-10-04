@@ -780,7 +780,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y5';
+var APP_VER = '20261005y6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1252,7 +1252,7 @@ function bars7(vals, lbls, curIdx, fmt) {
 function hlist(rows) {
   var mx = Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1]));
   return '<ul class="leg bars">' + rows.map(function (r) {
-    return '<li' + (r.h ? ' class="tapd" data-h="' + r.h + '"' : '') + '><div class="row1"><span class="n">' + (r.ico || '') + '<span>' + esc(r.n) + '</span></span><span class="v">' + r.t + '</span></div><div class="trk"><div class="fil" style="width:' + Math.max(2, r.v / mx * 100) + '%;background:' + (r.c || 'var(--txt)') + '"></div></div></li>';
+    return '<li' + (r.h ? ' class="tapd" data-h="' + r.h + '"' : '') + '><div class="row1"><span class="n">' + (r.ico || '') + '<span>' + esc(r.n) + '</span></span><span class="v">' + r.t + '</span></div><div class="trk"><div class="fil" style="width:' + Math.max(r.mx ? 0 : 2, r.v / (r.mx || mx) * 100) + '%;background:' + (r.c || 'var(--txt)') + '"></div></div></li>';
   }).join('') + '</ul>';
 }
 function weekLabels(ws) { return weekDays(ws).map(function (d, i) { return WM[i]; }); }
@@ -1288,9 +1288,7 @@ function trHome() {
     lst = st.length ? hlist(st.map(function (o) { return { n: o.x.name, v: o.s, t: '<b>' + o.s + '일</b> 연속', c: o.x.color, ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">오늘부터 연속 기록을 시작해 보세요</div>';
   } else {
     var low = hs.map(function (x) { var c = weekCnt(x, R.ws); return { x: x, c: c, left: x.target - c }; }).filter(function (o) { return o.left > 0; }).sort(function (a, b) { return b.left - a.left; });
-    lst = low.length ? '<ul class="leg lows">' + low.map(function (o) {
-      return '<li class="tapd" data-h="' + o.x.id + '">' + hIco(o.x, 'hico sm') + '<span class="n">' + esc(o.x.name) + '</span><span class="v">' + o.c + '/' + o.x.target + ' · ' + o.left + '회 남음</span></li>';
-    }).join('') + '</ul>' : '<div class="empty">이번 주 목표를 모두 채웠어요</div>';
+    lst = low.length ? hlist(low.map(function (o) { return { n: o.x.name, v: o.c, mx: o.x.target, t: '<b>' + o.c + '/' + o.x.target + '</b> · ' + o.left + '회 남음', c: o.x.color, ico: hIco(o.x, 'hico sm'), h: o.x.id }; })) : '<div class="empty">이번 주 목표를 모두 채웠어요</div>';
   }
   h += '<div class="card"><div class="ct">습관별<small>' + (tl === 'top' ? PP[0] : tl === 'run' ? '오늘까지' : '이번 주') + '</small></div>' + bSeg('data-tlt', [['top', '많이 한 습관'], ['run', '연속 기록'], ['low', '남은 목표']], tl) + lst + '</div>';
   $('#main').innerHTML = h; bindHome();
