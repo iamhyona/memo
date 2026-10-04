@@ -770,7 +770,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005x9';
+var APP_VER = '20261005y1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1093,8 +1093,8 @@ function renderMonth() {
     }).join('') + '</ul>' : '<div class="empty">이 달에 체크한 습관이 없어요</div>') + '</div>';
   var diff = t.cnt - pt.cnt;
   h += '<div class="card big1"><small>' + m + '월 체크</small><b>' + t.cnt + '<span class="pct">회</span></b>' +
-    '<div class="sub">' + (pt.cnt ? (diff > 0 ? '지난달보다 <span class="up">' + diff + '회 더</span> 해냈어요' : diff < 0 ? '지난달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난달과 같아요') : '첫 달 기록이에요') + '</div>' +
-    '<div class="sub" style="margin-top:4px">달성률 ' + pct(t.rate) + '%' + (pt.goal ? diffHtml(t.rate, pt.rate, '지난달') : '') + ' · 기록한 날 ' + nd + '일 · 일기 ' + dd + '일</div></div>';
+    '<div class="sub">' + (pt.cnt ? (diff > 0 ? '지난 달보다 <span class="up">' + diff + '회 더</span> 해냈어요' : diff < 0 ? '지난 달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난 달과 같아요') : '첫 달 기록이에요') + '</div>' +
+    '<div class="sub" style="margin-top:4px">달성률 ' + pct(t.rate) + '%' + (pt.goal ? diffHtml(t.rate, pt.rate, '지난 달') : '') + ' · 기록한 날 ' + nd + '일 · 일기 ' + dd + '일</div></div>';
   var note = (S.D.notes || {})[ym] || '';
   // 월간 메모 카드는 2026.10.04 삭제 (기존 메모 데이터는 그대로 둠)
   h += '<div class="card"><div class="ct">습관별 달성률</div>' + habitBars(from, to) + '</div>';
@@ -1253,7 +1253,7 @@ function trHome() {
   var tw = total(R.ws, R.we), pw = total(R.pws, R.pwe), dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
   var wv = weekDays(R.ws).map(function (d) { return hs.filter(function (x) { return on(d, x.id); }).length; });
   h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">자세히 ›</a></div><div class="st3">' +
-    stat('달성률', pct(tw.rate) + '%', '지난주 ' + pct(pw.rate) + '%') + stat('체크', tw.cnt + '회', delta(tw.cnt, pw.cnt, '회')) + stat('목표 달성', dn + '/' + hs.length) + '</div>' +
+    stat('달성률', pct(tw.rate) + '%', '지난 주 ' + pct(pw.rate) + '%') + stat('체크', tw.cnt + '회', delta(tw.cnt, pw.cnt, '회')) + stat('목표 달성', dn + '/' + hs.length) + '</div>' +
     bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '</div>';
   // 이번 달
   var tm = total(R.mf, R.mt), pm = total(R.pmf, R.pmt), days = 0;
@@ -1261,7 +1261,7 @@ function trHome() {
   var top = hs.map(function (x) { var s = hstat(x, R.mf, R.mt); return { n: x.name, v: s.cnt, t: s.cnt + '회 · <b>' + pct(s.rate) + '%</b>', c: x.color, ico: hIco(x, 'hico sm'), h: x.id }; })
     .sort(function (a, b) { return b.v - a.v; });
   h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">리뷰 ›</a></div><div class="st3">' +
-    stat('달성률', pct(tm.rate) + '%', '지난달 ' + pct(pm.rate) + '%') + stat('체크', tm.cnt + '회', delta(tm.cnt, pm.cnt, '회')) + stat('기록한 날', days + '일') + '</div>' +
+    stat('달성률', pct(tm.rate) + '%', '지난 달 ' + pct(pm.rate) + '%') + stat('체크', tm.cnt + '회', delta(tm.cnt, pm.cnt, '회')) + stat('기록한 날', days + '일') + '</div>' +
     '<div class="sub2">많이 한 습관</div>' + hlist(top.slice(0, 5)) + '</div>';
   // 연속 기록
   var st = hs.map(function (x) { return { x: x, s: streak(x.id) }; }).filter(function (o) { return o.s > 0; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 5);
@@ -2225,7 +2225,7 @@ function ctHome() {
   if (!ks.length) { $('#main').innerHTML = '<div class="card empty">물 마시기, 양치, 간식처럼<br>하루에 여러 번 하는 일을 + 버튼으로 추가해 보세요</div>'; return; }
   var yx = +TODAY.slice(0, 4), yd = addD(TODAY, -1);
   var lastDay = function (f, t) { return t < TODAY ? t : TODAY; };
-  var PP = { d: ['오늘', TODAY, TODAY, yd, yd, '어제'], w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난주'], m: ['이번 달', R.mf, R.mt, R.pmf, R.pmt, '지난달'], y: ['올해', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'] }[p];
+  var PP = { d: ['오늘', TODAY, TODAY, yd, yd, '어제'], w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: ['이번 달', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: ['올해', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'] }[p];
   var nd = Math.round((P(lastDay(PP[1], PP[2])) - P(PP[1])) / 864e5) + 1, pnd = Math.round((P(PP[4]) - P(PP[3])) / 864e5) + 1;
   var tot = 0;
   var cells = ks.map(function (x) {
@@ -2308,8 +2308,8 @@ function ctMonth() {
   h += '</div><div class="legend">점: 그날 목표를 채운 항목 · 날짜를 누르면 그날로</div></div>';
   var diff = t.cnt - pt.cnt;
   h += '<div class="card big1"><small>' + m + '월 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b>' +
-    '<div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '지난달') : '') + '</div>' +
-    (pt.cnt ? '<div class="sub" style="margin-top:4px">' + (diff > 0 ? '지난달보다 <span class="up">' + diff + '회 더</span> 기록했어요' : diff < 0 ? '지난달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난달과 같아요') + '</div>' : '') + '</div>';
+    '<div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '지난 달') : '') + '</div>' +
+    (pt.cnt ? '<div class="sub" style="margin-top:4px">' + (diff > 0 ? '지난 달보다 <span class="up">' + diff + '회 더</span> 기록했어요' : diff < 0 ? '지난 달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난 달과 같아요') + '</div>' : '') + '</div>';
   h += '<div class="card"><div class="ct">항목별 리뷰</div>' + (ks.length ? '<ul class="leg bars">' + ks.map(function (x) {
     var s = kstat(x, from, to);
     return '<li class="kedit" data-e="' + x.id + '"><div class="row1"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span><span class="v">' + s.ok + '/' + s.days + '일 · <b>' + pct(s.rate) + '%</b></span></div>' +
@@ -2561,7 +2561,7 @@ function bdHome() {
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
-  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
+  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
   // 요약 카드 하나: 주 · 월 · 연 단추로 전환 (지난 기간 평균 대비) — 2026.10.04
   var spi = { w: 0, m: 1, y: 2 }[S.bsp || 'w'] || 0, p = SP[spi];
@@ -2571,7 +2571,7 @@ function bdHome() {
   if (!n2 && spi < 2) {
     var ppY = pmM === 1 ? pmY - 1 : pmY, ppM = pmM === 1 ? 12 : pmM - 1;
     fb = spi === 0 ? '이번 주' : '이번 달';
-    p = spi === 0 ? ['지난주', addD(wsx, -7), addD(wsx, -1), addD(wsx, -14), addD(wsx, -8), '2주 전'] : ['지난달', pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), ppY + '-' + pad(ppM) + '-01', mEnd(ppY, ppM), '전달'];
+    p = spi === 0 ? ['지난 주', addD(wsx, -7), addD(wsx, -1), addD(wsx, -14), addD(wsx, -8), '2주 전'] : ['지난 달', pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), ppY + '-' + pad(ppM) + '-01', mEnd(ppY, ppM), '전달'];
     n2 = cntIn(p[1], p[2]);
   }
   h += '<div class="card"><div class="ct">' + p[0] + ' 요약<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회</small></div>' + bSeg('data-bsp', [['w', '주'], ['m', '월'], ['y', '연']], S.bsp || 'w') + '<div class="bc4" style="margin-top:12px">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
@@ -2917,7 +2917,7 @@ function wkWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), l = wIn(ws, we), pl = wIn(addD(ws, -7), addD(ws, -1)), x = wkOf(S.wk);
   var h = weekNav();
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">' + wCalCells(ws, we) + '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div>' +
-    '<div class="st3" style="margin-top:14px">' + stat('운동', l.length + '회', delta(l.length, pl.length, '회')) + stat('시간', fmtMin(wSum(l, 'dur')), '지난주 ' + fmtMin(wSum(pl, 'dur'))) + stat('운동한 날', wDays(l) + '/7') + '</div></div>';
+    '<div class="st3" style="margin-top:14px">' + stat('운동', l.length + '회', delta(l.length, pl.length, '회')) + stat('시간', fmtMin(wSum(l, 'dur')), '지난 주 ' + fmtMin(wSum(pl, 'dur'))) + stat('운동한 날', wDays(l) + '/7') + '</div></div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 운동<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindWk();
@@ -2946,7 +2946,7 @@ function wmFmt(k, v, big) {
   if (k === 'dur') return fmtMin(v);
   return Math.round(v).toLocaleString() + (big ? '<small>kcal</small>' : 'kcal');
 }
-// 이번 달 누적(파랑) vs 지난달 누적(회색 면)
+// 이번 달 누적(파랑) vs 지난 달 누적(회색 면)
 function wCum(cur, prev, endIdx, lbl0, lbl1, k) {
   var W = 320, H = 150, L = 6, R = 6, T = 14, B = 22, n = cur.length, mx = Math.max(cur[cur.length - 1] || 0, prev[prev.length - 1] || 0, 0.0001);
   var px = function (i, N) { return L + (W - L - R) * (N > 1 ? i / (N - 1) : 0); }, py = function (v) { return T + (H - T - B) * (1 - v / mx); };
@@ -2978,11 +2978,11 @@ function wPaceNum(l, sw) { var v = l.filter(function (r) { return r.dur && r.dis
 function fmtPace(sec, sw) { if (!isFinite(sec)) return '-'; return Math.floor(sec / 60) + "'" + pad(Math.round(sec % 60) % 60) + '"<small>/' + (sw ? '100m' : 'km') + '</small>'; }
 // 기간 (주·월·연): off = 0 이번, -1 지난 …
 function wPer(p, off) {
-  if (p === 'w') { var ws = addD(monOf(TODAY), 7 * off), we = addD(ws, 6); return { p: p, f: ws, t: we, n: 7, lb: bYmd(ws).slice(3), nm: off === 0 ? '이번 주' : off === -1 ? '지난주' : bYmd(ws) + '주' }; }
+  if (p === 'w') { var ws = addD(monOf(TODAY), 7 * off), we = addD(ws, 6); return { p: p, f: ws, t: we, n: 7, lb: bYmd(ws).slice(3), nm: off === 0 ? '이번 주' : off === -1 ? '지난 주' : bYmd(ws) + '주' }; }
   if (p === 'y') { var y = +TODAY.slice(0, 4) + off, f = y + '-01-01', t = y + '-12-31'; return { p: p, y: y, f: f, t: t, n: dDiff(f, t) + 1, lb: y + '', nm: off === 0 ? '올해' : off === -1 ? '작년' : y + '년' }; }
   var yy = +TODAY.slice(0, 4), mm = +TODAY.slice(5, 7) + off; while (mm < 1) { mm += 12; yy--; }
   var f2 = yy + '-' + pad(mm) + '-01', t2 = mEnd(yy, mm);
-  return { p: p, y: yy, m: mm, f: f2, t: t2, n: +t2.slice(8), lb: mm + '월', nm: off === 0 ? '이번 달' : off === -1 ? '지난달' : mm + '월' };
+  return { p: p, y: yy, m: mm, f: f2, t: t2, n: +t2.slice(8), lb: mm + '월', nm: off === 0 ? '이번 달' : off === -1 ? '지난 달' : mm + '월' };
 }
 function wTot(t, R) {
   if (R.p === 'm') return wMon(t, R.y, R.m);
