@@ -469,6 +469,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bcd small { display:block; font-size:12px; color:var(--mute); white-space:nowrap; }
 .bcd b { display:block; font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:4px 0 3px; }
 .bcd em { display:block; font-style:normal; font-size:11.5px; font-weight:700; }
+.sumc .bcd b { white-space:nowrap; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
 .bsel { display:flex; align-items:center; gap:6px; margin:0 2px 4px; }
 .bsel span { font-size:13px; color:var(--mute); font-weight:600; } .bsel b { font-size:15px; font-weight:800; } .bsel small { margin-left:auto; font-size:12px; color:var(--mute); }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
@@ -804,7 +805,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zp';
+var APP_VER = '20261005zq';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1096,7 +1097,7 @@ function renderMonth() {
   var t = total(from, to), pt = total(pfrom, pto);
   var nd = 0, dd = 0, d, i;
   for (d = from; d <= to; d = addD(d, 1)) { if (S.ck[d] && Object.keys(S.ck[d]).length) nd++; if (diaryOf(d)) dd++; }
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + (S.D.habits.length ? sumCard(sPer('vm'), sumT(sPer('vm'))) : '');
 
   // 통합 달력: 날마다 해낸 습관을 습관 색 점으로
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
@@ -1126,9 +1127,6 @@ function renderMonth() {
       return '<li class="tapd" data-h="' + o.x.id + '"><span class="hi2">' + hIco(o.x, 'hico sm') + '</span><span class="n">' + esc(o.x.name) + '</span><span class="v">' + o.n + '회</span></li>';
     }).join('') + '</ul>' : '<div class="empty">이 달에 체크한 습관이 없어요</div>') + '</div>';
   var diff = t.cnt - pt.cnt;
-  h += '<div class="card big1"><small>' + m + '월 체크</small><b>' + t.cnt + '<span class="pct">회</span></b>' +
-    '<div class="sub">' + (pt.cnt ? (diff > 0 ? '지난 달보다 <span class="up">' + diff + '회 더</span> 해냈어요' : diff < 0 ? '지난 달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난 달과 같아요') : '첫 달 기록이에요') + '</div>' +
-    '<div class="sub" style="margin-top:4px">달성률 ' + pct(t.rate) + '%' + (pt.goal ? diffHtml(t.rate, pt.rate, '지난 달') : '') + ' · 기록한 날 ' + nd + '일</div></div>';
   var note = (S.D.notes || {})[ym] || '';
   // 월간 메모 카드는 2026.10.04 삭제 (기존 메모 데이터는 그대로 둠)
   h += '<div class="card"><div class="ct">습관별 달성률</div>' + habitBars(from, to) + '</div>';
@@ -1170,9 +1168,7 @@ function renderYear() {
   var y = S.yy, from = y + '-01-01', to = y + '-12-31';
   var t = total(from, to), pt = total((y - 1) + '-01-01', (y - 1) + '-12-31');
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
-  h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">체크 ' + t.cnt + '회 · 기록한 날 ' +
-    Object.keys(S.ck).filter(function (d) { return d.slice(0, 4) === String(y) && Object.keys(S.ck[d]).length; }).length + '일' +
-    (pt.goal ? diffHtml(t.rate, pt.rate, '작년') : '') + '</div></div>';
+  h += S.D.habits.length ? sumCard(sPer('vy'), sumT(sPer('vy'))) : '';
   // 월별 달성률: 전체 또는 습관(카테고리) 하나 골라서 보기 (2026.10.05)
   var hsY = S.D.habits, sel = hsY.filter(function (x) { return x.id === S.tyh; })[0] || null;
   var mrate = function (x, m) { var f = y + '-' + pad(m) + '-01', e2 = mEnd(y, m); if (f > TODAY) return null; var r = x ? hstat(x, f, e2) : total(f, e2); return r.goal ? r.rate : null; };
@@ -1307,7 +1303,7 @@ function goMode(mode, view) { S.mode = mode; S.view = view || 'home'; ls.set('me
 // TRACKER HOME
 function trHome() {
   var hs = S.D.habits, R = rng(), n = hs.filter(function (x) { return on(TODAY, x.id); }).length;
-  var h = '<div class="hm"><small>TRACKER</small><b>' + mdw(TODAY) + '</b></div>';
+  var h = '<div class="hm"><small>TRACKER</small><b>' + mdw(TODAY) + '</b></div>', SUMI = h.length;
   // 오늘
   h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + hs.length + ' 완료 ›</a></div>' +
     (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk dico">' + hs.map(function (x) {
@@ -1320,9 +1316,7 @@ function trHome() {
   var tc = total(PP[1], PP[2]), tp = total(PP[3], PP[4]);
   for (d = PP[1]; d <= PP[2] && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
   var dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
-  h += '<div class="card"><div class="ct">' + PP[0] + ' 요약<a href="#" data-go="' + ({ w: 'week', m: 'month', y: 'year' }[sp]) + '">자세히 ›</a></div>' + bSeg('data-tsp', [['w', '주'], ['m', '월'], ['y', '연']], sp) + '<div class="st3">' +
-    stat('달성률', pct(tc.rate) + '%', PP[5] + ' ' + pct(tp.rate) + '%') + stat('체크', tc.cnt + '회', delta(tc.cnt, tp.cnt, '회')) + (sp === 'w' ? stat('목표 달성', dn + '/' + hs.length) : stat('기록한 날', days + '일')) + '</div>' +
-    (sp === 'w' ? bars7(weekDays(R.ws).map(function (d2) { return hs.filter(function (x) { return on(d2, x.id); }).length; }), weekLabels(R.ws), todayIdx(R.ws)) : '') + '</div>';
+  var SPP = sPer(sp); h = h.slice(0, SUMI) + sumCard(SPP, sumT(SPP), sSeg('data-tsp', sp)) + h.slice(SUMI);
   // 습관별: 많이 한 습관 · 연속 기록 · 남은 목표 (속단추)
   var tl = S.tlt || 'top', lst = '';
   if (tl === 'top') {
@@ -1342,47 +1336,36 @@ function trHome() {
 }
 // FEED HOME
 function fdHome() {
-  var R = rng(), ps = S.D.photos, cnt = function (a, b) { return ps.filter(function (p) { return inR(p.d, a, b); }); };
-  var today = photosOf(TODAY), w = cnt(R.ws, R.we), pw = cnt(R.pws, R.pwe), m = cnt(R.mf, R.mt), pm = cnt(R.pmf, R.pmt);
-  var h = '<div class="hm"><small>ME</small><b>' + mdw(TODAY) + '</b></div>';
-  h += '<div class="mini">' + stat('오늘', today.length + '장') + stat('이번 주', posts(w).length + '개 게시물') + stat('전체', posts(ps).length + '개 게시물') + '</div>';
-  // 이번 주
-  var wv = weekDays(R.ws).map(function (d) { return photosOf(d).length; }), act = wv.filter(Boolean).length;
-  h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">보기 ›</a></div><div class="st3">' +
-    stat('사진', w.length + '장', delta(w.length, pw.length, '장')) + stat('게시물', posts(w).length + '개') + stat('올린 날', act + '/7일') + '</div>' + bars7(wv, weekLabels(R.ws), todayIdx(R.ws)) + '</div>';
-  // 이번 달 카테고리
+  var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'w', P = sPer(sp), m = ps.filter(function (p) { return inR(p.d, P.f, P.t); });
+  var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'ME') + '</small><b>' + mdw(TODAY) + '</b></div>';
+  // 요약 (모든 메뉴 같은 자리·형식) — 2026.10.05
+  h += sumCard(P, sumF(P), sSeg('data-ssp', sp));
+  // 분류별
   var cats = allCats().concat(m.some(function (p) { return !p.cat; }) ? [''] : []);
   var cr = cats.map(function (c) { var k = m.filter(function (p) { return (p.cat || '') === c; }).length; return { n: c || '미분류', v: k, t: '<b>' + k + '장</b>' + (m.length ? ' · ' + Math.round(k / m.length * 100) + '%' : '') }; })
     .filter(function (r) { return r.v; }).sort(function (a, b) { return b.v - a.v; });
-  h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">보기 ›</a></div><div class="st3">' +
-    stat('사진', m.length + '장', delta(m.length, pm.length, '장')) + stat('게시물', posts(m).length + '개') + stat('최다 카테고리', cr.length ? esc(cr[0].n) : '-') + '</div>' +
-    (cr.length ? '<div class="sub2">카테고리</div>' + hlist(cr) : '<div class="empty">이 달에 올린 사진이 없어요</div>') + '</div>';
+  h += '<div class="card"><div class="ct">분류별<small>' + P.lb + '</small></div>' + (cr.length ? hlist(cr) : '<div class="empty">' + P.lb + ' 올린 사진이 없어요</div>') + '</div>';
   // 최근 게시물
   var rp = [].concat.apply([], posts(sortedPhotos(ps)).slice(0, 9)); S.pl = rp;
   h += '<div class="fcnt"><b>최근 게시물</b><a href="#" data-go="daily" class="mute">DAILY ›</a></div>' + (rp.length ? gridHtml(rp, 'ig') : '<div class="card empty">아직 사진이 없어요</div>');
-  $('#main').innerHTML = h; bindHome();
+  $('#main').innerHTML = h; bindHome(); bindSum();
 }
 // DIARY HOME
 function dyHome() {
-  var R = rng(), L = S.D.diary, x = diaryOf(TODAY), inl = function (a, b) { return L.filter(function (e) { return inR(e.d, a, b); }); };
-  var w = inl(R.ws, R.we), m = inl(R.mf, R.mt), pm = inl(R.pmf, R.pmt), passed = dDiff(R.mf, TODAY) + 1;
-  var best = 0, run = 0; L.map(function (e) { return e.d; }).sort().forEach(function (d, i, a) { run = i && dDiff(a[i - 1], d) === 1 ? run + 1 : 1; if (run > best) best = run; });
+  var L = S.D.diary, x = diaryOf(TODAY), sp = (S.ssp || {}).diary || 'w', P = sPer(sp), m = L.filter(function (e) { return inR(e.d, P.f, P.t); });
   var h = '<div class="hm"><small>DIARY</small><b>' + mdw(TODAY) + '</b></div>';
+  // 요약 (모든 메뉴 같은 자리·형식) — 2026.10.05
+  h += sumCard(P, sumD(P), sSeg('data-ssp', sp), '연속 작성 ' + dRun() + '일');
   h += '<div class="card"><div class="ct">오늘의 일기' + (x ? '<a href="#" data-go="daily">보기 ›</a>' : '') + '</div>' +
     (x ? (moodHtml(x.mood) ? '<div style="margin-bottom:10px">' + moodHtml(x.mood) + '</div>' : '') + '<p class="dprev">' + esc(x.text || '') + '</p>' : '<button class="lnk" id="dWrite" style="margin-top:0">오늘 기록하기</button>') + '</div>';
-  h += '<div class="mini">' + stat('연속 작성', dRun() + '일') + stat('최장 연속', best + '일') + stat('전체', L.length + '일') + '</div>';
-  // 이번 주: 요일별 기분
-  h += '<div class="card"><div class="ct">이번 주<a href="#" data-go="week">보기 ›</a></div><div class="st3">' + stat('작성', w.length + '/7일') + stat('글자 수', w.reduce(function (s, e) { return s + (e.text || '').length; }, 0) + '자') + stat('평균', w.length ? Math.round(w.reduce(function (s, e) { return s + (e.text || '').length; }, 0) / w.length) + '자' : '-') + '</div>' +
-    '<div class="wmood">' + weekDays(R.ws).map(function (d, i) { var e = diaryOf(d); return '<div class="' + (d === TODAY ? 'td' : '') + '"><i style="background:' + (e ? (e.mood ? moodC(e.mood) : 'var(--sub)') : d > TODAY ? 'transparent' : 'var(--chip)') + '"></i><span>' + WM[i] + '</span></div>'; }).join('') + '</div></div>';
-  // 이번 달: 기분 분포
+  // 기분
   var mr = MOODS.map(function (o) { var k = m.filter(function (e) { return e.mood === o.k; }).length; return { n: o.k, v: k, t: '<b>' + k + '일</b>', c: o.c }; }).filter(function (r) { return r.v; });
-  h += '<div class="card"><div class="ct">' + R.m + '월<a href="#" data-go="month">보기 ›</a></div><div class="st3">' +
-    stat('작성', m.length + '일', delta(m.length, pm.length, '일')) + stat('작성률', Math.round(m.length / passed * 100) + '%') + stat('글자 수', m.reduce(function (s, e) { return s + (e.text || '').length; }, 0) + '자') + '</div>' +
-    (mr.length ? '<div class="sub2">기분</div>' + hlist(mr) : '') + '</div>';
+  h += '<div class="card"><div class="ct">기분<small>' + P.lb + '</small></div>' + (sp === 'w' ? '<div class="wmood">' + weekDays(P.f).map(function (d, i) { var e = diaryOf(d); return '<div class="' + (d === TODAY ? 'td' : '') + '"><i style="background:' + (e ? (e.mood ? moodC(e.mood) : 'var(--sub)') : d > TODAY ? 'transparent' : 'var(--chip)') + '"></i><span>' + WM[i] + '</span></div>'; }).join('') + '</div>' : '') +
+    (mr.length ? hlist(mr) : sp === 'w' ? '' : '<div class="empty">' + P.lb + ' 쓴 일기가 없어요</div>') + '</div>';
   // 최근 일기
   var rec = L.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }).slice(0, 3);
   if (rec.length) h += '<div class="sec">최근 일기</div>' + rec.map(diaryCard).join('');
-  $('#main').innerHTML = h; bindHome();
+  $('#main').innerHTML = h; bindHome(); bindSum();
   if ($('#dWrite')) $('#dWrite').onclick = function () { openDiary(TODAY); };
   $$('.dc').forEach(function (b) { b.onclick = function () { openDiary(b.dataset.d); }; });
 }
@@ -1469,7 +1452,7 @@ function trDaily() {
 }
 function trWeek() {
   var hs = S.D.habits, ws = monOf(S.day), we = addD(ws, 6), days = weekDays(ws);
-  var h = weekNav();
+  var h = weekNav() + (hs.length ? sumCard(sPer('vw'), sumT(sPer('vw'))) : '');
   h += '<div class="card wk">';
   h += '<div class="hg"><div class="hs"></div>';
   days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
@@ -1490,7 +1473,6 @@ function trWeek() {
     if (firstCk(x) <= we) { t += Math.min(c, x.target); g += x.target; }
     n += c; if (c >= x.target) dn++;
   });
-  if (hs.length) h += '<div class="mini"><div><small>주간 달성률</small><b>' + (g ? pct(t / g) : 0) + '%</b></div><div><small>체크</small><b>' + n + '회</b></div><div><small>목표 달성</small><b>' + dn + '/' + hs.length + '</b></div></div>';
   if (S.D.habits.length) { var wsx = monOf(S.day), wc = [], k; for (k = 7; k >= 0; k--) { var f8 = addD(wsx, -7 * k); wc.push({ lb: P(f8).getMonth() + 1 + '/' + P(f8).getDate(), f: f8, t: addD(f8, 6), cur: k === 0 }); } h += hMatrix('습관별 주 달성률', '최근 8주 · %', wc); }
   $('#main').innerHTML = h;
   bindWeek();
@@ -1551,23 +1533,22 @@ function fdDaily() {
 function fdWeek() {
   var ws = monOf(S.day), all = S.D.photos.filter(function (p) { return p.d >= ws && p.d <= addD(ws, 6); });
   var l = sortedPhotos(byCat(all)); S.pl = l;
-  $('#main').innerHTML = weekNav() + catChips(all) + feedGrid(l, '사진');
+  $('#main').innerHTML = weekNav() + sumCard(sPer('vw'), sumF(sPer('vw'))) + catChips(all) + feedGrid(l, '사진');
   bindWeek(); bindFeed();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdMonth() {
   var y = S.y, m = S.m, ym = y + '-' + pad(m);
   var all = S.D.photos.filter(function (p) { return p.d.slice(0, 7) === ym; }), l = sortedPhotos(byCat(all)); S.pl = l;
-  $('#main').innerHTML = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + catChips(all) + feedGrid(l, '사진');
+  $('#main').innerHTML = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + sumCard(sPer('vm'), sumF(sPer('vm'))) + catChips(all) + feedGrid(l, '사진');
   bindMonth(); bindFeed();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdYear() {
   var y = S.yy, all = S.D.photos.filter(function (p) { return p.d.slice(0, 4) === String(y); }), l = byCat(all), best = 0, bm = 0;
-  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + catChips(all);
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + sumCard(sPer('vy'), sumF(sPer('vy'))) + catChips(all);
   var cc = allCats().filter(function (c) { return all.some(function (p) { return p.cat === c; }); }).length;
   for (var m = 1; m <= 12; m++) { var k = l.filter(function (p) { return +p.d.slice(5, 7) === m; }).length; if (k > best) { best = k; bm = m; } }
-  h += '<div class="pst"><div><b>' + l.length + '</b><small>사진</small></div><div><b>' + cc + '</b><small>카테고리</small></div><div><b>' + (bm ? bm + '월' : '-') + '</b><small>가장 많이 올린 달</small></div></div>';
   h += '<div class="ym">';
   for (m = 1; m <= 12; m++) {
     var ml = sortedPhotos(l.filter(function (p) { return +p.d.slice(5, 7) === m; })), fu = (y + '-' + pad(m)) > TODAY.slice(0, 7);
@@ -1601,7 +1582,7 @@ function dyDaily() {
 function dyWeek() {
   var ws = monOf(S.day), days = weekDays(ws).filter(function (d) { return d <= TODAY; }).reverse();
   var n = days.filter(diaryOf).length;
-  var h = weekNav() + '<div class="mini"><div><small>이번 주 일기</small><b>' + n + '일</b></div><div><small>연속 작성</small><b>' + dRun() + '일</b></div><div><small>전체</small><b>' + S.D.diary.length + '일</b></div></div>';
+  var h = weekNav() + sumCard(sPer('vw'), sumD(sPer('vw')));
   days.forEach(function (d) {
     var x = diaryOf(d);
     h += x ? diaryCard(x) : '<button class="dc none" data-d="' + d + '"><div class="dh"><b>' + md(d) + '<small>' + W[P(d).getDay()] + '요일</small></b><span class="mute" style="font-size:13px">기록 없음 · 쓰기</span></div></button>';
@@ -1615,7 +1596,7 @@ function renderDiary() {
   var list = S.D.diary.filter(function (x) { return x.d.slice(0, 7) === ym; }).sort(function (a, b) { return a.d < b.d ? 1 : -1; });
   var cont = 0; d = TODAY; if (!diaryOf(d)) d = addD(d, -1); while (diaryOf(d)) { cont++; d = addD(d, -1); }
   var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
-  h += '<div class="mini"><div><small>이 달 일기</small><b>' + list.length + '일</b></div><div><small>연속 작성</small><b>' + cont + '일</b></div><div><small>전체</small><b>' + S.D.diary.length + '일</b></div></div>';
+  h += sumCard(sPer('vm'), sumD(sPer('vm')));
   h += '<div class="card cal dcal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
@@ -1638,7 +1619,7 @@ function dyYear() {
   list.forEach(function (x) { if (x.mood) mc[x.mood] = (mc[x.mood] || 0) + 1; });
   var top = Object.keys(mc).sort(function (a, b) { return mc[b] - mc[a]; })[0];
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
-  h += '<div class="mini"><div><small>올해 일기</small><b>' + list.length + '일</b></div><div><small>최장 연속</small><b>' + best + '일</b></div><div><small>많았던 기분</small><b>' + (top || '-') + '</b></div></div>';
+  h += sumCard(sPer('vy'), sumD(sPer('vy')));
   h += '<div class="card"><div class="ct">월별 일기</div><div class="mbar">';
   var mx = 1, cs = [];
   for (var m = 1; m <= 12; m++) { cs[m] = list.filter(function (x) { return +x.d.slice(5, 7) === m; }).length; mx = Math.max(mx, cs[m]); }
@@ -2345,7 +2326,7 @@ function ctDaily() {
 // COUNT WEEK: 항목 × 요일 횟수표
 function ctWeek() {
   var ks = S.D.counters, ws = monOf(S.day), we = addD(ws, 6), days = weekDays(ws);
-  var h = weekNav();
+  var h = weekNav() + (ks.length ? sumCard(sPer('vw'), sumK(sPer('vw'))) : '');
   h += '<div class="card wk">';
   h += '<div class="hg"><div class="hs"></div>';
   days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
@@ -2360,7 +2341,7 @@ function ctWeek() {
   });
   h += '<button class="hadd" id="kAdd">항목 추가</button></div></div>';
   var t = ktotal(ws, we), cnt = 0;
-  if (ks.length) h += '<div class="mini"><div><small>주간 달성률</small><b>' + pct(t.rate) + '%</b></div><div><small>기록</small><b>' + t.cnt + '회</b></div><div><small>달성한 칸</small><b>' + t.ok + '/' + t.days + '</b></div></div>' +
+  if (ks.length) h +=
     '<div class="legend" style="margin:-4px 6px 12px">진한 칸: 하루 목표 달성 · 연한 칸: 기록만 있음</div>';
   $('#main').innerHTML = h;
   bindWeek();
@@ -2372,7 +2353,7 @@ function ctWeek() {
 function ctMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), ks = S.D.counters, d, i;
   var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1, t = ktotal(from, to), pt = ktotal(py + '-' + pad(pm) + '-01', mEnd(py, pm));
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + (ks.length ? sumCard(sPer('vm'), sumK(sPer('vm'))) : '');
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
@@ -2381,10 +2362,6 @@ function ctMonth() {
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span><span class="dts">' + dots + '</span></button>';
   }
   h += '</div><div class="legend">점: 그날 목표를 채운 항목 · 날짜를 누르면 그날로</div></div>';
-  var diff = t.cnt - pt.cnt;
-  h += '<div class="card big1"><small>' + m + '월 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b>' +
-    '<div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '지난 달') : '') + '</div>' +
-    (pt.cnt ? '<div class="sub" style="margin-top:4px">' + (diff > 0 ? '지난 달보다 <span class="up">' + diff + '회 더</span> 기록했어요' : diff < 0 ? '지난 달보다 <span class="dn">' + (-diff) + '회 적어요</span>' : '지난 달과 같아요') + '</div>' : '') + '</div>';
   h += '<div class="card"><div class="ct">항목별 리뷰</div>' + (ks.length ? '<ul class="leg bars">' + ks.map(function (x) {
     var s = kstat(x, from, to);
     return '<li class="kedit" data-e="' + x.id + '"><div class="row1"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span><span class="v">' + s.ok + '/' + s.days + '일 · <b>' + pct(s.rate) + '%</b></span></div>' +
@@ -2410,7 +2387,7 @@ function ctYear() {
   var y = S.yy, from = y + '-01-01', to = y + '-12-31', ks = S.D.counters;
   var t = ktotal(from, to), pt = ktotal((y - 1) + '-01-01', (y - 1) + '-12-31');
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
-  h += '<div class="card big1"><small>' + y + '년 달성률</small><b>' + pct(t.rate) + '<span class="pct">%</span></b><div class="sub">기록 ' + t.cnt + '회 · 달성한 칸 ' + t.ok + '/' + t.days + (pt.days ? diffHtml(t.rate, pt.rate, '작년') : '') + '</div></div>';
+  if (ks.length) h += sumCard(sPer('vy'), sumK(sPer('vy')));
   h += '<div class="card"><div class="ct">월별 달성률</div><div class="mbar">';
   for (var m = 1; m <= 12; m++) {
     var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), r = f > TODAY ? null : ktotal(f, e);
@@ -2638,6 +2615,80 @@ function bAgg(s, k, by) {
   s.forEach(function (r) { var key = by === 'w' ? monOf(r.d) : r.d.slice(0, 7); if (!g[key]) { g[key] = []; o.push(key); } g[key].push(r[k]); });
   return o.map(function (key) { var a = g[key]; return { v: a.reduce(function (p, q) { return p + q; }, 0) / a.length, l: by === 'w' ? bShort(key) : key.slice(2).replace('-', '.') }; });
 }
+// ───── 공통 요약 카드 (2026.10.05) ─────
+// 모든 메뉴: HOME = 날짜 바로 아래, WEEK·MONTH·YEAR = 기간 이동 바로 아래 첫 카드
+// 형식: '{기간} 요약' + 기간 · 회색 칸 4개(항목 (단위) / 숫자 / ▲▼ 지난 기간 대비)
+function sPer(k) {
+  var y, m, f, t, pf, pt, lb, pn;
+  if (k === 'w' || k === 'vw') {
+    f = k === 'w' ? monOf(TODAY) : monOf(S.day); t = addD(f, 6); pf = addD(f, -7); pt = addD(f, -1); pn = '지난 주';
+    lb = f === monOf(TODAY) ? '이번 주' : f === addD(monOf(TODAY), -7) ? '지난 주' : bYmd(f).slice(3) + ' 주';
+  } else if (k === 'm' || k === 'vm') {
+    y = k === 'm' ? +TODAY.slice(0, 4) : S.y; m = k === 'm' ? +TODAY.slice(5, 7) : S.m;
+    var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
+    f = y + '-' + pad(m) + '-01'; t = mEnd(y, m); pf = py + '-' + pad(pm) + '-01'; pt = mEnd(py, pm); pn = '지난 달';
+    lb = f.slice(0, 7) === TODAY.slice(0, 7) ? '이번 달' : (y !== +TODAY.slice(0, 4) ? y + '년 ' : '') + m + '월';
+  } else {
+    y = k === 'y' ? +TODAY.slice(0, 4) : S.yy; f = y + '-01-01'; t = y + '-12-31'; pf = (y - 1) + '-01-01'; pt = (y - 1) + '-12-31'; pn = '작년';
+    lb = y === +TODAY.slice(0, 4) ? '올해' : y + '년';
+  }
+  return { f: f, t: t, pf: pf, pt: pt, lb: lb, pn: pn, te: t < TODAY ? t : TODAY };
+}
+function sD(v, pv, dp) {
+  if (v == null || pv == null || isNaN(v) || isNaN(pv)) return '<span class="mute">-</span>';
+  dp = dp || 0; var mm = Math.pow(10, dp), d = Math.round((v - pv) * mm) / mm;
+  if (!d) return '<span class="mute">0</span>';
+  return '<span class="' + (d > 0 ? 'dn' : 'up') + '">' + (d > 0 ? '▲ ' : '▼ ') + (dp ? Math.abs(d).toFixed(dp) : Math.abs(d).toLocaleString()) + '</span>';
+}
+function sumCard(P, tiles, seg, note) {
+  return '<div class="card sumc"><div class="ct">' + P.lb + ' 요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>' + (seg || '') +
+    '<div class="bc4"' + (seg ? ' style="margin-top:12px"' : '') + '>' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' +
+    '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div></div>';
+}
+function sSeg(attr, cur) { return bSeg(attr, [['w', '주'], ['m', '월'], ['y', '연']], cur); }
+function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
+// 메뉴별 칸 4개
+function sumW(P) {
+  var a = wIn(P.f, P.t), b = wIn(P.pf, P.pt), h1 = wSum(a, 'dur') / 60, h0 = wSum(b, 'dur') / 60, k1 = wSum(a, 'akcal'), k0 = wSum(b, 'akcal');
+  return [['운동 (회)', a.length, sD(a.length, b.length)], ['시간 (h)', (Math.round(h1 * 10) / 10).toFixed(1), sD(h1, h0, 1)], ['운동한 날 (일)', wDays(a), sD(wDays(a), wDays(b))], ['활동 (kcal)', Math.round(k1).toLocaleString(), sD(Math.round(k1), Math.round(k0))]];
+}
+function sumK(P) {
+  var a = ktotal(P.f, P.t), b = ktotal(P.pf, P.pt), has = function (d) { return S.D.counters.some(function (x) { return kv(d, x.id); }); };
+  var d1 = sDays(P.f, P.t, has), d0 = sDays(P.pf, P.pt, has);
+  return [['달성률 (%)', pct(a.rate), b.days ? sD(pct(a.rate), pct(b.rate)) : ''], ['기록 (회)', a.cnt.toLocaleString(), sD(a.cnt, b.cnt)], ['달성한 칸', a.ok + '<small class="u">/' + a.days + '</small>', sD(a.ok, b.ok)], ['기록한 날 (일)', d1, sD(d1, d0)]];
+}
+function sumT(P) {
+  var a = total(P.f, P.t), b = total(P.pf, P.pt), has = function (d) { return S.ck[d] && Object.keys(S.ck[d]).length; };
+  var d1 = sDays(P.f, P.t, has), d0 = sDays(P.pf, P.pt, has);
+  var best = function (f, t) { return S.D.habits.reduce(function (m, x) { return Math.max(m, hstat(x, f, t).best || 0); }, 0); };
+  return [['달성률 (%)', pct(a.rate), b.goal ? sD(pct(a.rate), pct(b.rate)) : ''], ['체크 (회)', a.cnt, sD(a.cnt, b.cnt)], ['체크한 날 (일)', d1, sD(d1, d0)], ['최장 연속 (일)', best(P.f, P.t), sD(best(P.f, P.t), best(P.pf, P.pt))]];
+}
+function sumF(P) {
+  var a = S.D.photos.filter(function (p) { return inR(p.d, P.f, P.t); }), b = S.D.photos.filter(function (p) { return inR(p.d, P.pf, P.pt); });
+  var dd = function (l) { var m = {}; l.forEach(function (p) { m[p.d] = 1; }); return Object.keys(m).length; }, cc = {};
+  a.forEach(function (p) { var c = p.cat || '미분류'; cc[c] = (cc[c] || 0) + 1; });
+  var top = Object.keys(cc).sort(function (x, y) { return cc[y] - cc[x]; })[0];
+  return [['사진 (장)', a.length, sD(a.length, b.length)], ['게시물 (개)', posts(a).length, sD(posts(a).length, posts(b).length)], ['올린 날 (일)', dd(a), sD(dd(a), dd(b))], ['많이 올린 분류', top ? '<span class="stx">' + esc(top) + '</span>' : '-', top ? '<span class="mute">' + cc[top] + '장</span>' : '']];
+}
+function sumD(P) {
+  var L = S.D.diary, a = L.filter(function (e) { return inR(e.d, P.f, P.t); }), b = L.filter(function (e) { return inR(e.d, P.pf, P.pt); });
+  var ch = function (l) { return l.reduce(function (s2, e) { return s2 + (e.text || '').length; }, 0); };
+  var pass = function (f, t) { return t < f ? 0 : dDiff(f, t < TODAY ? t : TODAY) + 1; }, rt = function (l, f, t) { var n = pass(f, t); return n > 0 ? Math.round(l.length / n * 100) : 0; };
+  var mc = {}; a.forEach(function (e) { if (e.mood) mc[e.mood] = (mc[e.mood] || 0) + 1; });
+  var top = Object.keys(mc).sort(function (x, y) { return mc[y] - mc[x]; })[0];
+  return [['작성 (일)', a.length, sD(a.length, b.length)], ['작성률 (%)', P.f > TODAY ? '-' : rt(a, P.f, P.t), sD(rt(a, P.f, P.t), rt(b, P.pf, P.pt))], ['글자 수 (자)', ch(a).toLocaleString(), sD(ch(a), ch(b))], ['많았던 기분', top ? '<span class="stx" style="color:' + moodC(top) + '">' + top + '</span>' : '-', top ? '<span class="mute">' + mc[top] + '일</span>' : '']];
+}
+function sumB(P) {
+  var avg = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
+  return ['w', 'smm', 'pbf', 'vfl'].map(function (kk) { var xx = bkOf(kk), a1 = avg(kk, P.f, P.t), a0 = avg(kk, P.pf, P.pt); return [bLbl(xx), a1 == null ? '-' : bfmt(xx, a1), a1 != null && a0 != null ? bDelta(xx, a1, a0) : '']; });
+}
+function sumM(P) {
+  var a = vIn(P.f, P.t), b = vIn(P.pf, P.pt), lv = function (l) { return l.filter(function (v) { return labsOf(v.id).length; }).length; };
+  var hc = function (l) { var m = {}; l.forEach(function (v) { m[v.hosp || '병원'] = 1; }); return Object.keys(m).length; };
+  var bad = function (l) { var n = 0; l.forEach(function (v) { labsOf(v.id).forEach(function (x) { if (labFlag(x)) n++; }); }); return n; };
+  return [['방문 (회)', a.length, sD(a.length, b.length)], ['혈액검사 (회)', lv(a), sD(lv(a), lv(b))], ['병원 (곳)', hc(a), sD(hc(a), hc(b))], ['참고치 밖 (개)', bad(a), sD(bad(a), bad(b))]];
+}
+function bindSum() { $$('[data-ssp]').forEach(function (b) { b.onclick = function () { var y0 = window.scrollY; S.ssp = S.ssp || {}; S.ssp[S.mode] = b.dataset.ssp; render(); window.scrollTo(0, y0); }; }); }
 function bSeg(attr, list, cur) { return '<div class="seg3">' + list.map(function (p) { return '<button ' + attr + '="' + p[0] + '" class="' + (p[0] === cur ? 'on' : '') + '">' + p[1] + '</button>'; }).join('') + '</div>'; }
 function bdHome() {
   var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
@@ -2738,7 +2789,7 @@ function bdDaily() {
 function bdWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), recs = bList().filter(function (r) { return inR(r.d, ws, we); });
   var keys = bKeys(ws, we), k = bCur(keys), x = bkOf(k), s = bSeries(k, ws, we);
-  var h = weekNav() + bChips(keys, k);
+  var h = weekNav() + sumCard(sPer('vw'), sumB(sPer('vw')), '', '평균') + bChips(keys, k);
   h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindBody();
@@ -2747,7 +2798,7 @@ function bdWeek() {
 function bdMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7);
   var recs = bList().filter(function (r) { return inR(r.d, from, to); }), keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + bChips(keys, k);
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + sumCard(sPer('vm'), sumB(sPer('vm')), '', '평균') + bChips(keys, k);
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7, i, d;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
@@ -2765,7 +2816,7 @@ function bdMonth() {
 function bdYear() {
   if (S.bAll) return bdAll();
   var y = S.yy, from = y + '-01-01', to = y + '-12-31', keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + bChips(keys, k), ms = [], mm, ks = BK5;
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + sumCard(sPer('vy'), sumB(sPer('vy')), '', '평균') + bChips(keys, k), ms = [], mm, ks = BK5;
   for (mm = 1; mm <= 12; mm++) {
     var f = y + '-' + pad(mm) + '-01', e = mEnd(y, mm), rs = bList().filter(function (r) { return inR(r.d, f, e); });
     var av = function (kk) { var v = rs.filter(function (r) { return r[kk] != null; }).map(function (r) { return r[kk]; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; };
@@ -2991,11 +3042,11 @@ function wkHome() {
   var R = rng(), all = wList();
   var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
+  h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], S.wp || 'm'));
   h += wAnalysis(all);
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
-  h += '<div class="mini">' + stat('연속 운동', run + '일') + stat('올해', wIn(R.y + '-01-01', R.y + '-12-31').length + '회') + stat('전체', all.length + '회') + '</div>';
   $('#main').innerHTML = h; bindHome(); bindWk(); bindAnalysis();
 }
 // WORKOUT DAY
@@ -3015,9 +3066,8 @@ function wkDaily() {
 // WORKOUT WEEK
 function wkWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), l = wIn(ws, we), pl = wIn(addD(ws, -7), addD(ws, -1)), x = wkOf(S.wk);
-  var h = weekNav();
-  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">' + wCalCells(ws, we) + '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div>' +
-    '<div class="st3" style="margin-top:14px">' + stat('운동', l.length + '회', delta(l.length, pl.length, '회')) + stat('시간', fmtMin(wSum(l, 'dur')), '지난 주 ' + fmtMin(wSum(pl, 'dur'))) + stat('운동한 날', wDays(l) + '/7') + '</div></div>';
+  var h = weekNav() + sumCard(sPer('vw'), sumW(sPer('vw')));
+  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">' + wCalCells(ws, we) + '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div></div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 운동<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindWk();
@@ -3093,7 +3143,7 @@ function wTot(t, R) {
 // WORKOUT HOME 분석: 운동 종류별 카드 (주·월·연 · 항목 단추는 위에서 한 번에) — 2026.10.05
 function wAnalysis(all) {
   var types = wTypes(all).map(function (o) { return o.n; }), p = S.wp || 'm', k = S.wmk || 'dist';
-  var h = '<div class="wctl2"><div class="wps">' + [['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-wp="' + o[0] + '" class="' + (o[0] === p ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+  var h = '<div class="wctl2">' +
     '<div class="wmt">' + WMET.map(function (o) { return '<button data-wmk="' + o[0] + '" class="' + (o[0] === k ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
   // 운동 종류는 카드 안 단추 + 좌우 스와이프로 선택 (2026.10.05)
   if (!types.length) return h;
@@ -3168,13 +3218,12 @@ function wYearCal(y) {
 }
 function wkMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), l = wIn(from, to), i, d;
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7));
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + sumCard(sPer('vm'), sumW(sPer('vm')));
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
   h += wCalCells(from, to);
   h += '</div><div class="legend">점: 운동 종류 · 분석은 HOME에서</div></div>';
-  h += '<div class="card big1"><small>' + m + '월 운동</small><b>' + l.length + '<span class="pct">회</span></b><div class="sub">' + fmtMin(wSum(l, 'dur')) + ' · 운동한 날 ' + wDays(l) + '일 · 활동 ' + Math.round(wSum(l, 'akcal')) + 'kcal</div></div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   h += '<div class="card"><div class="ct">' + m + '월 기록<small>' + l.length + '회</small></div>' + (l.length ? '<ul class="brow wrows">' + l.slice().reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>';
   $('#main').innerHTML = h; bindMonth(); bindWk();
@@ -3208,7 +3257,7 @@ function openSwimReport(s) {
 function wkYear() {
   var y = S.yy, l = wIn(y + '-01-01', y + '-12-31'), pl = wIn((y - 1) + '-01-01', (y - 1) + '-12-31'), x = wkOf(S.wk);
   var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4));
-  h += '<div class="card big1"><small>' + y + '년 운동</small><b>' + l.length + '<span class="pct">회</span></b><div class="sub">' + fmtMin(wSum(l, 'dur')) + ' · 운동한 날 ' + wDays(l) + '일' + (pl.length ? ' · 작년 ' + pl.length + '회' : '') + '</div></div>';
+  h += sumCard(sPer('vy'), sumW(sPer('vy')));
   h += '<div class="card"><div class="ct">' + y + '년 달력<small>칸 색: 운동 종류</small></div>' + wYearCal(y) + '</div>';
   h += '<div class="card"><div class="ct">운동 종류</div>' + wTypeList(l) + '</div>';
   $('#main').innerHTML = h; bindYear(); bindWk();
@@ -3558,7 +3607,8 @@ function labTrend() {
 function mdHome() {
   var vs = vList(), h = '<div class="hm"><small>MEDICAL</small><b>' + mdw(TODAY) + '</b></div>';
   if (!vs.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 병원 다녀온 기록과<br>혈액검사 결과 캡처를 남겨 보세요</div>'; return; }
-  h += labTrend();   // 검사 항목 추이를 맨 위에
+  var msp = (S.ssp || {}).medical || 'y', MP = sPer(msp); h += sumCard(MP, sumM(MP), sSeg('data-ssp', msp));   // 요약 (모든 메뉴 같은 자리) — 2026.10.05
+  h += labTrend();   // 검사 항목 추이
   var nx = vs.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
   if (nx.length) h += '<div class="card"><div class="ct">다음 예약</div><ul class="brow">' + nx.map(function (v) {
     var dd = dDiff(TODAY, v.next);
@@ -3575,7 +3625,7 @@ function mdHome() {
       labCatBox(ls) + '</div>';
   }
   h += '<div class="card"><div class="ct">최근 방문<small>전체 ' + vs.length + '회</small></div><ul class="brow">' + vs.slice(-6).reverse().map(vRow).join('') + '</ul></div>';
-  $('#main').innerHTML = h; bindHome(); bindMd(); bindLabCat();
+  $('#main').innerHTML = h; bindHome(); bindMd(); bindLabCat(); bindSum();
 }
 // MEDICAL DAY
 function vCard(v) {
@@ -3648,7 +3698,7 @@ function mdWeek() {
 function vListCard(title, vs) { return '<div class="card"><div class="ct">' + title + '<small>' + vs.length + '회</small></div>' + (vs.length ? '<ul class="brow">' + vs.slice().reverse().map(vRow).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>'; }
 function mdMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), vs = vIn(from, to);
-  var h = navMonth(y + '년 ' + m + '월', true, true);
+  var h = navMonth(y + '년 ' + m + '월', true, true) + sumCard(sPer('vm'), sumM(sPer('vm')));
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7, i, d;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
@@ -3665,7 +3715,7 @@ function mdYear() {
   var y = S.yy, vs = vIn(y + '-01-01', y + '-12-31'), h = navMonth(y + '년', true, true), hs = {};
   vs.forEach(function (v) { var k = v.hosp || '병원'; hs[k] = (hs[k] || 0) + 1; });
   var vals = []; for (var mm = 1; mm <= 12; mm++) vals.push(vIn(y + '-' + pad(mm) + '-01', mEnd(y, mm)).length);
-  h += '<div class="card big1"><small>' + y + '년 병원 방문</small><b>' + vs.length + '<span class="pct">회</span></b><div class="sub">혈액검사 ' + vs.filter(function (v) { return labsOf(v.id).length; }).length + '회 · 병원 ' + Object.keys(hs).length + '곳</div></div>';
+  h += sumCard(sPer('vy'), sumM(sPer('vy')));
   h += '<div class="card"><div class="ct">월별 방문</div>' + bars7(vals, vals.map(function (v, i) { return i + 1; }), y === +TODAY.slice(0, 4) ? +TODAY.slice(5, 7) - 1 : -1) + '</div>';
   var hr = Object.keys(hs).map(function (k) { return { n: k, v: hs[k], t: '<b>' + hs[k] + '회</b>', c: '#5b8def' }; }).sort(function (a, b) { return b.v - a.v; });
   if (hr.length) h += '<div class="card"><div class="ct">병원별</div>' + hlist(hr) + '</div>';
