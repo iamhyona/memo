@@ -748,7 +748,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004w4';
+var APP_VER = '20261004w5';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -927,6 +927,12 @@ $('#brand').onclick = function () { S.view = 'all'; S.day = TODAY; ls.set('memo:
 
 /* ───── 습관 픽토그램 (이름을 읽어서 자동으로) · 습관 색 ───── */
 var H_ICONS = [
+  [/^밥$|식사/, 'M4 11h16a8 8 0 0 1-16 0zM8 7.5c0-1.5 1-2 1-3.5M12 7.5c0-1.5 1-2 1-3.5M16 7.5c0-1.5 1-2 1-3.5'],
+  [/과일/, 'M12 7c-2-2-7-1.5-7 4 0 5 3.5 10 7 8.5 3.5 1.5 7-3.5 7-8.5 0-5.5-5-6-7-4zM12 7c0-2 1-3.5 3-4'],
+  [/대변/, 'M4 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM8 4h10a4 4 0 0 1 4 4v12H12V8M8 8h.01'],
+  [/손씻기|손 씻/, 'M7 11V5.5a1.5 1.5 0 0 1 3 0V10M10 9.5V4a1.5 1.5 0 0 1 3 0v6M13 9.5V5a1.5 1.5 0 0 1 3 0v6M16 10V8a1.5 1.5 0 0 1 3 0v6a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-3-5a1.5 1.5 0 0 1 2.5-1.5L7 13'],
+  [/음료|주스|커피/, 'M6 8h12l-1.5 13h-9zM12 8l2-5h3M6.5 12h11'],
+  [/간식|과자|쿠키|디저트/, 'M12 3a9 9 0 1 0 9 9 4 4 0 0 1-5-4 4 4 0 0 1-4-5zM8.5 10.5h.01M9 15h.01M13.5 14.5h.01'],
   [/인바디|체중|몸무게/, 'M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM7.5 11a5 5 0 0 1 9 0M12 11l1.8-2.4'],
   [/아침밥|아침 식사|브런치/, 'M12 4c4 0 8 2.5 8 7 0 3.5-2.2 6-5 7.5S8.5 21 6 19.5 3 15 4 11.5 8 4 12 4zM12 15a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],
   [/점심밥|점심/, 'M3 12h18a9 9 0 0 1-18 0zM13 3l-3 7M19 4l-5 6'],
@@ -3223,12 +3229,16 @@ function vRow(v) {
 }
 function labName(l) { var x = labInfo(l.item, l.val, l.ref); return x ? '<b class="lk">' + esc(x[1]) + '</b><small class="le">' + esc(l.item) + '</small>' : '<b class="lk">' + esc(l.item) + '</b>'; }
 function labTable(ls) {
-  return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.map(function (l) {
+  return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.slice().sort(labSort).map(function (l) {
     var f = labFlag(l), x = labInfo(l.item, l.val, l.ref), u = l.unit || (x ? x[2] : '');
     return '<tr data-lid="' + esc(l.id) + '"><td>' + labName(l) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
   }).join('') + '</table>';
 }
-function labItems() { var m = {}; (S.D.labs || []).forEach(function (l) { if (!isNaN(labNum(l.val))) m[l.item] = (m[l.item] || 0) + 1; }); return Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }); }
+// 루푸스신염 기준 중요도 순서 (신장 기능 → 루푸스 활성도 → 단백뇨·혈뇨 → 빈혈·혈구 → 염증 → 전해질 → 대사·간 → 기타 혈구 → 소변 일반)
+var LAB_RANK = ["Creatinine", "eGFR", "Anti-dsDNA", "C3", "C4", "PC ratio", "Total Protein (Urine)", "Protein (Urine)", "Occult Blood (Urine)", "RBC (Urine)", "Dysmorphic RBC", "eGFR (MDRD)", "Urea Nitrogen (BUN)", "Albumin", "Hemoglobin", "Hematocrit", "RBC Count", "WBC Count", "Platelet count", "Lymphocytes", "ESR", "CRP", "Immunoglobulin G", "Uric acid", "Potassium", "Sodium", "Chloride", "Calcium", "Phosphorus", "Total Protein", "Total Cholesterol", "LDL-Cholesterol", "HDL-Cholesterol", "Triglyceride", "Glucose", "HbA1c", "AST (GOT)", "ALT (GPT)", "Alkaline Phosphatase", "γ-GTP", "Total Bilirubin", "LDH", "CPK", "25-OH Vitamin D", "Iron", "TIBC", "Ferritin", "Seg. neutrophils", "ANC", "Monocytes", "Eosinophils", "Basophils", "Creatinine (Urine)", "WBC (Urine)", "Leukocyte esterase", "Nitrite (Urine)", "Bacteria (Urine)", "Specific Gravity", "pH (Urine)", "Glucose (Urine)", "Ketone (Urine)", "Bilirubin (Urine)", "Urobilinogen", "Color (Urine)"];
+function labRank(n) { var i = LAB_RANK.indexOf(n); return i < 0 ? 500 + (LABS.indexOf(labInfo(n)) + 1 || 400) : i; }
+function labSort(a, b) { return labRank(a.item || a) - labRank(b.item || b); }
+function labItems() { var m = {}; (S.D.labs || []).forEach(function (l) { if (!isNaN(labNum(l.val))) m[l.item] = (m[l.item] || 0) + 1; }); return Object.keys(m).sort(labSort); }
 function labSeries(item) { return (S.D.labs || []).filter(function (l) { return l.item === item && !isNaN(labNum(l.val)); }).sort(function (a, b) { return a.d < b.d ? -1 : 1; }); }
 function bindMd() {
   $$('[data-bd]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); goDaily(b.dataset.bd); }; });
@@ -3251,6 +3261,7 @@ function labTrend() {
 function mdHome() {
   var vs = vList(), h = '<div class="hm"><small>MEDICAL</small><b>' + mdw(TODAY) + '</b></div>';
   if (!vs.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 병원 다녀온 기록과<br>혈액검사 결과 캡처를 남겨 보세요</div>'; return; }
+  h += labTrend();   // 검사 항목 추이를 맨 위에
   var nx = vs.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
   if (nx.length) h += '<div class="card"><div class="ct">다음 예약</div><ul class="brow">' + nx.map(function (v) {
     var dd = dDiff(TODAY, v.next);
@@ -3266,7 +3277,6 @@ function mdHome() {
       '<div class="st3">' + stat('검사 항목', ls.length + '개') + stat('참고치 밖', '<span class="' + (bad.length ? 'dn' : '') + '">' + bad.length + '개</span>') + stat('병원', esc(hs.join(', ') || '-')) + '</div>' +
       (bad.length ? '<div class="sub2">참고치를 벗어난 항목</div>' + labTable(bad) : '<p class="mnote">모든 항목이 참고치 안이에요</p>') + '</div>';
   }
-  h += labTrend();
   h += '<div class="card"><div class="ct">최근 방문<small>전체 ' + vs.length + '회</small></div><ul class="brow">' + vs.slice(-6).reverse().map(vRow).join('') + '</ul></div>';
   $('#main').innerHTML = h; bindHome(); bindMd();
 }
@@ -3307,8 +3317,6 @@ function mdList() {
 function mdWeek() {
   var its = labItems();
   if (!its.length) { $('#main').innerHTML = '<div class="card empty">혈액검사 결과를 넣으면<br>항목별로 변화를 볼 수 있어요</div>'; return; }
-  var ord = function (n) { var i = LABS.indexOf(labInfo(n)); return i < 0 ? 999 : i; };
-  its.sort(function (a, b) { return ord(a) - ord(b); });
   var it = its.indexOf(S.lt) >= 0 ? S.lt : its[0], s = labSeries(it), last = s[s.length - 1], info = labInfo(it, last.val, last.ref);
   var dp = s.reduce(function (a, l) { var p = String(labNum(l.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
   var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
