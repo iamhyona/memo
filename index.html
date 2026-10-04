@@ -427,6 +427,8 @@ header .vseg button { font-size:11.5px; padding:7px 0; }
 .nav2 { margin:6px 0 12px; min-height:36px; }
 .nav2 .lbl { font-size:16px; font-weight:800; padding:0 4px; letter-spacing:-0.01em; }
 .dpw { position:relative; cursor:pointer; }
+.lsel { display:inline-flex; align-items:center; } .lsel .dpk { color:var(--txt); }
+#ltc { transition:transform .12s, opacity .12s; } #ltc.swl { transform:translateX(-24px); opacity:.4; } #ltc.swr { transform:translateX(24px); opacity:.4; }
 .dpw::after { content:''; display:inline-block; width:5px; height:5px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); margin:0 2px 4px 8px; opacity:.35; vertical-align:middle; }
 .dpk { position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; border:0; margin:0; padding:0; font-size:16px; -webkit-appearance:none; appearance:none; cursor:pointer; color:transparent; background:transparent; }
 .seg3 { display:flex; gap:6px; margin:0 0 12px; }
@@ -736,7 +738,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v9';
+var APP_VER = '20261004w1';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3195,7 +3197,8 @@ function mdWeek() {
   var it = its.indexOf(S.lt) >= 0 ? S.lt : its[0], s = labSeries(it), last = s[s.length - 1], info = labInfo(it, last.val, last.ref);
   var dp = s.reduce(function (a, l) { var p = String(labNum(l.val)).split('.')[1]; return Math.max(a, p ? p.length : 0); }, 0);
   var x = { n: it, u: last.unit || (info ? info[2] : ''), dp: Math.min(dp, 3), c: '#e5484d' };
-  var h = '<div class="card"><div class="ct">' + esc(info ? info[1] : it) + '<small>' + esc(it) + '</small></div>' +
+  var ix = its.indexOf(it);
+  var h = '<div class="card" id="ltc"><div class="ct"><span class="dpw lsel">' + esc(info ? info[1] : it) + '<select id="ltS" class="dpk" aria-label="검사 항목 선택">' + its.map(function (n) { var k = labKo(n); return '<option value="' + esc(n) + '"' + (n === it ? ' selected' : '') + '>' + esc(k ? k + ' · ' + n : n) + '</option>'; }).join('') + '</select></span><small>' + (ix + 1) + ' / ' + its.length + ' · ' + esc(it) + '</small></div>' +
     '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
     bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
     '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
@@ -3207,6 +3210,16 @@ function mdWeek() {
   }).join('') + '</ul></div>';
   $('#main').innerHTML = h; bindMd();
   $$('[data-lt2]').forEach(function (b) { b.onclick = function () { S.lt = b.dataset.lt2; window.scrollTo({ top: 0, behavior: 'smooth' }); render(); }; });
+  // 항목 이름 누르면 고르기 · 카드를 옆으로 밀면 이전/다음 항목
+  $('#ltS').onchange = function () { S.lt = this.value; render(); };
+  var c = $('#ltc'), sx = 0, sy = 0;
+  c.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  c.addEventListener('touchend', function (e) {
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    var j = ix + (dx < 0 ? 1 : -1); if (j < 0 || j >= its.length) return;
+    S.lt = its[j]; c.classList.add(dx < 0 ? 'swl' : 'swr'); setTimeout(render, 120);
+  });
 }
 function vListCard(title, vs) { return '<div class="card"><div class="ct">' + title + '<small>' + vs.length + '회</small></div>' + (vs.length ? '<ul class="brow">' + vs.slice().reverse().map(vRow).join('') + '</ul>' : '<div class="empty" style="padding:14px 0">기록이 없어요</div>') + '</div>'; }
 function mdMonth() {
