@@ -455,6 +455,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .btab th:first-child, .btab td:first-child { text-align:left; }
 .btab td:first-child { font-weight:500; color:var(--sub); } .btab td small { color:var(--faint); }
 .btab tr[data-bd], .btab tr[data-bm] { cursor:pointer; }
+.bseg td span { font-size:11px; font-weight:600; margin-left:3px; }
 .st3 small.bu { display:inline; font-size:12px; color:var(--mute); margin-left:2px; font-weight:600; }
 .bkc { flex-wrap:nowrap; overflow-x:auto; margin:0 -16px 12px; padding:0 16px; scrollbar-width:none; }
 .bkc::-webkit-scrollbar { display:none; } .bkc button { flex:none; background:#fff; } .bkc button.on { background:var(--txt); color:#fff; }
@@ -704,7 +705,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t6';
+var APP_VER = '20261004t7';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2299,15 +2300,34 @@ var BK = [
   { k: 'ecw', n: '세포외수분', u: 'L', g: 0 },
   { k: 'ecwr', n: '세포외수분비', u: '', g: -1, dp: 3 },
   { k: 'bmc', n: '골무기질량', u: 'kg', g: 1, dp: 2 },
-  { k: 'bcm', n: '체세포량', u: 'kg', g: 1 }
+  { k: 'bcm', n: '체세포량', u: 'kg', g: 1 },
+  { k: 'mra', n: '오른팔 근육', u: 'kg', g: 1, seg: 1, dp: 2 },
+  { k: 'mla', n: '왼팔 근육', u: 'kg', g: 1, seg: 1, dp: 2 },
+  { k: 'mtr', n: '몸통 근육', u: 'kg', g: 1, seg: 1 },
+  { k: 'mrl', n: '오른다리 근육', u: 'kg', g: 1, seg: 1, dp: 2 },
+  { k: 'mll', n: '왼다리 근육', u: 'kg', g: 1, seg: 1, dp: 2 },
+  { k: 'fra', n: '오른팔 지방', u: 'kg', g: -1, seg: 1 },
+  { k: 'fla', n: '왼팔 지방', u: 'kg', g: -1, seg: 1 },
+  { k: 'ftr', n: '몸통 지방', u: 'kg', g: -1, seg: 1 },
+  { k: 'frl', n: '오른다리 지방', u: 'kg', g: -1, seg: 1 },
+  { k: 'fll', n: '왼다리 지방', u: 'kg', g: -1, seg: 1 }
 ];
 var JT = { lo: '표준이하', ok: '표준', hi: '표준이상' };
 function bkOf(k) { for (var i = 0; i < BK.length; i++) if (BK[i].k === k) return BK[i]; return BK[0]; }
 function bcol(x) { return x.c || '#4e5968'; }
 function bfmt(x, v) { return v == null ? '-' : Number(v).toFixed(x.dp == null ? 1 : x.dp); }
 function bkey(r) { return r.d + ' ' + (r.t || '') + ' ' + r.id; }
-function bList() { return (S.D.body || []).slice().sort(function (a, b) { var x = bkey(a), y = bkey(b); return x < y ? -1 : x > y ? 1 : 0; }); }
-function bSeries(k, from, to) { return bList().filter(function (r) { return r[k] != null && (!from || r.d >= from) && (!to || r.d <= to); }); }
+// 기록이 수천 건이라 정렬·항목별 목록은 한 번만 만들어 두고 기록이 바뀔 때만 다시 만듦
+var BC = { a: null, n: -1, v: [], s: {} };
+function bList() {
+  var a = S.D.body || [];
+  if (BC.a !== a || BC.n !== a.length) BC = { a: a, n: a.length, s: {}, v: a.map(function (r) { return [bkey(r), r]; }).sort(function (x, y) { return x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0; }).map(function (x) { return x[1]; }) };
+  return BC.v;
+}
+function bSeries(k, from, to) {
+  var L = bList(), s = BC.s[k] || (BC.s[k] = L.filter(function (r) { return r[k] != null; }));
+  return from || to ? s.filter(function (r) { return (!from || r.d >= from) && (!to || r.d <= to); }) : s.slice();
+}
 function bLast(k) { var s = bSeries(k); return s.length ? s[s.length - 1] : null; }
 function bPrevVal(r, k) { var s = bSeries(k), p = null; for (var i = 0; i < s.length; i++) { if (s[i].id === r.id) break; p = s[i]; } return p ? p[k] : null; }
 function bAt(k, d) { var s = bSeries(k, null, d); return s.length ? s[s.length - 1] : null; }
@@ -2369,7 +2389,7 @@ function bSum(s, k, x) {
     stat('최저 · 최고', bfmt(x, Math.min.apply(null, vs)) + '–' + bfmt(x, Math.max.apply(null, vs))) + '</div>';
 }
 // 항목 고르기 칩 (기간 안에 기록이 있는 항목만)
-function bKeys(from, to) { return BK.filter(function (x) { return bSeries(x.k, from, to).length; }).map(function (x) { return x.k; }); }
+function bKeys(from, to) { return BK.filter(function (x) { return !x.seg && bSeries(x.k, from, to).length; }).map(function (x) { return x.k; }); }
 function bCur(keys) { return keys.indexOf(S.bk) >= 0 ? S.bk : keys[0] || S.bk; }
 function bChips(keys, cur) {
   return keys.length ? '<div class="chips bkc">' + keys.map(function (k) { return '<button data-bk="' + k + '" class="' + (k === cur ? 'on' : '') + '">' + bkOf(k).n + '</button>'; }).join('') + '</div>' : '';
@@ -2417,7 +2437,7 @@ function bdHome() {
     var pv = bPrevVal(lr3, xx.k);
     return '<li class="tap' + (xx.k === k ? ' on' : '') + '" data-bk="' + xx.k + '"><span class="n">' + xx.n + (lr3.d !== r.d ? '<small class="dt">' + bShort(lr3.d) + '</small>' : '') + '</span><span class="v"><b>' + bfmt(xx, lr3[xx.k]) + '</b><small>' + xx.u + '</small></span><span class="d">' + bjHtml(xx.k, lr3) + (pv != null ? bDelta(xx, lr3[xx.k], pv) : '') + '</span></li>';
   };
-  var core = BK.filter(function (xx) { return xx.core; }).map(row).join(''), ext = BK.filter(function (xx) { return !xx.core; }).map(row).join('');
+  var core = BK.filter(function (xx) { return xx.core; }).map(row).join(''), ext = BK.filter(function (xx) { return !xx.core && !xx.seg; }).map(row).join('');
   h += '<div class="card"><div class="ct">전체 항목<small>누르면 그래프로</small></div><ul class="brow">' + core + '</ul>' + (ext ? '<div class="sub2">추가 항목 · 측정한 기기에서만</div><ul class="brow">' + ext + '</ul>' : '') + '</div>';
   h += '<p class="mnote" style="margin:0 6px 16px">판정은 여성 표준 범위 기준이에요 (BMI 18.5~25 · 체지방률 18~28% · 내장지방 10 미만 · 체중은 키로 계산한 표준체중의 85~115%).</p>';
   $('#main').innerHTML = h; bindBody();
@@ -2433,8 +2453,11 @@ function bRecCard(r) {
       return '<li><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(x, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(x, r[x.k], pv) : '') + '</span></li>';
     }).join('') + '</ul>';
   };
-  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
-    grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core; })) +
+  var sg = [['오른팔', 'ra'], ['왼팔', 'la'], ['몸통', 'tr'], ['오른다리', 'rl'], ['왼다리', 'll']].filter(function (q) { return r['m' + q[1]] != null || r['f' + q[1]] != null; });
+  var cell = function (k) { return '<td>' + (r[k] == null ? '<span class="mute">-</span>' : bfmt(bkOf(k), r[k]) + ' ' + bDelta(bkOf(k), r[k], bPrevVal(r, k))) + '</td>'; };
+  var seg = sg.length ? '<div class="sub2">부위별</div><table class="btab bseg"><tr><th></th><th>근육 kg</th><th>지방 kg</th></tr>' + sg.map(function (q) { return '<tr><td>' + q[0] + '</td>' + cell('m' + q[1]) + cell('f' + q[1]) + '</tr>'; }).join('') + '</table>' : '';
+  return '<div class="card"><div class="ct">' + (r.t ? r.t + ' 측정' : '측정 기록') + (r.dev ? ' <small>' + esc(r.dev) + '</small>' : '') + '<a href="#" data-be="' + r.id + '">수정 ›</a></div>' +
+    grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) + seg +
     (r.memo ? '<p class="mnote">' + esc(r.memo) + '</p>' : '') + '<div class="legend" style="justify-content:flex-start">▲▼ 지난 측정 대비 · 파랑 좋아짐 · 빨강 나빠짐</div></div>';
 }
 function bdDaily() {
@@ -2577,7 +2600,8 @@ $('#bbIn').onchange = function () {
 };
 $('#bbS').onclick = function () {
   if (BB.busy) return toast('사진을 읽는 중이에요');
-  var d = $('#bbD').value, t = ($('#bbTm').value || '').slice(0, 5), rec = { id: BB.id, d: d, t: t, memo: $('#bbM').value.trim() }, c = 0;
+  var d = $('#bbD').value, t = ($('#bbTm').value || '').slice(0, 5), rec = { id: BB.id, d: d, t: t, memo: $('#bbM').value.trim() }, c = 0, old = BB.id && (S.D.body || []).filter(function (x) { return x.id === BB.id; })[0];
+  if (old && old.dev) rec.dev = old.dev;
   if (!d) return toast('날짜를 선택해 주세요');
   $$('#bb input[data-k]').forEach(function (inp) { var v = parseFloat(String(inp.value).replace(',', '.')); if (!isNaN(v)) { rec[inp.dataset.k] = v; c++; } });
   if (!c) return toast('수치를 하나 이상 입력해 주세요');
