@@ -587,7 +587,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004s1';
+var APP_VER = '20261004s2';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1135,7 +1135,6 @@ function trDaily() {
   var h = dayNav();
   h += dstrip(function (d) { return { w: hs.length ? hs.filter(function (x) { return on(d, x.id); }).length / hs.length : 0 }; });
   var doneN = hs.filter(function (x) { return on(day, x.id); }).length;
-  if (hs.length) h += '<div class="tdh"><span class="cnt">' + doneN + '/' + hs.length + ' 완료</span></div>';
   var cardOf = function (x) {
     var v = on(day, x.id), c = weekCnt(x, ws), st = streak(x.id);
     var sub = '이번 주 ' + c + '/' + x.target + (c >= x.target ? ' 달성' : '') + (st >= 2 ? ' · 연속 ' + st + '일' : '');
@@ -1994,8 +1993,7 @@ function ctHome() {
 function ctDaily() {
   var ks = S.D.counters, day = S.day, n = kdayOk(day);
   var h = dayNav();
-  if (ks.length) h += '<div class="tdh"><span class="cnt">' + n + '/' + ks.length + ' 목표 달성</span><span class="khint">카드를 누르면 +1</span></div>';
-  else h += '<div class="card empty">아직 횟수 항목이 없어요<br>오른쪽 아래 + 버튼으로 물 마시기, 양치처럼<br>하루에 여러 번 하는 일을 추가해 보세요</div>';
+  if (!ks.length) h += '<div class="card empty">아직 횟수 항목이 없어요<br>오른쪽 아래 + 버튼으로 물 마시기, 양치처럼<br>하루에 여러 번 하는 일을 추가해 보세요</div>';
   h += ks.map(function (x) { return kcard(x, day); }).join('');
   $('#main').innerHTML = h;
   bindDay(); bindKc(day);
