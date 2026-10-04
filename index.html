@@ -469,7 +469,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bcd small { display:block; font-size:12px; color:var(--mute); white-space:nowrap; }
 .bcd b { display:block; font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:4px 0 3px; }
 .bcd em { display:block; font-style:normal; font-size:11.5px; font-weight:700; }
-.sumc .bcd b, .asm .bcd b { white-space:nowrap; } .asm .bc4 { margin-top:2px; } .asm { cursor:pointer; } .asm .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); } .asm .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .asum .seg3 { margin-top:2px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
+.sumc .bcd b, .asm .bcd b { white-space:nowrap; } .asm .bc4 { margin-top:2px; } .asm { cursor:pointer; } .asm .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); } .asm .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .ahm { justify-content:space-between; gap:8px; } .aseg { display:flex; gap:4px; flex:none; } .aseg button { border:0; background:#fff; border-radius:999px; min-width:34px; padding:7px 10px; font-size:12.5px; font-weight:700; color:var(--sub); } .aseg button.on { background:var(--txt); color:#fff; } .asub { font-size:12px; color:var(--mute); margin:-6px 6px 12px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
 .bsel { display:flex; align-items:center; gap:6px; margin:0 2px 4px; }
 .bsel span { font-size:13px; color:var(--mute); font-weight:600; } .bsel b { font-size:15px; font-weight:800; } .bsel small { margin-left:auto; font-size:12px; color:var(--mute); }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
@@ -805,7 +805,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zr';
+var APP_VER = '20261005zs';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -924,8 +924,8 @@ var VIEWS = { tracker: { home: trHome, daily: trDaily, week: trWeek, month: rend
 function render() { renderCore(); try { datePick(); } catch (e) {} }
 // 날짜 글자를 누르면 바로 날짜 고르기 (HOME·DAY·WEEK = 날짜, MONTH = 년·월, YEAR = 연도) — 2026.10.04
 function datePick() {
-  if (!S.D || S.view === 'all') return;
-  var v = S.view, el = v === 'home' ? $('#main .hm b') : $('#main .nav2 .lbl'), inp, y;
+  if (!S.D) return;
+  var v = S.view, el = v === 'home' || v === 'all' ? $('#main .hm b') : $('#main .nav2 .lbl'), inp, y;
   if (!el || el.querySelector('.dpk')) return;
   if (v === 'year') {
     inp = document.createElement('select');
@@ -935,7 +935,7 @@ function datePick() {
     inp = document.createElement('input');
     inp.type = v === 'month' ? 'month' : 'date';
     inp.min = v === 'month' ? '2015-01' : '2015-01-01'; inp.max = v === 'month' ? TODAY.slice(0, 7) : TODAY;
-    inp.value = v === 'month' ? S.y + '-' + pad(S.m) : v === 'home' ? TODAY : S.day;
+    inp.value = v === 'month' ? S.y + '-' + pad(S.m) : v === 'all' ? (S.ad || TODAY) : v === 'home' ? TODAY : S.day;
   }
   inp.className = 'dpk'; inp.setAttribute('aria-label', '날짜 선택');
   el.classList.add('dpw'); el.appendChild(inp);
@@ -943,7 +943,7 @@ function datePick() {
     var x = inp.value; if (!x) return;
     if (v === 'year') { if (+x === S.yy) return; S.yy = +x; }
     else if (v === 'month') { var yy = +x.slice(0, 4), mm = +x.slice(5, 7); if (yy === S.y && mm === S.m) return; S.y = yy; S.m = mm; S.sel = null; }
-    else { if (x > TODAY) x = TODAY; if (v === 'home') return goDaily(x); if (x === S.day) return; S.day = x; }
+    else { if (x > TODAY) x = TODAY; if (v === 'all') { if (x === (S.ad || TODAY)) return; S.ad = x; render(); return; } if (v === 'home') return goDaily(x); if (x === S.day) return; S.day = x; }
     window.scrollTo(0, 0); render();
   };
   // 휴대폰은 휠을 돌리는 중에도 값이 바뀌므로 '완료'로 닫을 때(blur) 적용
@@ -1379,12 +1379,14 @@ function bindHome() {
 // ARCHIVE 전체 요약
 function renderAll() {
   // 전체 요약: 일·주·월·연 단추 → 메뉴별 같은 형식(칸 4개 + ▲▼ 지난 기간 대비) — 2026.10.05
-  var R = rng(), ps = S.D.photos, sp = S.asp || 'w', y = String(R.y);
-  var P = sp === 'd' ? { f: TODAY, t: TODAY, pf: addD(TODAY, -1), pt: addD(TODAY, -1), lb: '오늘', pn: '어제', te: TODAY } : sPer(sp);
-  var h = '<div class="hm"><small>' + y + ' ROUTINE</small><b>' + mdw(TODAY) + '</b></div>';
-  h += '<div class="card asum"><div class="ct">' + P.lb + ' 요약<small>' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + '</small></div>' +
-    bSeg('data-asp', [['d', '일간'], ['w', '주간'], ['m', '월간'], ['y', '연간']], sp) +
-    '<div class="legend" style="justify-content:flex-start;margin-top:10px">메뉴마다 칸 4개 · ▲▼ ' + P.pn + ' 대비 · 카드를 누르면 그 메뉴로</div></div>';
+  var R = rng(), ps = S.D.photos, sp = S.asp || 'w', A = S.ad && S.ad <= TODAY ? S.ad : TODAY, y = String(R.y), P;
+  // 기준 날짜(날짜를 눌러 선택) + 일·주·월·연 — 2026.10.05
+  if (sp === 'd') P = { f: A, t: A, pf: addD(A, -1), pt: addD(A, -1), pn: '전날' };
+  else if (sp === 'w') { var w0 = monOf(A); P = { f: w0, t: addD(w0, 6), pf: addD(w0, -7), pt: addD(w0, -1), pn: '지난 주' }; }
+  else if (sp === 'm') { var ay = +A.slice(0, 4), am = +A.slice(5, 7), apy = am === 1 ? ay - 1 : ay, apm = am === 1 ? 12 : am - 1; P = { f: A.slice(0, 8) + '01', t: mEnd(ay, am), pf: apy + '-' + pad(apm) + '-01', pt: mEnd(apy, apm), pn: '지난 달' }; }
+  else { var yy0 = +A.slice(0, 4); P = { f: yy0 + '-01-01', t: yy0 + '-12-31', pf: (yy0 - 1) + '-01-01', pt: (yy0 - 1) + '-12-31', pn: '작년' }; }
+  var h = '<div class="hm ahm"><small>' + y + ' ROUTINE</small><b>' + mdw(A) + '</b><div class="aseg">' + [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-asp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+    '<div class="asub">' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + ' 요약 · ▲▼ ' + P.pn + ' 대비</div>';
   var card = function (mode, title, tiles, note) {
     return '<div class="card mcard asm" data-amode="' + mode + '"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div>' +
       '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' + (note ? '<div class="legend" style="justify-content:flex-start;margin-top:8px">' + note + '</div>' : '') + '</div>';
