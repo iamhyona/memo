@@ -583,6 +583,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .lbar .lbf { position:absolute; top:0; bottom:0; background:#f8b4c0; }
 .lbar .lbd { position:absolute; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:#2fb67c; border:2.5px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.18); }
 .lbar.bad .lbd { background:#f0506e; }
+.mlst li { align-items:center; } .mlst .n { padding-right:10px; } .mlst .mv { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; text-align:right; } .mlst .d2 { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; }
 </style>
 </head>
 <body>
@@ -791,7 +792,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zc';
+var APP_VER = '20261005zd';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3543,7 +3544,7 @@ function mdWeek() {
     }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
   h += '<div class="card"><div class="ct">전체 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div><ul class="brow mlst">' + its.map(function (n) {
     var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
-    return '<li class="tap' + (n === it ? ' on' : '') + '" data-lt2="' + esc(n) + '"><span class="n">' + labName(l) + '</span><span class="v"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b><small>' + esc(u) + '</small></span><span class="d">' + flagHtml(f) + '<span class="mute">' + ss.length + '회</span></span></li>';
+    return '<li class="tap' + (n === it ? ' on' : '') + '" data-lt2="' + esc(n) + '"><span class="n">' + labName(l) + '</span><span class="mv"><span class="v"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b><small>' + esc(u) + '</small></span><span class="d2">' + flagHtml(f) + '<span class="mute">' + ss.length + '회</span></span></span></li>';
   }).join('') + '</ul></div>';
   var vsA = vList(), ysA = {}; vsA.forEach(function (v) { (ysA[v.d.slice(0, 4)] = ysA[v.d.slice(0, 4)] || []).push(v); });
   h += '<div class="sec">검사일 · 병원 기록</div>';
