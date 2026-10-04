@@ -283,6 +283,9 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .legend { display:flex; justify-content:flex-end; align-items:center; gap:4px; font-size:11px; color:var(--mute); margin-top:10px; }
 .legend i { width:12px; height:12px; border-radius:3px; background:var(--chip); display:inline-block; }
 .dchk { display:flex; flex-wrap:wrap; gap:6px; }
+.dchk.dico { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+.dchk.dico button { padding:0; aspect-ratio:1; border-radius:50%; justify-content:center; background:#f2f4f6; }
+.dchk.dico button .hico { width:22px; height:22px; opacity:1; filter:grayscale(1); opacity:.3; } .dchk.dico button.on .hico { filter:none; opacity:1; }
 .dchk button { border:0; border-radius:999px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--chip); color:var(--mute); display:flex; align-items:center; gap:6px; }
 .dchk button.on { color:var(--txt); }
 .dchk button .hico { opacity:.35; } .dchk button.on .hico { opacity:1; } .dchk button.on { color:var(--txt); }
@@ -729,7 +732,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004v2';
+var APP_VER = '20261004v3';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1195,8 +1198,8 @@ function trHome() {
   var h = '<div class="hm"><small>TRACKER</small><b>' + mdw(TODAY) + '</b></div>';
   // 오늘
   h += '<div class="card"><div class="ct">오늘<a href="#" data-go="daily">' + n + '/' + hs.length + ' 완료 ›</a></div>' +
-    (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk">' + hs.map(function (x) {
-      return '<button data-h="' + x.id + '" class="' + (on(TODAY, x.id) ? 'on' : '') + '"' + (on(TODAY, x.id) ? ' style="background:' + x.color + '"' : '') + '>' + hIco(x, 'hico sm') + esc(x.name) + '</button>';
+    (hs.length ? '<div class="pbar"><i style="width:' + Math.round(n / hs.length * 100) + '%"></i></div><div class="dchk dico">' + hs.map(function (x) {
+      return '<button data-h="' + x.id + '" aria-label="' + esc(x.name) + '" title="' + esc(x.name) + '" class="' + (on(TODAY, x.id) ? 'on' : '') + '"' + (on(TODAY, x.id) ? ' style="background:' + x.color + '"' : '') + '>' + hIco(x, 'hico') + '</button>';
     }).join('') + '</div>' : '<div class="empty">+ 버튼으로 습관을 추가해 보세요</div>') + '</div>';
   if (!hs.length) { $('#main').innerHTML = h; return bindHome(); }
   // 이번 주
