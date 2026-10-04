@@ -612,7 +612,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
       <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
-  <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="tracker">TRACKER</button><button data-m="count">COUNT</button><button data-m="food">FOOD</button><button data-m="workout">WORKOUT</button><button data-m="feed">ME</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
+  <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="workout">WORKOUT</button><button data-m="count">COUNT</button><button data-m="food">FOOD</button><button data-m="tracker">TRACKER</button><button data-m="feed">ME</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
   <div class="mode vseg" id="nav"><button data-v="home">HOME</button><button data-v="daily">DAY</button><button data-v="week">WEEK</button><button data-v="month">MONTH</button><button data-v="year">YEAR</button></div>
 </header>
 <main id="main"><div class="ld">불러오는 중…</div></main>
@@ -802,7 +802,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zj';
+var APP_VER = '20261005zk';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1430,7 +1430,7 @@ function renderAll() {
   if (vl.length) { var vnx = vl.filter(function (v) { return v.next && v.next >= TODAY; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; })[0]; h += card('medical', 'MEDICAL', [stat('최근 방문', bShort(vl[vl.length - 1].d)), stat('다음 예약', vnx ? bShort(vnx.next) : '-'), stat('올해', vIn(R.y + '-01-01', R.y + '-12-31').length + '회'), stat('혈액검사', vl.filter(function (v) { return labsOf(v.id).length; }).length + '회')]); }
   var br = bLast('w');
   if (br) h += card('body', 'BODY', [stat('최근 측정', bShort(br.d)), stat('체중', bfmt(bkOf('w'), br.w) + 'kg'), stat('골격근량', bfmt(bkOf('smm'), br.smm) + 'kg'), stat('체지방률', bfmt(bkOf('pbf'), br.pbf) + '%')]);
-  h += ['body', 'tracker', 'count', 'food', 'workout', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
+  h += ['body', 'workout', 'count', 'food', 'tracker', 'feed', 'diary', 'medical'].map(function (k) { return CD[k] || ''; }).join('');
   // 올해
   var ty = total(y + '-01-01', y + '-12-31');
   h += '<div class="sec">' + y + '년</div><div class="mini">' + stat('습관 체크', ty.cnt + '회') + stat('사진', ps.filter(function (p) { return p.d.slice(0, 4) === y; }).length + '장') + stat('일기', L.filter(function (e) { return e.d.slice(0, 4) === y; }).length + '일') + '</div>';
