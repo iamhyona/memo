@@ -705,7 +705,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261004t8';
+var APP_VER = '20261004t9';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2934,6 +2934,7 @@ function labInfo(name, val, ref) {
   var k = labKey(name), cut = /…|\.{2,}/.test(String(name || '')); if (!k) return null;
   if (/^creatinin/.test(k) && labNum(val) > 20) k = 'creatinine(u';
   if (/^totalprot/.test(k) && /</.test(String(ref || '').replace(/[〈＜]/g, '<'))) k = 'totalprotein(u';
+  for (var i0 = 0; i0 < LABS.length; i0++) if (labKey(LABS[i0][0]) === k) return LABS[i0];   // 정확한 이름이 먼저
   for (var i = 0; i < LABS.length; i++) {
     var ps = LABS[i][3];
     for (var j = 0; j < ps.length; j++) {
@@ -3007,11 +3008,14 @@ function mdHome() {
     var dd = dDiff(TODAY, v.next);
     return '<li class="tap" data-bd="' + v.d + '"><span class="n">' + vTitle(v) + '</span><span class="v"><b>' + md(v.next) + '</b></span><span class="d"><span class="' + (dd <= 7 ? 'dn' : 'mute') + '">' + (dd ? 'D-' + dd : '오늘') + '</span></span></li>';
   }).join('') + '</ul></div>';
-  var lv = vs.filter(function (v) { return labsOf(v.id).length; }).pop();
+  // 최근 검사: 마지막 검사일부터 일주일 안의 검사는 한 번에 묶어서 (결과가 날짜를 나눠 나오는 경우)
+  var lvs = vs.filter(function (v) { return labsOf(v.id).length; }), lv = lvs[lvs.length - 1];
   if (lv) {
-    var ls = labsOf(lv.id), bad = ls.filter(function (l) { return labFlag(l); });
-    h += '<div class="card"><div class="ct">최근 혈액검사<a href="#" data-bd="' + lv.d + '">' + bShort(lv.d) + ' ›</a></div>' +
-      '<div class="st3">' + stat('검사 항목', ls.length + '개') + stat('참고치 밖', '<span class="' + (bad.length ? 'dn' : '') + '">' + bad.length + '개</span>') + stat('병원', esc(lv.hosp || '-')) + '</div>' +
+    var gv = lvs.filter(function (v) { return v.d >= addD(lv.d, -7); }), d0 = gv[0].d, hs = [];
+    gv.forEach(function (v) { if (v.hosp && hs.indexOf(v.hosp) < 0) hs.push(v.hosp); });
+    var ls = [].concat.apply([], gv.map(function (v) { return labsOf(v.id); })), bad = ls.filter(function (l) { return labFlag(l); });
+    h += '<div class="card"><div class="ct">최근 혈액검사<a href="#" data-bd="' + d0 + '">' + bShort(d0) + (d0 !== lv.d ? '~' + bShort(lv.d) : '') + ' ›</a></div>' +
+      '<div class="st3">' + stat('검사 항목', ls.length + '개') + stat('참고치 밖', '<span class="' + (bad.length ? 'dn' : '') + '">' + bad.length + '개</span>') + stat('병원', esc(hs.join(', ') || '-')) + '</div>' +
       (bad.length ? '<div class="sub2">참고치를 벗어난 항목</div>' + labTable(bad) : '<p class="mnote">모든 항목이 참고치 안이에요</p>') + '</div>';
   }
   h += labTrend();
