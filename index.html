@@ -577,6 +577,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .utb { display:flex; align-items:center; justify-content:space-between; margin-top:10px; min-height:30px; } .utb b { font-size:24px; font-weight:800; letter-spacing:-0.02em; color:var(--txt); } .utb b small { font-size:12.5px; font-weight:700; color:var(--sub); margin-left:2px; } .utm { width:30px; height:30px; border:0; border-radius:50%; background:rgba(255,255,255,.75); color:var(--sub); display:flex; align-items:center; justify-content:center; padding:0; } .utm svg { width:14px; height:14px; }
 .utbar { display:block; height:5px; border-radius:3px; background:rgba(25,31,40,.08); overflow:hidden; margin-top:9px; } .utbar.none { background:transparent; } .utbar i { display:block; height:100%; border-radius:3px; } .ut.on .utbar { background:rgba(255,255,255,.6); }
 .card .ut:not(.on) { background:#f2f4f6; } .ut:not(.on) .utn { color:#8b95a1; } .ut:not(.on) .utb b { color:#c4cad1; } .ut:not(.on) .uti .hico { opacity:.55; }
+/* 오늘 타일 3열로 작게 (2026.10.05) */ .utg { grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px; } .ut { border-radius:14px; padding:9px 9px 9px 10px; } .utt { gap:6px; } .uti { width:24px; height:24px; border-radius:8px; } .uti .hico { width:15px; height:15px; } .utn { font-size:12.5px; } .utb { margin-top:6px; min-height:24px; } .utb b { font-size:19px; } .utb b small { font-size:11px; } .utm { width:24px; height:24px; } .utm svg { width:11px; height:11px; } .utbar { height:4px; margin-top:6px; } .ut .uok { transform:scale(.8); transform-origin:right center; }
 .kg { position:relative; background:var(--chip); border-radius:16px; padding:11px 10px 10px; min-width:0; cursor:pointer; user-select:none; -webkit-user-select:none; transition:transform .08s; }
 .kg:active { transform:scale(.96); }
 .kgt { display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; } .kgt span { overflow:hidden; text-overflow:ellipsis; }
@@ -839,7 +840,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zr';
+var APP_VER = '20261005zs';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
