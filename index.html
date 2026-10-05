@@ -567,7 +567,8 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .kgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
 .hbo { display:block; width:100%; text-align:left; border:0; background:var(--chip); border-radius:16px; padding:16px 18px; margin-bottom:10px; } .hbo b { display:block; font-size:16px; font-weight:800; color:var(--txt); } .hbo small { display:block; margin-top:4px; font-size:13px; color:var(--mute); }
 .ug .ugb { height:30px; display:flex; align-items:center; } .ug .ugb svg { width:24px; height:24px; } .ug .ugb .ue { display:block; width:22px; height:22px; border-radius:50%; border:2.5px solid #d5dbe3; } .ugrid { margin-top:10px; }
-.tcard { padding:16px 18px 12px; } .tcard > small { display:block; font-size:13px; font-weight:700; color:var(--sub); } .tcard > b { display:block; font-size:30px; font-weight:800; letter-spacing:-0.02em; margin:2px 0 8px; } .tcard > b small { font-size:.5em; margin:0 2px; } .tch { width:100%; display:block; } .tch .tbx { font-size:10px; fill:var(--mute); } .tch .tbl { font-size:10px; fill:var(--mute); } .tch .tbl.cur { fill:var(--txt); font-weight:800; }
+.tsec { display:flex; align-items:center; justify-content:space-between; margin:14px 4px 8px; } .tsec .wct { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; } .tsec .wib { width:26px; height:26px; border-radius:8px; } .tsec .wib .hico { width:15px; height:15px; } .tsec small { font-size:12px; color:var(--mute); }
+.tgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px; } .tcard { background:#fff; border-radius:18px; padding:12px 12px 8px 14px; min-width:0; } .tcard > small { display:block; font-size:12px; font-weight:700; color:var(--sub); } .tcard > b { display:block; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin:1px 0 6px; white-space:nowrap; } .tcard > b small { font-size:.55em; margin:0 1px; } .tch { width:100%; display:block; } .tch .tbx { font-size:8.5px; fill:var(--mute); } .tch .tbl { font-size:8.5px; fill:var(--mute); } .tch .tbl.cur { fill:var(--txt); font-weight:800; }
 .utg { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .ut { position:relative; background:#e6e9ed; border-radius:18px; padding:12px 12px 12px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; transition:transform .08s; min-width:0; } .ut:active { transform:scale(.97); }
 .utt { display:flex; align-items:center; gap:8px; min-width:0; } .uti { width:30px; height:30px; border-radius:10px; background:rgba(255,255,255,.75); display:flex; align-items:center; justify-content:center; flex:none; } .uti .hico { width:18px; height:18px; } .utn { flex:1; min-width:0; font-size:14.5px; font-weight:800; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .uok { flex:none; width:20px; height:20px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; } .uok svg { width:12px; height:12px; }
 .utb { display:flex; align-items:center; justify-content:space-between; margin-top:10px; min-height:30px; } .utb b { font-size:24px; font-weight:800; letter-spacing:-0.02em; color:var(--txt); } .utb b small { font-size:12.5px; font-weight:700; color:var(--sub); margin-left:2px; } .utm { width:30px; height:30px; border:0; border-radius:50%; background:rgba(255,255,255,.75); color:var(--sub); display:flex; align-items:center; justify-content:center; padding:0; } .utm svg { width:14px; height:14px; }
@@ -835,7 +836,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y8';
+var APP_VER = '20261005y9';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3299,21 +3300,21 @@ function wHr(l) { var s = 0, w = 0; l.forEach(function (r) { if (r.hr) { var k =
 // 운동 추세 차트 (애플 피트니스처럼 항목별 카드: 큰 숫자 + 막대 + 눈금) — 2026.10.05
 function niceMax(v) { if (v <= 0) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
 function trendBars(vals, lbls, color, fmt, cur) {
-  var W = 320, H = 130, T = 8, B = 20, RW = 42, n = vals.length, mx = niceMax(Math.max.apply(null, vals.concat([0]))), cw = (W - RW) / n, bw = Math.max(3, Math.min(22, cw * 0.62));
+  var W = 170, H = 84, T = 6, B = 16, RW = 30, n = vals.length, mx = niceMax(Math.max.apply(null, vals.concat([0]))), cw = (W - RW) / n, bw = Math.max(3, Math.min(22, cw * 0.62));
   var y = function (v) { return T + (H - T - B) * (1 - v / mx); }, g = '';
   [mx, mx / 2, 0].forEach(function (v) { g += '<line x1="0" x2="' + (W - RW) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#e5e8eb"' + (v ? ' stroke-dasharray="3 3"' : '') + '/><text x="' + (W - RW + 6) + '" y="' + (y(v) + 4) + '" class="tbx">' + fmt(v) + '</text>'; });
   vals.forEach(function (v, i) {
     var x = cw * i + (cw - bw) / 2;
     if (v > 0) g += '<rect x="' + x.toFixed(1) + '" y="' + y(v).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, (H - B - y(v))).toFixed(1) + '" rx="' + Math.min(4, bw / 3) + '" fill="' + color + '"' + (i === cur ? '' : ' fill-opacity=".55"') + '/>';
-    if (lbls[i] !== '') g += '<text x="' + (cw * i + cw / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle" class="tbl' + (i === cur ? ' cur' : '') + '">' + lbls[i] + '</text>';
+    if (lbls[i] !== '') g += '<text x="' + (cw * i + cw / 2).toFixed(1) + '" y="' + (H - 3) + '" text-anchor="middle" class="tbl' + (i === cur ? ' cur' : '') + '">' + lbls[i] + '</text>';
   });
   return '<svg class="tch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
 }
 function wTrend(t, p) {
   var bk = [], i, y = +TODAY.slice(0, 4);
   if (p === 'w') { var ws = monOf(TODAY); for (i = 0; i < 7; i++) bk.push({ f: addD(ws, i), t: addD(ws, i), lb: WM[i], cur: addD(ws, i) === TODAY }); }
-  else if (p === 'm') { var mf = TODAY.slice(0, 8) + '01', me = mEnd(y, +TODAY.slice(5, 7)); for (var d = mf; d <= me; d = addD(d, 1)) { var dn = +d.slice(8); bk.push({ f: d, t: d, lb: dn === 1 || dn % 7 === 1 ? dn : '', cur: d === TODAY }); } }
-  else { for (i = 1; i <= 12; i++) bk.push({ f: y + '-' + pad(i) + '-01', t: mEnd(y, i), lb: i, cur: i === +TODAY.slice(5, 7) }); }
+  else if (p === 'm') { var mf = TODAY.slice(0, 8) + '01', me = mEnd(y, +TODAY.slice(5, 7)); for (var d = mf; d <= me; d = addD(d, 1)) { var dn = +d.slice(8); bk.push({ f: d, t: d, lb: dn === 1 || dn === 15 || dn === 29 ? dn : '', cur: d === TODAY }); } }
+  else { for (i = 1; i <= 12; i++) bk.push({ f: y + '-' + pad(i) + '-01', t: mEnd(y, i), lb: i % 3 === 1 ? i + '월' : '', cur: i === +TODAY.slice(5, 7) }); }
   var sw = isSwim(t), all = wOf(t, bk[0].f, bk[bk.length - 1].t), L = bk.map(function (b) { return wOf(t, b.f, b.t); }), ci = bk.findIndex(function (b) { return b.cur; });
   var sum = function (k) { return L.map(function (l) { return wSum(l, k); }); };
   var dist = sum('dist'), dur = sum('dur'), kc = sum('akcal'), hr = L.map(function (l) { var a = l.filter(function (r) { return r.hr; }); return a.length ? a.reduce(function (s2, r) { return s2 + r.hr; }, 0) / a.length : 0; });
@@ -3323,16 +3324,16 @@ function wTrend(t, p) {
   var hm = function (m) { m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + '<small>시간</small> ' + (m % 60) + '<small>분</small>' : m + '<small>분</small>'; };
   var cards = [
     ['거리', tD ? (sw ? Math.round(tD * 1000).toLocaleString() + '<small>m</small>' : (Math.round(tD * 100) / 100) + '<small>km</small>') : '', dist, '#3b9cf6', function (v) { return sw ? Math.round(v * 1000) + '' : (Math.round(v * 10) / 10) + ''; }],
-    ['시간', tM ? hm(tM) : '', dur, '#f2b705', function (v) { v = Math.round(v); return v >= 60 ? Math.floor(v / 60) + '시간' + (v % 60 ? ' ' + v % 60 + '분' : '') : v + '분'; }],
+    ['시간', tM ? hm(tM) : '', dur, '#f2b705', function (v) { v = Math.round(v); return v >= 60 ? (Math.round(v / 6) / 10) + 'h' : v + '분'; }],
     ['활동 칼로리', tK ? Math.round(tK).toLocaleString() + '<small>kcal</small>' : '', kc, '#f5527a', function (v) { return Math.round(v) + ''; }],
     sw ? ['평균 페이스', tD && tM ? pc(tM / (tD * 10)) + '<small>/100m</small>' : '', spd, '#2cc5c9', function (v) { return v ? pc(v) : '0'; }] : ['평균 속도', tD && tM ? (Math.round(tD / (tM / 60) * 10) / 10) + '<small>km/h</small>' : '', spd, '#2cc5c9', function (v) { return (Math.round(v * 10) / 10) + ''; }],
     ['평균 심박', tH ? Math.round(tH) + '<small>bpm</small>' : '', hr, '#ef4444', function (v) { return Math.round(v) + ''; }]
   ].filter(function (c) { return c[1]; });
   var pl = p === 'w' ? '이번 주' : p === 'm' ? '이번 달' : y + '년';
   var lbls = bk.map(function (b) { return b.lb; });
-  return '<div class="sec">' + esc(t) + ' 추세<small>' + pl + (p === 'y' ? ' · 월별' : ' · 일별') + '</small></div>' + (cards.length ? cards.map(function (c) {
-    return '<div class="card tcard"><small>' + c[0] + '</small><b style="color:' + c[3] + '">' + c[1] + '</b>' + trendBars(c[2], lbls, c[3], c[4], ci) + '</div>';
-  }).join('') : '<div class="card empty">' + pl + ' ' + esc(t) + ' 기록이 없어요</div>');
+  return '<div class="tsec"><span class="wct">' + wIco(t) + esc(t) + '</span><small>' + pl + (p === 'y' ? ' · 월별' : ' · 일별') + '</small></div>' + (cards.length ? '<div class="tgrid">' + cards.map(function (c) {
+    return '<div class="tcard"><small>' + c[0] + '</small><b style="color:' + c[3] + '">' + c[1] + '</b>' + trendBars(c[2], lbls, c[3], c[4], ci) + '</div>';
+  }).join('') + '</div>' : '<div class="card empty" style="padding:16px">' + pl + ' 기록이 없어요</div>');
 }
 function wkHome() {
   var R = rng(), all = wList();
@@ -3340,7 +3341,7 @@ function wkHome() {
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
   h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], S.wp || 'm'));
   h += wAnalysis(all);
-  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) h += wTrend(tys.indexOf(S.wat) >= 0 ? S.wat : tys[0], S.wp || 'm');
+  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) h += '<div class="sec">운동별 추세<small>' + ({ w: '이번 주', m: '이번 달', y: '올해' }[S.wp || 'm']) + '</small></div>' + tys.map(function (t) { return wTrend(t, S.wp || 'm'); }).join('');
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
