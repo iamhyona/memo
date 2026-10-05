@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yl';
+var APP_VER = '20261005ym';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3705,7 +3705,6 @@ function openSwimReport(s) {
   var lp = swPB('최장 연속', SRP), pc = swPB('대표 페이스', SRP), sk = swPB('대표 스트로크', SRP), sf = swPB('대표 SWOLF', SRP), pb = [];
   if (lp) pb.push(card('최장 연속 거리', lp.val.toLocaleString(), 'm', bShort(lp.d))); if (pc) pb.push(card('대표 페이스', fmtSec(pc.val), '/25m', bShort(pc.d)));
   if (sk) pb.push(card('대표 스트로크수', sk.val + '회', '/25m', bShort(sk.d))); if (sf) pb.push(card('대표 SWOLF', sf.val, '/25m', bShort(sf.d)));
-  if (pb.length) h += '<div class="fl" style="margin-top:18px">다른 앱 최고 기록</div><div class="srg">' + pb.join('') + '</div>';
   h += '<div class="fl" style="margin-top:18px">루틴에 기록된 ' + SRP + '</div>' + (recs.length ? '<ul class="brow">' + recs.slice().reverse().slice(0, 10).map(function (p) { return '<li><span class="n">' + bShort(p[0].d) + '<small class="dt">' + esc(p[0].type || '') + '</small></span><span class="v"><b>' + p[1].toLocaleString() + '</b><small>m</small></span></li>'; }).join('') + '</ul>' : '<div class="empty" style="padding:12px 0">아직 없어요</div>');
   $('#srBd').innerHTML = h;
   $$('[data-srs]').forEach(function (b) { b.onclick = function () { openSwimReport(b.dataset.srs); }; });
