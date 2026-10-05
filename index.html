@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zc';
+var APP_VER = '20261005zd';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -955,7 +955,9 @@ var VIEWS = { habit: { home: hbHome, daily: hbDaily, week: hbWeek, month: hbMont
   body: { home: bdHome, daily: bdDaily, week: bdWeek, month: bdMonth, year: bdYear },
   workout: { home: wkHome, daily: wkDaily, week: wkWeek, month: wkMonth, year: wkYear },
   medical: { home: mdHome, daily: mdDaily, week: mdWeek, month: mdMonth, year: mdYear } };
-function render() { renderCore(); try { datePick(); } catch (e) {} hhSet(); }
+function render() { renderCore(); try { datePick(); } catch (e) {} try { hmSeg(); } catch (e) {} hhSet(); }
+// HOME: 요약 카드의 기간 단추를 날짜 옆(고정 줄)으로 (2026.10.05)
+function hmSeg() { if (S.view !== 'home') return; var hm = $('#main > .hm'), sg = $('#main .sct .aseg'); if (hm && sg && !hm.querySelector('.aseg')) { hm.classList.add('ahm'); hm.appendChild(sg); } }
 // 고정 날짜 줄 위치 = 위 탭 높이 (2026.10.05)
 function hhSet() { var hd = document.querySelector('header'); if (hd) document.documentElement.style.setProperty('--hh', hd.offsetHeight + 'px'); }
 window.addEventListener('resize', function () { try { hhSet(); } catch (e) {} });
@@ -1359,7 +1361,7 @@ function trHome() {
   if (!hs.length) { $('#main').innerHTML = h; return bindHome(); }
   // 요약: 주 · 월 · 연 단추 (2026.10.05)
   var sp = S.tsp || 'w', yx = R.y, days = 0, d;
-  var PP = { w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: [R.m + '월', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: [yx + '년', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], a: ['전체', sPer('a').f, TODAY, '0001-01-01', '0001-01-01', ''] }[sp];
+  var PP = { w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: [R.m + '월', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: [yx + '년', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], a: ['전체', sPer('a').f, TODAY, '0001-01-01', '0001-01-01', ''], d: ['오늘', TODAY, TODAY, addD(TODAY, -1), addD(TODAY, -1), '어제'] }[sp];
   var tc = total(PP[1], PP[2]), tp = total(PP[3], PP[4]);
   for (d = PP[1]; d <= PP[2] && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
   var dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
@@ -2903,6 +2905,7 @@ function aFirst() {
 }
 function sPer(k) {
   var y, m, f, t, pf, pt, lb, pn;
+  if (k === 'd') { var yd0 = addD(TODAY, -1); return { f: TODAY, t: TODAY, pf: yd0, pt: yd0, lb: '오늘', pn: '어제', te: TODAY }; }
   if (k === 'a') { f = aFirst(); return { f: f, t: TODAY, pf: '0001-01-01', pt: '0001-01-01', lb: '전체', pn: '', a: 1, te: TODAY }; }
   if (k === 'w' || k === 'vw') {
     f = k === 'w' ? monOf(TODAY) : monOf(S.day); t = addD(f, 6); pf = addD(f, -7); pt = addD(f, -1); pn = '지난 주';
@@ -2935,11 +2938,11 @@ function sG(v, pv, dp, lowGood) {
   return '<span class="' + (good ? 'up' : 'dn') + '">' + (d > 0 ? '▲ ' : '▼ ') + (dp ? Math.abs(d).toFixed(dp) : Math.abs(d).toLocaleString()) + '</span>';
 }
 function sumCard(P, tiles, seg, note) {
-  return '<div class="card sumc">' + (seg ? sHead(bYmd(P.f) + ' ~ ' + bYmd(P.t), seg) : '<div class="ct">' + P.lb + ' 요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>') +
+  return '<div class="card sumc">' + (seg ? sHead(P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t), seg) : '<div class="ct">' + P.lb + ' 요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>') +
     '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' +
     (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div>') + '</div>';
 }
-var SSEG = [['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']];
+var SSEG = [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']];
 function sSeg(attr, cur, list) { return '<div class="aseg">' + (list || SSEG).map(function (o) { return '<button ' + attr + '="' + o[0] + '" class="' + (o[0] === cur ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
@@ -2988,10 +2991,10 @@ function bdHome() {
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
-  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], ['전체', (bList()[0] || {}).d || TODAY, TODAY, null, null, '']];
+  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], ['전체', (bList()[0] || {}).d || TODAY, TODAY, null, null, ''], ['오늘', TODAY, TODAY, addD(TODAY, -1), addD(TODAY, -1), '어제']];
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
   // 요약 카드 하나: 주 · 월 · 연 단추로 전환 (지난 기간 평균 대비) — 2026.10.04
-  var spi = { w: 0, m: 1, y: 2, a: 3 }[S.bsp || 'w'] || 0, p = SP[spi];
+  var spi = { w: 0, m: 1, y: 2, a: 3, d: 4 }[S.bsp || 'w'] || 0, p = SP[spi];
   var cntIn = function (f2, t2) { return bList().filter(function (r) { return r.d >= f2 && r.d <= t2; }).length; };
   var n2 = cntIn(p[1], p[2]), fb = '';
   // 이번 주·달에 아직 측정이 없으면 지난 기간을 보여줌 (월요일·1일에 빈 화면 방지)
@@ -3001,7 +3004,7 @@ function bdHome() {
     p = spi === 0 ? ['지난 주', addD(wsx, -7), addD(wsx, -1), addD(wsx, -14), addD(wsx, -8), '2주 전'] : ['지난 달', pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), ppY + '-' + pad(ppM) + '-01', mEnd(ppY, ppM), '전달'];
     n2 = cntIn(p[1], p[2]);
   }
-  h += '<div class="card">' + sHead(bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회', sSeg('data-bsp', S.bsp || 'w')) + '<div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
+  h += '<div class="card">' + sHead((p[1] === p[2] ? bShort(p[1]) : bYmd(p[1]) + ' ~ ' + bYmd(p[2])) + ' · 측정 ' + n2 + '회', sSeg('data-bsp', S.bsp || 'w')) + '<div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
     var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = spi === 3 ? null : avgOf(kk, p[3], p[4]);
     return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b>' + (spi === 3 ? '' : '<em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em>') + '</button>';
   }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">' + (fb ? fb + ' 측정이 아직 없어 ' + p[0] + ' 기준 · ' : '') + (spi === 3 ? '평균' : '평균 · ▲▼ ' + p[5] + ' 평균 대비') + '</div></div>';
@@ -3348,6 +3351,7 @@ function trendBars(vals, lbls, color, fmt, cur) {
   });
   return '<svg class="tch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
 }
+function wAP() { var p = S.wp || 'm'; return p === 'd' ? 'w' : p; }
 function wTrend(t, p, nh) {
   // 운동 분석 + 추세 통합 (2026.10.05): 카드마다 합계 · 지난 기간 대비 · 일별/월별 막대
   var bk = [], i, y = +TODAY.slice(0, 4);
@@ -3429,7 +3433,7 @@ function wkHome() {
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
   h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), sSeg('data-wp', S.wp || 'm'));
   // 운동별 추세: 종류 선택(단추 + 스와이프)으로 하나씩 — 2026.10.05
-  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0], tcol = deep(wTypeCol(tsel)); h += '<div class="sec">운동별 분석<small>' + ({ w: '이번 주 · 일별', m: '이번 달 · 일별', y: TODAY.slice(0, 4) + '년 · 월별', a: '전체 · 연별' }[S.wp || 'm']) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, S.wp || 'm', 1) + '</div>'; }
+  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0], tcol = deep(wTypeCol(tsel)); h += '<div class="sec">운동별 분석<small>' + ({ w: '이번 주 · 일별', m: '이번 달 · 일별', y: TODAY.slice(0, 4) + '년 · 월별', a: '전체 · 연별' }[wAP()]) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, wAP(), 1) + '</div>'; }
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
