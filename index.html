@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zj';
+var APP_VER = '20261005zk';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1586,9 +1586,12 @@ function uRun(u) { return u.t === 'h' ? streak(u.id) : krun(u.x); }
 function uHas(d) { return (S.ck[d] && Object.keys(S.ck[d]).length) || (S.kc[d] && Object.keys(S.kc[d]).some(function (k) { return S.kc[d][k]; })); }
 function uTap(u) { return u.t === 'h' ? 'tapd" data-h="' + u.id : 'kedit" data-e="' + u.id; }
 function sumU(P) {
-  var a = uTotal(P.f, P.t), b = uTotal(P.pf, P.pt), r1 = sRate(P.f, P.t, uHas), r0 = sRate(P.pf, P.pt, uHas);
+  var C = sCut(P);   // 지난 기간도 같은 날수만큼만 비교 (2026.10.05)
+  var a = uTotal(P.f, P.t), b = uTotal(C.f, C.t), r1 = sRate(P.f, P.t, uHas), r0 = sRate(C.f, C.t, uHas);
   return [['기록률 (%)', P.f > TODAY ? '-' : r1.rate, sG(r1.rate, r0.rate)], ['연속 기록 (일)', sRun(uHas), ''], ['안 한 날 (일)', r1.miss, sG(r1.miss, r0.miss, 0, 1)], ['기록 (회)', a.cnt.toLocaleString(), sG(a.cnt, b.cnt)]];
 }
+// 비교 기간: 지금 진행 중인 기간이면 지난 기간도 같은 날수까지만 (예: 이번 주 월요일 ↔ 지난 주 월요일)
+function sCut(P) { if (P.a || P.t < TODAY || P.f > TODAY) return { f: P.pf, t: P.pt }; var t = addD(P.pf, dDiff(P.f, TODAY)); if (t > P.pt) t = P.pt; P.cut = 1; return { f: P.pf, t: t }; }
 // 꾸준함 공통 (2026.10.05): 기간 안 지난 날 중 한 날 비율 · 안 한 날 · 오늘(없으면 어제)부터 연속
 function sRate(f, t, has) { var n = 0, k = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) { n++; if (has(d)) k++; } return { n: n, k: k, miss: n - k, rate: n ? Math.round(k / n * 100) : 0 }; }
 function sRun(has) { var c = 0, d = TODAY; if (!has(d)) d = addD(d, -1); while (has(d)) { c++; d = addD(d, -1); } return c; }
@@ -2970,16 +2973,17 @@ function sG(v, pv, dp, lowGood) {
 function sumCard(P, tiles, seg, note) {
   return '<div class="card sumc">' + (seg ? sHead(P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t), seg) : '<div class="ct">' + P.lb + ' 요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>') +
     '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' +
-    (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div>') + '</div>';
+    (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + (P.cut ? ' 같은 기간' : '') + ' 대비</div>') + '</div>';
 }
 var SSEG = [['w', '주'], ['m', '월'], ['h', '반년'], ['y', '한해'], ['a', '전체']];   // HOME: 일 빼고 반년 (2026.10.05)
 function sSeg(attr, cur, list) { return '<div class="aseg">' + (list || SSEG).map(function (o) { return '<button ' + attr + '="' + o[0] + '" class="' + (o[0] === cur ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
 function sumW(P) {
-  var a = wIn(P.f, P.t), b = wIn(P.pf, P.pt), h1 = wSum(a, 'dur') / 60, h0 = wSum(b, 'dur') / 60, has = function (d) { return wHasD[d]; };
+  var C = sCut(P);   // 지난 기간도 같은 날수만큼만 비교 (2026.10.05)
+  var a = wIn(P.f, P.t), b = wIn(C.f, C.t), h1 = wSum(a, 'dur') / 60, h0 = wSum(b, 'dur') / 60, has = function (d) { return wHasD[d]; };
   var wHasD = {}; wList().forEach(function (r) { wHasD[r.d] = 1; });
-  var r1 = sRate(P.f, P.t, has), r0 = sRate(P.pf, P.pt, has);
+  var r1 = sRate(P.f, P.t, has), r0 = sRate(C.f, C.t, has);
   return [['운동한 날 (%)', P.f > TODAY ? '-' : r1.rate, sG(r1.rate, r0.rate)], ['연속 운동 (일)', sRun(has), ''], ['운동 (회)', a.length, sG(a.length, b.length)], ['시간 (h)', (Math.round(h1 * 10) / 10).toFixed(1), sG(h1, h0, 1)]];
 }
 function sumK(P) {
@@ -3000,8 +3004,9 @@ function sumF(P) {
   return [['사진 (장)', a.length, sG(a.length, b.length)], ['게시물 (개)', posts(a).length, sG(posts(a).length, posts(b).length)], ['올린 날 (일)', dd(a), sG(dd(a), dd(b))], ['연속 (일)', run(a, P.f, P.t), sG(run(a, P.f, P.t), run(b, P.pf, P.pt))]];
 }
 function sumD(P) {
-  var L = S.D.diary, a = L.filter(function (e) { return inR(e.d, P.f, P.t); }), b = L.filter(function (e) { return inR(e.d, P.pf, P.pt); });
-  var has = function (d) { return !!diaryOf(d); }, r1 = sRate(P.f, P.t, has), r0 = sRate(P.pf, P.pt, has);
+  var C = sCut(P);   // 지난 기간도 같은 날수만큼만 비교 (2026.10.05)
+  var L = S.D.diary, a = L.filter(function (e) { return inR(e.d, P.f, P.t); }), b = L.filter(function (e) { return inR(e.d, C.f, C.t); });
+  var has = function (d) { return !!diaryOf(d); }, r1 = sRate(P.f, P.t, has), r0 = sRate(C.f, C.t, has);
   return [['작성률 (%)', P.f > TODAY ? '-' : r1.rate, sG(r1.rate, r0.rate)], ['연속 작성 (일)', dRun(), ''], ['안 쓴 날 (일)', r1.miss, sG(r1.miss, r0.miss, 0, 1)], ['작성 (개)', a.length, sG(a.length, b.length)]];
 }
 function sumB(P) {
