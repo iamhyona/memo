@@ -567,6 +567,7 @@ textarea.dx.sm2 { min-height:96px; height:96px; }
 .kgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
 .hbo { display:block; width:100%; text-align:left; border:0; background:var(--chip); border-radius:16px; padding:16px 18px; margin-bottom:10px; } .hbo b { display:block; font-size:16px; font-weight:800; color:var(--txt); } .hbo small { display:block; margin-top:4px; font-size:13px; color:var(--mute); }
 .ug .ugb { height:30px; display:flex; align-items:center; } .ug .ugb svg { width:24px; height:24px; } .ug .ugb .ue { display:block; width:22px; height:22px; border-radius:50%; border:2.5px solid #d5dbe3; } .ugrid { margin-top:10px; }
+.fcnt2 { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 18px; } .fcnt2 .fcl small { display:block; font-size:12px; color:var(--mute); font-weight:600; } .fcnt2 .fcl b { display:block; font-size:28px; font-weight:800; letter-spacing:-0.02em; line-height:1.2; } .fcnt2 .fcl b span { font-size:14px; color:var(--sub); margin-left:2px; } .fcnt2 .fcl em { font-style:normal; font-size:12.5px; color:var(--sub); } .fcnt2 .aseg button { background:var(--chip); }
 .tsec { display:flex; align-items:center; justify-content:space-between; margin:14px 4px 8px; } .tsec .wct { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; } .tsec .wib { width:26px; height:26px; border-radius:8px; } .tsec .wib .hico { width:15px; height:15px; } .tsec small { font-size:12px; color:var(--mute); }
 .tgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px; } .tcard { background:#fff; border-radius:18px; padding:12px 12px 8px 14px; min-width:0; } .tcard > small { display:block; font-size:12px; font-weight:700; color:var(--sub); } .tcard > b { display:block; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin:1px 0 6px; white-space:nowrap; } .tcard > b small { font-size:.55em; margin:0 1px; } .tch { width:100%; display:block; } .tch .tbx { font-size:8.5px; fill:var(--mute); } .tch .tbl { font-size:8.5px; fill:var(--mute); } .tch .tbl.cur { fill:var(--txt); font-weight:800; }
 .utg { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .ut { position:relative; background:#e6e9ed; border-radius:18px; padding:12px 12px 12px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; transition:transform .08s; min-width:0; } .ut:active { transform:scale(.97); }
@@ -836,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y9';
+var APP_VER = '20261005ya';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1378,10 +1379,12 @@ function trHome() {
 }
 // FEED HOME
 function fdHome() {
-  var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'w', P = sPer(sp), m = ps.filter(function (p) { return inR(p.d, P.f, P.t); });
+  var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'd', P = sp === 'd' ? { f: TODAY, t: TODAY, lb: '오늘' } : sPer(sp), m = ps.filter(function (p) { return inR(p.d, P.f, P.t); });
   var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'ME') + '</small><b>' + mdw(TODAY) + '</b></div>';
   // 요약 (모든 메뉴 같은 자리·형식) — 2026.10.05
-  h += sumCard(P, sumF(P), sSeg('data-ssp', sp));
+  // 사진 메뉴 HOME: 개수만 (일·주·월·연) — 2026.10.05
+  h += '<div class="card fcnt2"><div class="fcl"><small>' + P.lb + (P.f === P.t ? '' : ' · ' + bYmd(P.f).slice(3) + ' ~ ' + bYmd(P.t).slice(3)) + '</small><b>' + m.length + '<span>장</span></b><em>게시물 ' + posts(m).length + '개</em></div>' +
+    '<div class="aseg">' + [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-ssp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
   // 전체 게시물 (인스타처럼 3열)
   var rp = sortedPhotos(ps); S.pl = rp;
   h += photoBlock(rp, 3, '전체 게시물');
