@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yo';
+var APP_VER = '20261005yp';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3365,6 +3365,8 @@ function wTrend(t, p, nh) {
       return '<li><span><i style="background:' + (SCOL[s2] || '#D1D6DB') + '"></i>' + s2 + '</span><b>' + st[s2].toLocaleString() + 'm</b><em>' + Math.round(st[s2] / tot * 100) + '%</em></li>'; }).join('') + '</ul></div>'
       : '<p class="wsub" style="margin:6px 0 2px;font-size:12px">' + pl2 + ' 영법 기록이 없어요</p>') + '</div>';
   }
+  // 속도 구간 (달리기·자전거)
+  if (!sw && cards.length && (isRun(t) || isBike(t))) { var bsum = {}, spl = 0; l.forEach(function (r) { var o = wBands(r); if (wSplits(r)) spl++; if (o) Object.keys(o).forEach(function (k) { bsum[k] = (bsum[k] || 0) + o[k]; }); }); h += bandDonut(bsum, pl2 + ' 속도 구간', spl ? 'km별 페이스' : '평균 ' + (isRun(t) ? '페이스' : '속도')); }
   // 심박 영역 · 회복 심박 (영역 캡쳐가 있는 운동만)
   if (cards.length) {
     var zl = l.filter(wZone), zp = pl.filter(wZone), zs = [0, 0, 0, 0, 0], hiP = 0;
@@ -3420,7 +3422,10 @@ function wCard(r) {
   var st = wStrokes(r), ks = Object.keys(st), tot = ks.reduce(function (a, k) { return a + st[k]; }, 0), sb = '';
   if (tot) sb = '<div class="zbox"><small>영법</small><div class="wst wst2">' + ks.map(function (k) { return '<i style="flex:' + st[k] + ';background:' + (SCOL[k] || '#D1D6DB') + '"></i>'; }).join('') + '</div><ul class="zl">' +
     ks.slice().sort(function (a, b) { return st[b] - st[a]; }).map(function (k) { return '<li><span><i style="background:' + (SCOL[k] || '#D1D6DB') + '"></i>' + k + '</span><b>' + st[k].toLocaleString() + 'm</b><em>' + Math.round(st[k] / tot * 100) + '%</em></li>'; }).join('') + '</ul></div>';
-  var note = mm.split(' · ').filter(function (x) { return x && !/^(영역|회복)\s/.test(x) && !/^랩\s?\d/.test(x) && !/^\d+m\s?수영장/.test(x) && !/^(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?[\d,]+m$/.test(x); }).join(' · ');
+  var bd = wBands(r), bk = bd ? Object.keys(bd) : [], bt = bk.reduce(function (a, k) { return a + bd[k]; }, 0);
+  if (!tot && bt) sb = '<div class="zbox"><small>속도 구간<em class="zr">' + (wSplits(r) ? 'km별 페이스' : '평균 ' + (isRun(r.type) ? '페이스' : '속도')) + ' 기준</em></small><div class="wst wst2">' + bk.map(function (k) { return '<i style="flex:' + bd[k] + ';background:' + BCOL[k] + '"></i>'; }).join('') + '</div><ul class="zl">' +
+    bk.slice().sort(function (a, b) { return bd[b] - bd[a]; }).map(function (k) { return '<li><span><i style="background:' + BCOL[k] + '"></i>' + k + '</span><b>' + (Math.round(bd[k] / 10) / 100) + 'km</b><em>' + Math.round(bd[k] / bt * 100) + '%</em></li>'; }).join('') + '</ul></div>';
+  var note = mm.split(' · ').filter(function (x) { return x && !/^스플릿\s/.test(x) && !/^(영역|회복)\s/.test(x) && !/^랩\s?\d/.test(x) && !/^\d+m\s?수영장/.test(x) && !/^(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?[\d,]+m$/.test(x); }).join(' · ');
   return '<div class="card wac"><div class="wah">' + wIco(r.type) + '<div class="wat"><b>' + esc(r.type || '운동') + '</b>' + (r.t ? '<small>' + r.t + end + '</small>' : '') + '</div><a href="#" data-we="' + r.id + '">수정 ›</a></div>' +
     (g.length ? '<div class="wag">' + g.join('') + '</div>' : '') + sb +
     (wZone(r) ? '<div class="zbox"><small>심박 영역</small>' + zoneHtml(wZone(r)) + '</div>' : '') +
@@ -3449,6 +3454,32 @@ var STROKES = ['자유형', '평영', '배영', '접영', '혼영', '킥판', '�
 var SCOL = { 자유형: '#15C47E', 평영: '#F47EB4', 배영: '#FFB331', 접영: '#3182F6', 혼영: '#8C6CF5', 킥판: '#B0B8C1', 드릴: '#D1D6DB', 기타: '#D1D6DB' };
 function isSwim(t) { return /수영/.test(t || ''); }
 // 심박 영역 · 회복 심박 (메모 속 '영역 27:47/10:21/4:45/3:00/1:40 · 회복 130→108→104') — 2026.10.05
+// 달리기·자전거 속도 구간 (수영의 영법처럼) — 달리기: 1km당 페이스(초), 자전거: km/h · 2026.10.05
+var RB = [['걷기', 540, 1e9, '#9AD0F5', "9'00\" 이상"], ['조깅', 420, 540, '#5FD6A0', "7'00\"~9'00\""], ['러닝', 330, 420, '#FFB331', "5'30\"~7'00\""], ['스피드', 0, 330, '#F2542D', "5'30\" 미만"]];
+var BB = [['여유', 0, 15, '#9AD0F5', '15km/h 미만'], ['보통', 15, 20, '#5FD6A0', '15~20km/h'], ['빠르게', 20, 25, '#FFB331', '20~25km/h'], ['고속', 25, 1e9, '#F2542D', '25km/h 이상']];
+var BCOL = {}; RB.concat(BB).forEach(function (b) { BCOL[b[0]] = b[3]; });
+function isRun(t) { return /달리기|러닝|조깅|run/i.test(t || ''); }
+function isBike(t) { return /자전거|사이클|싸이클|바이크|bike|cycl/i.test(t || ''); }
+function wSplits(r) { var m = String(r.memo || '').match(/스플릿\s?([\d'"\/\s:′″]+)/); if (!m) return null; var a = m[1].split('/').map(function (x) { var q = x.match(/(\d+)\s?['′:]\s?(\d{1,2})/); return q ? +q[1] * 60 + +q[2] : null; }).filter(function (v) { return v; }); return a.length ? a : null; }
+function wBands(r) {
+  var run = isRun(r.type), bike = isBike(r.type);
+  if ((!run && !bike) || !r.dist) return null;
+  var o = {}, M = r.dist * 1000, put = function (n, m) { o[n] = (o[n] || 0) + m; }, pick = function (B, v) { for (var i = 0; i < B.length; i++) if (v >= B[i][1] && v < B[i][2]) return B[i][0]; return B[0][0]; };
+  var sp = run ? wSplits(r) : null;
+  if (sp) { sp.forEach(function (v, i) { var mm = i < sp.length - 1 ? 1000 : Math.max(M - 1000 * (sp.length - 1), 0); if (mm > 0) put(pick(RB, v), Math.round(mm)); }); return o; }
+  if (!r.dur) return null;
+  put(run ? pick(RB, r.dur * 60 / r.dist) : pick(BB, r.dist / (r.dur / 60)), Math.round(M));
+  return o;
+}
+function bandDonut(st, title, note) {
+  var ks = Object.keys(st).filter(function (k) { return st[k] > 0; }), tot = ks.reduce(function (a, k) { return a + st[k]; }, 0); if (!tot) return '';
+  ks.sort(function (a, b) { return st[b] - st[a]; });
+  var R0 = 42, CF = 2 * Math.PI * R0, acc = 0;
+  var dn = '<svg class="sdn" viewBox="0 0 110 110"><circle cx="55" cy="55" r="' + R0 + '" fill="none" stroke="#f2f4f6" stroke-width="14"/>' + ks.map(function (k) {
+    var len = st[k] / tot * CF, seg = '<circle cx="55" cy="55" r="' + R0 + '" fill="none" stroke="' + BCOL[k] + '" stroke-width="14" stroke-dasharray="' + Math.max(len - 1.5, 0.5).toFixed(2) + ' ' + CF.toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 55 55)"/>'; acc += len; return seg;
+  }).join('') + '<text x="55" y="53" text-anchor="middle" class="sdn1">' + (Math.round(tot / 100) / 10) + 'km</text><text x="55" y="68" text-anchor="middle" class="sdn2">' + note + '</text></svg>';
+  return '<div class="tcard tfull"><small>' + title + '</small><div class="sdw">' + dn + '<ul class="zl sdl">' + ks.map(function (k) { return '<li><span><i style="background:' + BCOL[k] + '"></i>' + k + '</span><b>' + (Math.round(st[k] / 100) / 10) + 'km</b><em>' + Math.round(st[k] / tot * 100) + '%</em></li>'; }).join('') + '</ul></div></div>';
+}
 var ZC = ['#7cb8f7', '#5fd6cc', '#b5dc4f', '#ffad4d', '#ff7aa8'];
 function wZone(r) { var m = String(r.memo || '').match(/영역\s?(\d{1,3}:\d\d)\/(\d{1,3}:\d\d)\/(\d{1,3}:\d\d)\/(\d{1,3}:\d\d)\/(\d{1,3}:\d\d)/); return m ? m.slice(1, 6).map(function (x) { var p = x.split(':'); return +p[0] * 60 + +p[1]; }) : null; }
 function wRcv(r) { var m = String(r.memo || '').match(/회복\s?(\d{2,3})\s?→\s?(\d{2,3})(?:\s?→\s?(\d{2,3}))?/); return m ? { e: +m[1], a: +m[2], b: m[3] ? +m[3] : null } : null; }
@@ -3638,7 +3669,7 @@ function wFillCal(t, from, to) {
     o.L.forEach(function (r) {
       var amt = hasD ? (r.dist || 0) * 1000 : (r.dur || 0);
       if (sw) { var st = wStrokes(r), sum = 0; Object.keys(st).forEach(function (k) { seq.push([SCOL[k] || '#D1D6DB', st[k]]); sum += st[k]; }); if (amt - sum > 1) seq.push(['#D1D6DB', amt - sum]); }
-      else seq.push([tc, amt]);
+      else { var bd = hasD ? wBands(r) : null; if (bd) Object.keys(bd).forEach(function (k) { seq.push([BCOL[k], bd[k]]); }); else seq.push([tc, amt]); }
     });
     var acc = 0, out = '', n = 0;
     seq.forEach(function (sg) { var a = Math.round(acc / unit); acc += sg[1]; var b = Math.min(Math.round(acc / unit), 64); for (var k = a; k < b; k++) { out += '<i style="background:' + sg[0] + '"></i>'; n++; } });
@@ -3649,7 +3680,8 @@ function wFillCal(t, from, to) {
   for (i = 0; i < lead; i++) h += '<div></div>';
   days.forEach(function (o) { h += '<div class="wfd' + (o.d > TODAY ? ' fu' : '') + (o.d === TODAY ? ' td' : '') + '"><span>' + P(o.d).getDate() + '</span><button class="wft" data-d="' + o.d + '">' + cells(o) + '</button></div>'; });
   h += '</div>';
-  var lg = sw ? Object.keys(SCOL).filter(function (k) { return k !== '드릴'; }).map(function (k) { return '<span><i style="background:' + SCOL[k] + '"></i>' + k + '</span>'; }).join('') : '';
+  var BL = isRun(t) ? RB : isBike(t) ? BB : null;
+  var lg = sw ? Object.keys(SCOL).filter(function (k) { return k !== '드릴'; }).map(function (k) { return '<span><i style="background:' + SCOL[k] + '"></i>' + k + '</span>'; }).join('') : BL ? BL.map(function (b) { return '<span><i style="background:' + b[3] + '"></i>' + b[0] + ' <small style="color:var(--mute)">' + b[4] + '</small></span>'; }).join('') : '';
   return h + '<div class="wfl">' + lg + '<em>한 칸 = ' + (hasD ? (unit >= 1000 ? unit / 1000 + 'km' : unit + 'm') : unit + '분') + '</em></div>';
 }
 function wkMonth() {
