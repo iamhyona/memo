@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005ze';
+var APP_VER = '20261005zf';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1443,10 +1443,10 @@ function dyHome() {
     h += '<div class="card"><div class="ct">기분 비율<small>전체 ' + NL + '편</small></div><div class="dmood"><div class="dmd">' + donut(mr2.map(function (o) { return { n: o.n, c: o.c }; })) + '</div><ul class="dml2">' +
       mr2.map(function (o) { return '<li><i style="background:' + o.c + '"></i><span>' + o.k + '</span><b>' + Math.round(o.n / NL * 100) + '%</b><small>' + o.n + '일</small></li>'; }).join('') + '</ul></div></div>';
     // 2) 요일별 작성: 월 · 연 · 전체
-    var wp = S.dwp || 'm', wf = wp === 'm' ? TODAY.slice(0, 8) + '01' : wp === 'y' ? TODAY.slice(0, 5) + '01-01' : '0000', wl = L.filter(function (e) { return e.d >= wf; });
+    var wl = L.filter(function (e) { return inR(e.d, P.f, P.t); });   // 기간 = 위 고정 단추 (2026.10.05)
     var byW = [0, 0, 0, 0, 0, 0, 0]; wl.forEach(function (e) { byW[(new Date(e.d + 'T00:00').getDay() + 6) % 7]++; });
     var mxW = Math.max.apply(null, byW), topW = byW.indexOf(mxW);
-    h += '<div class="card"><div class="ct">요일별 작성<small>' + (wp === 'm' ? (+TODAY.slice(5, 7)) + '월' : wp === 'y' ? TODAY.slice(0, 4) + '년' : '전체') + ' · ' + wl.length + '편</small></div>' + bSeg('data-dwp', [['m', '월'], ['y', '연'], ['a', '전체']], wp) +
+    h += '<div class="card"><div class="ct">요일별 작성<small>' + P.lb + ' · ' + wl.length + '편</small></div>' +
       (wl.length ? bars7(byW, WM, mxW ? topW : -1) + '<div class="legend" style="justify-content:flex-start">' + (mxW ? WM[topW] + '요일에 가장 많이 썼어요 · ' + mxW + '편' : '') + '</div>' : '<div class="empty">이 기간 쓴 일기가 없어요</div>') + '</div>';
     // 3) 통계: 2열
     var tm = L.map(function (e) { var t = String(e.ts || ''), mm, hh; if (/T\d/.test(t)) { var dt = new Date(t); if (isNaN(dt)) return null; hh = dt.getHours(); mm = dt.getMinutes(); } else { var q = t.match(/(\d{1,2}):(\d{2})/); if (!q) return null; hh = +q[1]; mm = +q[2]; } var v = hh * 60 + mm; return v < 300 ? v + 1440 : v; }).filter(function (v) { return v != null; });
@@ -3038,11 +3038,10 @@ function bdHome() {
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
     bChart(pts, x) + bSum(s, k, x) + '</div>';
   // 1) 최저 · 최고
-  var bm = S.bmm || 'm', ws = monOf(TODAY), y = TODAY.slice(0, 4);
-  var rg = { w: [ws, addD(ws, 6), '이번 주'], m: [TODAY.slice(0, 8) + '01', TODAY, '이번 달'], y: [y + '-01-01', TODAY, y + '년'], a: [null, null, '전체'] }[bm];
+  var y = TODAY.slice(0, 4), rg = BP.a ? [null, null, '전체'] : [BP.f, BP.te, BP.lb];   // 기간 = 위 고정 단추 (2026.10.05)
   var cnt = bList().filter(function (r) { return (!rg[0] || r.d >= rg[0]) && (!rg[1] || r.d <= rg[1]); }).length;
   var cell = function (xx, r) { return r ? '<b>' + bfmt(xx, r[xx.k]) + bU(xx) + '</b><small>' + bShort(r.d) + '</small>' : '<span class="mute">-</span>'; };
-  h += '<div class="card"><div class="ct">최저 · 최고<small>' + rg[2] + ' · 측정 ' + cnt + '회</small></div>' + bSeg('data-bmm', [['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']], bm) +
+  h += '<div class="card"><div class="ct">최저 · 최고<small>' + rg[2] + ' · 측정 ' + cnt + '회</small></div>' +
     '<table class="btab bmm"><tr><th></th><th>최저</th><th>최고</th><th>평균</th></tr>' + BMK.map(function (kk) {
       var xx = bkOf(kk), ss = bSeries(kk, rg[0], rg[1]), lo = null, hi = null, sum = 0;
       ss.forEach(function (r) { if (!lo || r[kk] < lo[kk]) lo = r; if (!hi || r[kk] > hi[kk]) hi = r; sum += r[kk]; });
