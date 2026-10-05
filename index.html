@@ -484,7 +484,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .asw { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:8px; scrollbar-width:none; } .asw::-webkit-scrollbar { display:none; } .asw > * { scroll-snap-align:start; flex:none; } .alabh { display:flex; align-items:baseline; justify-content:space-between; margin:14px 0 8px; } .alabh b { font-size:13px; font-weight:800; } .alabh span { font-size:12px; color:var(--mute); font-weight:600; }
 .alab .alb { display:flex; flex-direction:column; } .alt { display:flex; align-items:center; justify-content:space-between; gap:6px; } .alt span { font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .alt em { flex:none; font-style:normal; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:999px; } .alt em.h { background:#fde4e6; color:#e5484d; } .alt em.l { background:#ffeedd; color:#f07a1a; } .alt em.n { background:#dcf3e7; color:#1f9d63; } .alb .ale { display:block; font-size:10.5px; color:var(--faint); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .alb .alv { display:block; font-size:22px; font-weight:800; margin:6px 0 10px; } .alb .alv small { font-size:11px; color:var(--mute); font-weight:600; } .alb .alv.lo { color:#ff8a3d; } .alb .alv.dn { color:#e5484d; } .alw { margin-top:auto; } .alw .gtx, .alw .lqt { display:none; } .alw .gfr { margin:0; } .alr { font-size:11px; color:var(--mute); margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .alab .alb { width:calc(50% - 4px); background:var(--chip); border-radius:14px; padding:10px 12px 12px; box-sizing:border-box; } .alb > small { display:block; font-size:11.5px; color:var(--mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .alb > b { display:block; font-size:20px; font-weight:800; margin:2px 0 8px; } .alb > b small { font-size:11px; color:var(--mute); font-weight:600; } .alb > b.lo { color:#ff8a3d; }
-.ahm { justify-content:space-between; gap:8px; } .ct.sct { align-items:center; } .sct1 { display:flex; flex-direction:column; gap:3px; min-width:0; } .sct1 small { font-size:12px; line-height:1.35; } .sct .aseg button:not(.on) { background:#f2f4f6; } .aseg { display:flex; gap:4px; flex:none; } .aseg button { border:0; background:#fff; border-radius:999px; min-width:34px; padding:7px 10px; font-size:12.5px; font-weight:700; color:var(--sub); } .aseg button.on { background:var(--txt); color:#fff; } .asub { font-size:12px; color:var(--mute); margin:-6px 6px 12px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
+.ahm { justify-content:space-between; gap:8px; } .hm.hmp { gap:6px; } .hm.hmp b { flex:1; min-width:0; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .hm.hmp .aseg { gap:3px; } .hm.hmp .aseg button { min-width:0; padding:6px 7px; font-size:11.5px; letter-spacing:-0.01em; } .harw { display:flex; gap:3px; flex:none; } .harw button { width:28px; height:28px; border:0; border-radius:50%; background:#fff; font-size:17px; line-height:1; color:var(--txt); padding:0; } .harw button:disabled { opacity:.35; } .ct.sct { align-items:center; } .sct1 { display:flex; flex-direction:column; gap:3px; min-width:0; } .sct1 small { font-size:12px; line-height:1.35; } .sct .aseg button:not(.on) { background:#f2f4f6; } .aseg { display:flex; gap:4px; flex:none; } .aseg button { border:0; background:#fff; border-radius:999px; min-width:34px; padding:7px 10px; font-size:12.5px; font-weight:700; color:var(--sub); } .aseg button.on { background:var(--txt); color:#fff; } .asub { font-size:12px; color:var(--mute); margin:-6px 6px 12px; } .sumc .bcd b small.u { display:inline; font-size:.55em; color:var(--mute); font-weight:700; } .sumc .bcd b .stx { font-size:15px; display:block; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; } .sumc .bcd em .mute { font-weight:600; }
 .bsel { display:flex; align-items:center; gap:6px; margin:0 2px 4px; }
 .bsel span { font-size:13px; color:var(--mute); font-weight:600; } .bsel b { font-size:15px; font-weight:800; } .bsel small { margin-left:auto; font-size:12px; color:var(--mute); }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zd';
+var APP_VER = '20261005ze';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -955,9 +955,37 @@ var VIEWS = { habit: { home: hbHome, daily: hbDaily, week: hbWeek, month: hbMont
   body: { home: bdHome, daily: bdDaily, week: bdWeek, month: bdMonth, year: bdYear },
   workout: { home: wkHome, daily: wkDaily, week: wkWeek, month: wkMonth, year: wkYear },
   medical: { home: mdHome, daily: mdDaily, week: mdWeek, month: mdMonth, year: mdYear } };
-function render() { renderCore(); try { datePick(); } catch (e) {} try { hmSeg(); } catch (e) {} hhSet(); }
+function render() { renderCore(); try { hmSeg(); } catch (e) {} try { datePick(); } catch (e) {} hhSet(); }
 // HOME: 요약 카드의 기간 단추를 날짜 옆(고정 줄)으로 (2026.10.05)
-function hmSeg() { if (S.view !== 'home') return; var hm = $('#main > .hm'), sg = $('#main .sct .aseg'); if (hm && sg && !hm.querySelector('.aseg')) { hm.classList.add('ahm'); hm.appendChild(sg); } }
+// HOME 기준 날짜 (좌우 단추로 이동) — 2026.10.05
+function hA() { return S.ha && S.ha < TODAY ? S.ha : TODAY; }
+function hShift(sp, d, n) {
+  if (sp === 'd') return addD(d, n); if (sp === 'w') return addD(d, 7 * n);
+  var k = sp === 'm' ? 1 : sp === 'h' ? 6 : 12, y = +d.slice(0, 4), m = +d.slice(5, 7) + k * n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; }
+  var e = mEnd(y, m); return y + '-' + pad(m) + '-' + pad(Math.min(+d.slice(8, 10), +e.slice(8, 10)));
+}
+function hLbl(sp, P) {
+  var A = hA(), cy = A.slice(0, 4) !== TODAY.slice(0, 4);
+  if (sp === 'd') return bShort(A);
+  if (sp === 'w') return (cy ? A.slice(2, 4) + '.' : '') + P.f.slice(5).replace('-', '.') + ' – ' + P.t.slice(5).replace('-', '.');
+  if (sp === 'm') return A.slice(0, 4) + '년 ' + (+A.slice(5, 7)) + '월';
+  if (sp === 'h') return P.lb;
+  if (sp === 'y') return A.slice(0, 4) + '년';
+  return '전체 기록';
+}
+function hmSeg() {
+  if (S.view !== 'home') return;
+  var hm = $('#main > .hm'), sg = $('#main .sct .aseg'); if (!hm || !sg || hm.querySelector('.aseg')) return;
+  var on = sg.querySelector('button.on'); if (!on) return;
+  var sp = on.attributes[0].value, P = sPer(sp), b = hm.querySelector('b');
+  hm.classList.add('ahm', 'hmp'); if (b) b.textContent = hLbl(sp, P);
+  var ar = document.createElement('div'); ar.className = 'harw';
+  if (sp !== 'a') ar.innerHTML = '<button id="hP" aria-label="이전">‹</button><button id="hN" aria-label="다음"' + (P.t >= TODAY ? ' disabled' : '') + '>›</button>';
+  hm.appendChild(sg); hm.appendChild(ar);
+  var mv = function (n) { var x = hShift(sp, hA(), n); S.ha = x >= TODAY ? '' : x; render(); };
+  if ($('#hP')) $('#hP').onclick = function () { mv(-1); };
+  if ($('#hN')) $('#hN').onclick = function () { if (P.t < TODAY) mv(1); };
+}
 // 고정 날짜 줄 위치 = 위 탭 높이 (2026.10.05)
 function hhSet() { var hd = document.querySelector('header'); if (hd) document.documentElement.style.setProperty('--hh', hd.offsetHeight + 'px'); }
 window.addEventListener('resize', function () { try { hhSet(); } catch (e) {} });
@@ -974,7 +1002,7 @@ function datePick() {
     inp = document.createElement('input');
     inp.type = v === 'month' ? 'month' : 'date';
     inp.min = v === 'month' ? '2015-01' : '2015-01-01'; inp.max = v === 'month' ? TODAY.slice(0, 7) : TODAY;
-    inp.value = v === 'month' ? S.y + '-' + pad(S.m) : v === 'all' ? (S.ad || TODAY) : v === 'home' ? TODAY : S.day;
+    inp.value = v === 'month' ? S.y + '-' + pad(S.m) : v === 'all' ? (S.ad || TODAY) : v === 'home' ? hA() : S.day;
   }
   inp.className = 'dpk'; inp.setAttribute('aria-label', '날짜 선택');
   el.classList.add('dpw'); el.appendChild(inp);
@@ -982,7 +1010,7 @@ function datePick() {
     var x = inp.value; if (!x) return;
     if (v === 'year') { if (+x === S.yy) return; S.yy = +x; }
     else if (v === 'month') { var yy = +x.slice(0, 4), mm = +x.slice(5, 7); if (yy === S.y && mm === S.m) return; S.y = yy; S.m = mm; S.sel = null; }
-    else { if (x > TODAY) x = TODAY; if (v === 'all') { if (x === (S.ad || TODAY)) return; S.ad = x; render(); return; } if (v === 'home') return goDaily(x); if (x === S.day) return; S.day = x; }
+    else { if (x > TODAY) x = TODAY; if (v === 'all') { if (x === (S.ad || TODAY)) return; S.ad = x; render(); return; } if (v === 'home') { if (x === hA()) return; S.ha = x >= TODAY ? '' : x; render(); return; } if (x === S.day) return; S.day = x; }
     window.scrollTo(0, 0); render();
   };
   // 휴대폰은 휠을 돌리는 중에도 값이 바뀌므로 '완료'로 닫을 때(blur) 적용
@@ -2905,18 +2933,20 @@ function aFirst() {
 }
 function sPer(k) {
   var y, m, f, t, pf, pt, lb, pn;
-  if (k === 'd') { var yd0 = addD(TODAY, -1); return { f: TODAY, t: TODAY, pf: yd0, pt: yd0, lb: '오늘', pn: '어제', te: TODAY }; }
+  var A = hA();
+  if (k === 'd') { var yd0 = addD(A, -1); return { f: A, t: A, pf: yd0, pt: yd0, lb: A === TODAY ? '오늘' : bShort(A), pn: '전날', te: A }; }
+  if (k === 'h') { y = +A.slice(0, 4); var h2 = +A.slice(5, 7) > 6; f = y + (h2 ? '-07-01' : '-01-01'); t = y + (h2 ? '-12-31' : '-06-30'); pf = h2 ? y + '-01-01' : (y - 1) + '-07-01'; pt = h2 ? y + '-06-30' : (y - 1) + '-12-31'; return { f: f, t: t, pf: pf, pt: pt, lb: y + (h2 ? ' 하반기' : ' 상반기'), pn: '지난 반기', te: t < TODAY ? t : TODAY }; }
   if (k === 'a') { f = aFirst(); return { f: f, t: TODAY, pf: '0001-01-01', pt: '0001-01-01', lb: '전체', pn: '', a: 1, te: TODAY }; }
   if (k === 'w' || k === 'vw') {
-    f = k === 'w' ? monOf(TODAY) : monOf(S.day); t = addD(f, 6); pf = addD(f, -7); pt = addD(f, -1); pn = '지난 주';
+    f = k === 'w' ? monOf(A) : monOf(S.day); t = addD(f, 6); pf = addD(f, -7); pt = addD(f, -1); pn = '지난 주';
     lb = f === monOf(TODAY) ? '이번 주' : f === addD(monOf(TODAY), -7) ? '지난 주' : bYmd(f).slice(3) + ' 주';
   } else if (k === 'm' || k === 'vm') {
-    y = k === 'm' ? +TODAY.slice(0, 4) : S.y; m = k === 'm' ? +TODAY.slice(5, 7) : S.m;
+    y = k === 'm' ? +A.slice(0, 4) : S.y; m = k === 'm' ? +A.slice(5, 7) : S.m;
     var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
     f = y + '-' + pad(m) + '-01'; t = mEnd(y, m); pf = py + '-' + pad(pm) + '-01'; pt = mEnd(py, pm); pn = '지난 달';
     lb = f.slice(0, 7) === TODAY.slice(0, 7) ? '이번 달' : (y !== +TODAY.slice(0, 4) ? y + '년 ' : '') + m + '월';
   } else {
-    y = k === 'y' ? +TODAY.slice(0, 4) : S.yy; f = y + '-01-01'; t = y + '-12-31'; pf = (y - 1) + '-01-01'; pt = (y - 1) + '-12-31'; pn = '작년';
+    y = k === 'y' ? +A.slice(0, 4) : S.yy; f = y + '-01-01'; t = y + '-12-31'; pf = (y - 1) + '-01-01'; pt = (y - 1) + '-12-31'; pn = '작년';
     lb = y === +TODAY.slice(0, 4) ? '올해' : y + '년';
   }
   return { f: f, t: t, pf: pf, pt: pt, lb: lb, pn: pn, te: t < TODAY ? t : TODAY };
@@ -2942,7 +2972,7 @@ function sumCard(P, tiles, seg, note) {
     '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' +
     (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div>') + '</div>';
 }
-var SSEG = [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']];
+var SSEG = [['d', 'D'], ['w', 'W'], ['m', 'M'], ['h', '½Y'], ['y', 'Y'], ['a', 'All']];
 function sSeg(attr, cur, list) { return '<div class="aseg">' + (list || SSEG).map(function (o) { return '<button ' + attr + '="' + o[0] + '" class="' + (o[0] === cur ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
@@ -2990,20 +3020,10 @@ function bdHome() {
   var h = '<div class="hm"><small>BODY</small><b>' + mdw(TODAY) + '</b></div>', L = bList();
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
-  var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
-  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], ['전체', (bList()[0] || {}).d || TODAY, TODAY, null, null, ''], ['오늘', TODAY, TODAY, addD(TODAY, -1), addD(TODAY, -1), '어제']];
+  var BP = sPer(S.bsp || 'w'), spi = BP.a ? 3 : 0, p = [BP.lb, BP.f, BP.t, BP.pf, BP.pt, BP.pn];   // 기간 = HOME 위 단추 + 좌우 이동 (2026.10.05)
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
-  // 요약 카드 하나: 주 · 월 · 연 단추로 전환 (지난 기간 평균 대비) — 2026.10.04
-  var spi = { w: 0, m: 1, y: 2, a: 3, d: 4 }[S.bsp || 'w'] || 0, p = SP[spi];
   var cntIn = function (f2, t2) { return bList().filter(function (r) { return r.d >= f2 && r.d <= t2; }).length; };
   var n2 = cntIn(p[1], p[2]), fb = '';
-  // 이번 주·달에 아직 측정이 없으면 지난 기간을 보여줌 (월요일·1일에 빈 화면 방지)
-  if (!n2 && spi < 2) {
-    var ppY = pmM === 1 ? pmY - 1 : pmY, ppM = pmM === 1 ? 12 : pmM - 1;
-    fb = spi === 0 ? '이번 주' : '이번 달';
-    p = spi === 0 ? ['지난 주', addD(wsx, -7), addD(wsx, -1), addD(wsx, -14), addD(wsx, -8), '2주 전'] : ['지난 달', pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), ppY + '-' + pad(ppM) + '-01', mEnd(ppY, ppM), '전달'];
-    n2 = cntIn(p[1], p[2]);
-  }
   h += '<div class="card">' + sHead((p[1] === p[2] ? bShort(p[1]) : bYmd(p[1]) + ' ~ ' + bYmd(p[2])) + ' · 측정 ' + n2 + '회', sSeg('data-bsp', S.bsp || 'w')) + '<div class="bc4">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
     var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = spi === 3 ? null : avgOf(kk, p[3], p[4]);
     return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b>' + (spi === 3 ? '' : '<em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em>') + '</button>';
@@ -3351,7 +3371,7 @@ function trendBars(vals, lbls, color, fmt, cur) {
   });
   return '<svg class="tch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
 }
-function wAP() { var p = S.wp || 'm'; return p === 'd' ? 'w' : p; }
+function wAP() { var p = S.wp || 'm'; return p === 'd' ? 'w' : p === 'h' ? 'y' : p; }
 function wTrend(t, p, nh) {
   // 운동 분석 + 추세 통합 (2026.10.05): 카드마다 합계 · 지난 기간 대비 · 일별/월별 막대
   var bk = [], i, y = +TODAY.slice(0, 4);
