@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yq';
+var APP_VER = '20261005yr';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3406,9 +3406,10 @@ function wCard(r) {
   // 애플 피트니스 요약처럼: 아이콘 · 종류 · 시간대 → 2열 큰 숫자 → 영법 비율 막대 → 심박 (2026.10.05)
   var sw = isSwim(r.type), mm = String(r.memo || ''), q;
   var hms = function (m) { var t = Math.round(m * 60); return Math.floor(t / 3600) + ':' + pad(Math.floor(t % 3600 / 60)) + ':' + pad(t % 60); };
-  var end = ''; if (r.t && r.dur) { var em = +r.t.slice(0, 2) * 60 + +r.t.slice(3, 5) + Math.round(r.dur); end = '–' + pad(Math.floor(em / 60) % 24) + ':' + pad(em % 60); }
+  var el = mm.match(/경과\s?시간\s?(\d{1,2}):(\d\d):\d\d/), end = ''; if (r.t && r.dur) { var em = +r.t.slice(0, 2) * 60 + +r.t.slice(3, 5) + (el ? +el[1] * 60 + +el[2] : Math.round(r.dur)); end = '–' + pad(Math.floor(em / 60) % 24) + ':' + pad(em % 60); }
   var cell = function (n, v, u, c) { return '<div><small>' + n + '</small><b style="color:' + c + '">' + v + (u ? '<em>' + u + '</em>' : '') + '</b></div>'; }, g = [];
   if (r.dur != null) g.push(cell('운동 시간', hms(r.dur), '', '#e0a800'));
+  if ((q = mm.match(/경과\s?시간\s?(\d{1,2}:\d\d:\d\d)/))) g.push(cell('경과 시간', q[1], '', '#e0a800'));
   if (r.dist != null) g.push(sw ? cell('거리', Math.round(r.dist * 1000).toLocaleString(), 'M', '#2f9cf0') : cell('거리', (Math.round(r.dist * 100) / 100), 'KM', '#2f9cf0'));
   if (r.akcal != null) g.push(cell('활동 킬로칼로리', Math.round(r.akcal).toLocaleString(), 'KCAL', '#f0386b'));
   if (r.tkcal != null) g.push(cell('총 킬로칼로리', Math.round(r.tkcal).toLocaleString(), 'KCAL', '#f0386b'));
@@ -3428,7 +3429,7 @@ function wCard(r) {
   var bd = wBands(r), bk = bd ? Object.keys(bd) : [], bt = bk.reduce(function (a, k) { return a + bd[k]; }, 0);
   if (!tot && bt) sb = '<div class="zbox"><small>속도 구간<em class="zr">' + (wSplits(r) ? 'km별 페이스' : '평균 ' + (isRun(r.type) ? '페이스' : '속도')) + ' 기준</em></small><div class="wst wst2">' + bk.map(function (k) { return '<i style="flex:' + bd[k] + ';background:' + BCOL[k] + '"></i>'; }).join('') + '</div><ul class="zl">' +
     bk.slice().sort(function (a, b) { return bd[b] - bd[a]; }).map(function (k) { return '<li><span><i style="background:' + BCOL[k] + '"></i>' + k + '</span><b>' + (Math.round(bd[k] / 10) / 100) + 'km</b><em>' + Math.round(bd[k] / bt * 100) + '%</em></li>'; }).join('') + (wSplits(r) ? '' : '') + '</ul>' + (wSplits(r) ? '<div class="spl">' + wSplits(r).map(function (v, i) { var b = RB.filter(function (x) { return v >= x[1] && v < x[2]; })[0] || RB[0]; return '<span><em>' + (i + 1) + 'km</em><b style="color:' + deep(b[3]) + '">' + Math.floor(v / 60) + "'" + pad(v % 60) + '"</b></span>'; }).join('') + '</div>' : '') + '</div>';
-  var note = mm.split(' · ').filter(function (x) { return x && !/^(스플릿|고도|파워|케이던스)\s/.test(x) && !/^(영역|회복)\s/.test(x) && !/^랩\s?\d/.test(x) && !/^\d+m\s?수영장/.test(x) && !/^(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?[\d,]+m$/.test(x); }).join(' · ');
+  var note = mm.split(' · ').filter(function (x) { return x && !/^(스플릿|고도|파워|케이던스|등반 고도|평균 파워|평균 케이던스|경과 시간)\s/.test(x) && !/^(영역|회복)\s/.test(x) && !/^랩\s?\d/.test(x) && !/^\d+m\s?수영장/.test(x) && !/^(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?[\d,]+m$/.test(x); }).join(' · ');
   return '<div class="card wac"><div class="wah">' + wIco(r.type) + '<div class="wat"><b>' + esc(r.type || '운동') + '</b>' + (r.t ? '<small>' + r.t + end + '</small>' : '') + '</div><a href="#" data-we="' + r.id + '">수정 ›</a></div>' +
     (g.length ? '<div class="wag">' + g.join('') + '</div>' : '') + sb +
     (wZone(r) ? '<div class="zbox"><small>심박 영역</small>' + zoneHtml(wZone(r)) + '</div>' : '') +
