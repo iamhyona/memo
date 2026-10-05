@@ -173,7 +173,7 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .hg .hs button { border:0; background:var(--chip); border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700; color:var(--sub); }
 .hg .ln { grid-column:1 / -1; border-top:1px solid var(--line); margin:4px -14px 12px; }
 .hg { row-gap:4px; } @media (min-width:420px) { .hg { row-gap:6px; } }
-.hg { grid-template-columns:minmax(0,1fr) repeat(7,22px) !important; column-gap:4px !important; row-gap:4px !important; } .hg .ck { border-radius:5px; width:22px; height:22px; aspect-ratio:1; max-width:none; } .hg .hh b { width:22px !important; height:22px !important; line-height:22px !important; font-size:12px !important; border-radius:6px !important; }   /* 2026.10.05: 표 칸 높이 통일 22px */
+.hg { grid-template-columns:minmax(0,1fr) repeat(7,18px) !important; column-gap:3px !important; row-gap:3px !important; } .hg .ck { border-radius:4px; width:18px; height:18px; aspect-ratio:1; max-width:none; font-size:9px; } .hg .ck svg { width:11px !important; height:11px !important; } .hg .hh { font-size:9.5px !important; } .hg .hh b { width:18px !important; height:18px !important; line-height:18px !important; font-size:10.5px !important; border-radius:5px !important; }   /* 2026.10.05: 모든 표 칸 18px 정사각 · 간격 3px */   /* 2026.10.05: 표 칸 높이 통일 22px */
 .hg .ck svg { width:13px; height:13px; } .hg .hn .n { font-size:12.5px; } .hg .hn .hico.sm { width:15px; height:15px; }
 .card.wk { padding:18px 14px 8px; } .hg .hh { padding-bottom:0; } .hg .hn { padding:2px; }
 .hn { border:0; background:none; text-align:left; padding:8px 2px; min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -587,10 +587,10 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .wps { display:flex; background:#e5e8eb; border-radius:10px; padding:3px; } .wps button { border:0; background:none; font-size:13px; font-weight:700; color:#8b95a1; padding:6px 13px; border-radius:8px; } .wps button.on { background:#fff; color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.08); }
 .wmt { display:flex; gap:13px; } .wmt button { border:0; background:none; font-size:13.5px; font-weight:700; color:#b0b8c1; padding:6px 0 5px; } .wmt button.on { color:var(--txt); box-shadow:inset 0 -2px 0 var(--txt); }
 .bper td i.ar { font-style:normal; font-size:.8em; margin-right:2px; vertical-align:1px; }
-.ymx { margin-top:4px; display:flex; flex-direction:column; gap:4px; } .ymh, .ymr { display:grid; grid-template-columns:minmax(64px,1fr) repeat(12,minmax(0,22px)); gap:4px; align-items:center; }   /* 2026.10.05: 정사각 22px · 상하좌우 간격 4px */
+.ymx { margin-top:4px; display:flex; flex-direction:column; gap:3px; } .ymh, .ymr { display:grid; grid-template-columns:minmax(0,1fr) repeat(12,18px); gap:3px; align-items:center; }   /* 2026.10.05: 정사각 22px · 상하좌우 간격 4px */
 .ymh b { font-size:10px; letter-spacing:-0.04em; white-space:nowrap; color:var(--faint); text-align:center; font-weight:600; padding-bottom:4px; } .ymh b.cur { color:var(--txt); font-weight:800; }
 .ymr { padding:0; } .ymr .n { display:flex; align-items:center; gap:4px; min-width:0; } .ymr .n em { font-style:normal; font-size:11.5px; letter-spacing:-0.04em; font-weight:700; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ymr i { font-style:normal; width:100%; aspect-ratio:1; border-radius:5px; background:#f2f4f6; font-size:9px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
+.ymr i { font-style:normal; width:18px; height:18px; border-radius:4px; background:#f2f4f6; font-size:7.5px; font-weight:700; color:var(--sub); display:flex; align-items:center; justify-content:center; letter-spacing:-0.04em; } .ymr i.fu { background:#f9fafb; }
 .kgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .kgrid2 .kc { margin:0; padding:8px 6px 8px 8px; gap:6px; border-radius:14px; min-width:0; }
 .kgrid2 .kc .hi { width:28px; height:28px; border-radius:8px; } .kgrid2 .kc .hi .hico { width:17px; height:17px; }
@@ -834,7 +834,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y5';
+var APP_VER = '20261005y6';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1185,7 +1185,7 @@ function yearGrid(x, y) {
 // 습관 × 기간 달성률 표 (YEAR와 같은 디자인) — 2026.10.05
 function hMatrix(title, sub, cols) {
   var hs = S.D.habits; if (!hs.length) return '';
-  var gt = 'grid-template-columns:minmax(64px,1fr) repeat(' + cols.length + ',minmax(0,22px))';
+  var gt = 'grid-template-columns:minmax(0,1fr) repeat(' + cols.length + ',18px)';
   return '<div class="card"><div class="ct">' + title + '<small>' + sub + '</small></div><div class="ymx"><div class="ymh" style="' + gt + '"><span></span>' + cols.map(function (c) { return '<b' + (c.cur ? ' class="cur"' : '') + '>' + c.lb + '</b>'; }).join('') + '</div>' +
     hs.map(function (x) {
       return '<div class="ymr tapd" data-h="' + x.id + '" style="' + gt + '"><span class="n">' + hIco(x, 'hico sm') + '<em>' + esc(x.name) + '</em></span>' + cols.map(function (c) {
@@ -1551,7 +1551,7 @@ function sumU(P) {
 // 항목 × 기간 달성률 표
 function uMatrix(title, sub, cols) {
   var us = uItems(); if (!us.length) return '';
-  var gt = 'grid-template-columns:minmax(64px,1fr) repeat(' + cols.length + ',minmax(0,22px))';
+  var gt = 'grid-template-columns:minmax(0,1fr) repeat(' + cols.length + ',18px)';
   return '<div class="card"><div class="ct">' + title + '<small>' + sub + '</small></div><div class="ymx"><div class="ymh" style="' + gt + '"><span></span>' + cols.map(function (c) { return '<b' + (c.cur ? ' class="cur"' : '') + '>' + c.lb + '</b>'; }).join('') + '</div>' +
     us.map(function (u) {
       return '<div class="ymr ' + uTap(u) + '" style="' + gt + '"><span class="n">' + hIco(u.x, 'hico sm') + '<em>' + esc(u.x.name) + '</em></span>' + cols.map(function (c) {
@@ -1638,9 +1638,9 @@ function hbWeek() {
     h += '<button class="hn kname" data-e="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span></button>';
     days.forEach(function (d) { var v = kv(d, x.id), sh = kShade(x, v); h += '<button class="ck kcell' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '"' + (v ? ' style="background:' + sh.bg + (sh.dk ? ';color:#fff' : '') + '"' : '') + '>' + (v || '') + '</button>'; });
   });
-  h += '</div><div class="legend" style="margin-top:10px">체크형: ✓ · 횟수형: 숫자(많을수록 진하게)</div></div>';
-  var wc = [], k; for (k = 7; k >= 0; k--) { var f8 = addD(ws, -7 * k); wc.push({ lb: P(f8).getMonth() + 1 + '/' + P(f8).getDate(), f: f8, t: addD(f8, 6), cur: k === 0 }); }
-  h += uMatrix('항목별 주 달성률', '최근 8주 · %', wc);
+  h += '</div><div class="legend" style="margin-top:10px">숫자: 그날 기록한 횟수</div></div>';
+  var wc = [], k; for (k = 7; k >= 0; k--) { var f8 = addD(ws, -7 * k); wc.push({ lb: P(f8).getDate(), f: f8, t: addD(f8, 6), cur: k === 0 }); }
+  h += uMatrix('항목별 주 달성률', bYmd(wc[0].f).slice(3) + ' ~ ' + bYmd(wc[7].f).slice(3) + ' 시작 주 · %', wc);
   $('#main').innerHTML = h;
   bindWeek(); uBind();
   $$('.hn[data-h]').forEach(function (b) { b.onclick = function () { openDetail(b.dataset.h); }; });
