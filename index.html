@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yx';
+var APP_VER = '20261005yy';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3438,10 +3438,15 @@ function wCard(r) {
   if ((q = mm.match(/랩\s?(\d+)/))) g.push(cell('랩', q[1], '', '#8b6cf5'));
   if ((q = mm.match(/(\d{2,3})m\s?수영장/))) g.push(cell('수영장 길이', q[1], 'M', '#8b6cf5'));
   if (r.steps != null) g.push(cell('걸음', Math.round(r.steps).toLocaleString(), '', '#2fb67c'));
-  // 영법 비율 (가로 막대)
-  var st = wStrokes(r), ks = Object.keys(st), tot = ks.reduce(function (a, k) { return a + st[k]; }, 0), sb = '';
-  if (tot) sb = '<div class="zbox"><small>영법</small><div class="wst wst2">' + ks.map(function (k) { return '<i style="flex:' + st[k] + ';background:' + (SCOL[k] || '#D1D6DB') + '"></i>'; }).join('') + '</div><ul class="zl">' +
-    ks.slice().sort(function (a, b) { return st[b] - st[a]; }).map(function (k) { return '<li><span><i style="background:' + (SCOL[k] || '#D1D6DB') + '"></i>' + k + '</span><b>' + st[k].toLocaleString() + 'm</b><em>' + Math.round(st[k] / tot * 100) + '%</em></li>'; }).join('') + '</ul></div>';
+  // 영법 비율 (도넛) — 2026.10.05
+  var st = wStrokes(r), ks = Object.keys(st).sort(function (a, b) { return st[b] - st[a]; }), tot = ks.reduce(function (a, k) { return a + st[k]; }, 0), sb = '';
+  if (tot) sb = '<div class="zbox"><small>영법</small><div class="sdw">' + (function () {
+      var R0 = 42, CF = 2 * Math.PI * R0, acc = 0;
+      return '<svg class="sdn" viewBox="0 0 110 110"><circle cx="55" cy="55" r="' + R0 + '" fill="none" stroke="#f2f4f6" stroke-width="14"/>' + ks.map(function (s2) {
+        var len = st[s2] / tot * CF, seg = '<circle cx="55" cy="55" r="' + R0 + '" fill="none" stroke="' + (SCOL[s2] || '#D1D6DB') + '" stroke-width="14" stroke-dasharray="' + Math.max(len - 1.5, 0.5).toFixed(2) + ' ' + CF.toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 55 55)"/>'; acc += len; return seg;
+      }).join('') + '<text x="55" y="53" text-anchor="middle" class="sdn1">' + (tot >= 1000 ? (Math.round(tot / 100) / 10) + 'km' : tot + 'm') + '</text><text x="55" y="68" text-anchor="middle" class="sdn2">' + ks.length + '개 영법</text></svg>';
+    })() + '<ul class="zl sdl">' +
+    ks.map(function (k) { return '<li><span><i style="background:' + (SCOL[k] || '#D1D6DB') + '"></i>' + k + '</span><b>' + st[k].toLocaleString() + 'm</b><em>' + Math.round(st[k] / tot * 100) + '%</em></li>'; }).join('') + '</ul></div></div>';
   var bd = wBands(r), bk = bd ? Object.keys(bd) : [], bt = bk.reduce(function (a, k) { return a + bd[k]; }, 0);
   if (!tot && bt) sb = '<div class="zbox"><small>속도 구간<em class="zr">' + (wSplits(r) ? 'km별 페이스' : '평균 ' + (isRun(r.type) ? '페이스' : '속도')) + ' 기준</em></small><div class="wst wst2">' + bk.map(function (k) { return '<i style="flex:' + bd[k] + ';background:' + BCOL[k] + '"></i>'; }).join('') + '</div><ul class="zl">' +
     bk.slice().sort(function (a, b) { return bd[b] - bd[a]; }).map(function (k) { return '<li><span><i style="background:' + BCOL[k] + '"></i>' + k + '</span><b>' + (Math.round(bd[k] / 10) / 100) + 'km</b><em>' + Math.round(bd[k] / bt * 100) + '%</em></li>'; }).join('') + (wSplits(r) ? '' : '') + '</ul>' + (wSplitRows(r) ? splTable(wSplitRows(r)) : '') + '</div>';
