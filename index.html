@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zp';
+var APP_VER = '20261005zq';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1675,9 +1675,8 @@ function hbDaily() {
 function hbWeek() {
   var hs = S.D.habits, ks = S.D.counters, ws = monOf(S.day), days = weekDays(ws), us = uItems();
   var h = weekNav() + (us.length ? sumCard(sPer('vw'), sumU(sPer('vw'))) : UEMPTY);
-  h += '<div class="card wk"><div class="hg"><div class="hs"></div>';
+  h += '<div class="card wk"><div class="ct">항목별 기록<small>숫자: 그날 기록한 횟수</small></div><div class="hg"><div class="hs"></div>';   // 제목 넣고 줄 없앰 (2026.10.05)
   days.forEach(function (d, i) { h += '<div class="hh' + (d === TODAY ? ' td' : '') + '">' + WM[i] + '<b>' + P(d).getDate() + '</b></div>'; });
-  h += '<div class="ln"></div>';
   hs.forEach(function (x) {
     h += '<button class="hn" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span></button>';
     days.forEach(function (d) { var v = on(d, x.id); h += '<button class="ck' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '" data-h="' + x.id + '"' + (v ? ' style="background:' + x.color + '"' : '') + '>' + CHK + '</button>'; });
@@ -1686,9 +1685,7 @@ function hbWeek() {
     h += '<button class="hn kname" data-e="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></span></button>';
     days.forEach(function (d) { var v = kv(d, x.id), sh = kShade(x, v); h += '<button class="ck kcell' + (v ? ' on' : '') + (d > TODAY ? ' fu' : '') + '" data-d="' + d + '"' + (v ? ' style="background:' + sh.bg + (sh.dk ? ';color:#fff' : '') + '"' : '') + '>' + (v || '') + '</button>'; });
   });
-  h += '</div><div class="legend" style="margin-top:10px">숫자: 그날 기록한 횟수</div></div>';
-  var wc = [], k; for (k = 7; k >= 0; k--) { var f8 = addD(ws, -7 * k); wc.push({ lb: P(f8).getDate(), f: f8, t: addD(f8, 6), cur: k === 0 }); }
-  h += uMatrix('항목별 주 달성률', bYmd(wc[0].f).slice(3) + ' ~ ' + bYmd(wc[7].f).slice(3) + ' 시작 주 · %', wc);
+  h += '</div></div>';   // 주 달성률은 MONTH에 있어서 뺌 (2026.10.05)
   $('#main').innerHTML = h;
   bindWeek(); uBind();
   $$('.hn[data-h]').forEach(function (b) { b.onclick = function () { openDetail(b.dataset.h); }; });
