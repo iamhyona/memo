@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zf';
+var APP_VER = '20261005zg';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -955,9 +955,11 @@ var VIEWS = { habit: { home: hbHome, daily: hbDaily, week: hbWeek, month: hbMont
   body: { home: bdHome, daily: bdDaily, week: bdWeek, month: bdMonth, year: bdYear },
   workout: { home: wkHome, daily: wkDaily, week: wkWeek, month: wkMonth, year: wkYear },
   medical: { home: mdHome, daily: mdDaily, week: mdWeek, month: mdMonth, year: mdYear } };
-function render() { renderCore(); try { hmSeg(); } catch (e) {} try { datePick(); } catch (e) {} hhSet(); }
+function render() { try { noDay(); } catch (e) {} renderCore(); try { hmSeg(); } catch (e) {} try { datePick(); } catch (e) {} hhSet(); }
 // HOME: 요약 카드의 기간 단추를 날짜 옆(고정 줄)으로 (2026.10.05)
 // HOME 기준 날짜 (좌우 단추로 이동) — 2026.10.05
+// HOME 기간에 '일'이 남아 있으면 주로
+function noDay() { ['wp', 'bsp', 'hsp'].forEach(function (k) { if (S[k] === 'd') S[k] = 'w'; }); var o = S.ssp || {}; ['diary', 'medical'].forEach(function (k) { if (o[k] === 'd') o[k] = 'w'; }); }
 function hA() { return S.ha && S.ha < TODAY ? S.ha : TODAY; }
 function hShift(sp, d, n) {
   if (sp === 'd') return addD(d, n); if (sp === 'w') return addD(d, 7 * n);
@@ -2972,7 +2974,7 @@ function sumCard(P, tiles, seg, note) {
     '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' +
     (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div>') + '</div>';
 }
-var SSEG = [['d', 'D'], ['w', 'W'], ['m', 'M'], ['h', '½Y'], ['y', 'Y'], ['a', 'All']];
+var SSEG = [['w', 'W'], ['m', 'M'], ['h', '½Y'], ['y', 'Y'], ['a', 'All']];   // HOME: 일 빼고 반년 (2026.10.05)
 function sSeg(attr, cur, list) { return '<div class="aseg">' + (list || SSEG).map(function (o) { return '<button ' + attr + '="' + o[0] + '" class="' + (o[0] === cur ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
