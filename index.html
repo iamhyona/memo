@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zn';
+var APP_VER = '20261005zo';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1485,15 +1485,14 @@ function renderAll() {
   // 전체 요약: 일·주·월·연 단추 → 메뉴별 같은 형식(칸 4개 + ▲▼ 지난 기간 대비) — 2026.10.05
   var R = rng(), ps = S.D.photos, sp = S.asp || 'w', A = S.ad && S.ad <= TODAY ? S.ad : TODAY, y = String(R.y), P;
   // 기준 날짜(날짜를 눌러 선택) + 일·주·월·연 — 2026.10.05
-  if (sp === 'd') P = { f: A, t: A, pf: addD(A, -1), pt: addD(A, -1), pn: '전날' };
-  else if (sp === 'w') { var w0 = monOf(A); P = { f: w0, t: addD(w0, 6), pf: addD(w0, -7), pt: addD(w0, -1), pn: '지난 주' }; }
-  else if (sp === 'm') { var ay = +A.slice(0, 4), am = +A.slice(5, 7), apy = am === 1 ? ay - 1 : ay, apm = am === 1 ? 12 : am - 1; P = { f: A.slice(0, 8) + '01', t: mEnd(ay, am), pf: apy + '-' + pad(apm) + '-01', pt: mEnd(apy, apm), pn: '지난 달' }; }
-  else { var yy0 = +A.slice(0, 4); P = { f: yy0 + '-01-01', t: yy0 + '-12-31', pf: (yy0 - 1) + '-01-01', pt: (yy0 - 1) + '-12-31', pn: '작년' }; }
-  var h = '<div class="hm ahm"><small>' + y + ' ROUTINE</small><b>' + mdw(A) + '</b><div class="aseg">' + [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-asp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+  // 일·주·월·반년·한해·전체 (메뉴 HOME과 같은 단추 · 날짜 표기) — 2026.10.05
+  var oha = S.ha; S.ha = A < TODAY ? A : ''; P = sPer(sp); S.ha = oha;
+  if (P.a) { var fs = [wList()[0], bList()[0], S.D.diary.slice().sort(function (a, b) { return a.d < b.d ? -1 : 1; })[0]].filter(Boolean).map(function (r) { return r.d; }).sort(); P.f = fs[0] || TODAY; P.t = TODAY; }
+  var h = '<div class="hm ahm hmp"><small>' + y + ' ROUTINE</small><b>' + A.slice(2).replace(/-/g, '.') + '<em class="hwd">' + W[new Date(A + 'T00:00').getDay()] + '</em></b><div class="aseg">' + SSEG.map(function (o) { return '<button data-asp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
     '<div class="asub">' + (P.f === P.t ? bShort(P.f) : bYmd(P.f) + ' ~ ' + bYmd(P.t)) + ' 요약 · MEDICAL은 올해 합산</div>';
   var card = function (mode, title, tiles, note) {
     return '<div class="card mcard asm" data-amode="' + mode + '"><div class="ct"><span class="mk">' + title + '</span><a href="#" data-mode="' + mode + '">HOME ›</a></div>' +
-      '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' + (note ? '<div class="legend" style="justify-content:flex-start;margin-top:8px">' + note + '</div>' : '') + '</div>';
+      '<div class="bc4">' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' + (note ? '<div class="legend" style="justify-content:flex-start;margin-top:8px">' + note + '</div>' : '') + '</div>';
   };
   var withP = function (food, fn) { var all = S.D.photos; S.D.photos = all.filter(function (p) { return isFood(p) === food; }); try { return fn(); } finally { S.D.photos = all; } };
   // 메뉴별 내용 (2026.10.05): 숫자 칸보다 '무엇을 얼마나·연속' 위주
@@ -1529,7 +1528,7 @@ function renderAll() {
   // DIARY: 최근 일기 첫 줄 · 기분 일수 · 연속
   var DL = S.D.diary.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }), dIn = DL.filter(function (e) { return inR(e.d, P.f, P.t); }), last = dIn[0] || DL[0];
   var mc = MOODS.map(function (m) { return { k: m.k, c: m.c, n: dIn.filter(function (e) { return e.mood === m.k; }).length }; }).filter(function (m) { return m.n; });
-  CD.diary = box('diary', 'DIARY', '작성 ' + dIn.length + '일 · 연속 ' + dRun() + '일',
+  CD.diary = box('diary', 'DIARY', '다이어리 ' + dIn.length + '일 작성 · 연속 ' + dRun() + '일',
     // 최근 일기 5개: 날짜 · 기분 · 첫 줄 한 줄로 (2026.10.05)
     (last ? '<ul class="adl">' + DL.filter(function (e) { return e.d <= A; }).slice(0, 5).map(function (e) { return '<li data-dd="' + e.d + '"><span class="ad1">' + bShort(e.d) + '</span><span class="ad2">' + (e.mood ? '<i style="background:' + moodC(e.mood) + '"></i>' + esc(e.mood) : '<i></i>-') + '</span><span class="ad3">' + esc((e.text || '').split('\n')[0] || '') + '</span></li>'; }).join('') + '</ul>' : empty('아직 쓴 일기가 없어요')) +
     (mc.length ? '<div class="amc">' + mc.map(function (m) { return '<span><i style="background:' + m.c + '"></i>' + m.k + ' <b>' + m.n + '</b>일</span>'; }).join('') + '</div>' : ''));
