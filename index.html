@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yt';
+var APP_VER = '20261005yu';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3524,7 +3524,7 @@ function rcvTxt(o) { return o.e + '→' + o.a + (o.b ? '→' + o.b : '') + 'bpm'
 function wStrokes(r) { var o = {}, m, re = /(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?\(?\s?([\d,]+)\s?m/g; while ((m = re.exec(r.memo || ''))) o[m[1]] = (o[m[1]] || 0) + +m[2].replace(/,/g, ''); return o; }
 function wOf(t, a, b) { return wIn(a, b).filter(function (r) { return t === '전체' || (r.type || '기타') === t; }); }
 // 다른 앱에서 가져온 수영 월 요약 (있으면 그 달 수영은 그 값을 씀)
-function swImp(ym) { var o = null; (S.D.swim || []).forEach(function (x) { if (x.d.slice(0, 7) === ym && /^월 /.test(x.kind)) { o = o || {}; o[{ '월 횟수': 'cnt', '월 시간': 'dur', '월 칼로리': 'kcal', '월 거리': 'dist' }[x.kind]] = x.val; } }); return o; }
+function swImp(ym) { return null; /* 건강 앱 전체 기록을 가져와서 다른 앱 월 요약은 안 씀 (2026.10.05) */ var o = null; (S.D.swim || []).forEach(function (x) { if (x.d.slice(0, 7) === ym && /^월 /.test(x.kind)) { o = o || {}; o[{ '월 횟수': 'cnt', '월 시간': 'dur', '월 칼로리': 'kcal', '월 거리': 'dist' }[x.kind]] = x.val; } }); return o; }
 function wMon(t, y, m) {
   var f = y + '-' + pad(m) + '-01', e = mEnd(y, m), l = wOf(t, f, e), sw = t === '전체' || isSwim(t), imp = sw ? swImp(f.slice(0, 7)) : null;
   var sum = function (L) { return { cnt: L.length, dur: wSum(L, 'dur'), kcal: wSum(L, 'akcal'), dist: wSum(L, 'dist') }; };
@@ -3739,10 +3739,10 @@ function openSwimReport(s) {
   $('#srH').innerHTML = '<div class="srtab">' + ['자유형', '평영', '배영', '접영', '킥판'].map(function (x) { return '<button data-srs="' + x + '" class="' + (x === SRP ? 'on' : '') + '" style="' + (x === SRP ? 'color:' + dc2 : '') + '">' + x + '</button>'; }).join('') + '</div>';
   var tb = swPB('누적 거리', SRP), add = 0, recs = [], all = 0, yr = 0, best = null;
   wList().forEach(function (r) { var o = wStrokes(r), v = o[SRP] || 0; Object.keys(o).forEach(function (k) { all += o[k]; }); if (!v) return; if (!tb || r.d > tb.d) add += v; recs.push([r, v]); if (r.d.slice(0, 4) === y) yr += v; if (!best || v > best[1]) best = [r, v]; });
-  var tot = (tb ? tb.val : 0) + add / 1000, sum = recs.reduce(function (a, p) { return a + p[1]; }, 0);
+  var sum0 = recs.reduce(function (a, p) { return a + p[1]; }, 0), tot = sum0 / 1000, first = recs.length ? recs[0][0].d : null, sum = recs.reduce(function (a, p) { return a + p[1]; }, 0);
   var card = function (lbl, val, unit, sub) { return '<div class="src"><small style="color:' + dc2 + '">' + lbl + '</small><b>' + val + (unit ? '<em>' + unit + '</em>' : '') + '</b><span>' + (sub || '&nbsp;') + '</span></div>'; };
   // 누적 거리 옆에 전체 영법 중 비율 (2026.10.05)
-  var h = '<div class="srg">' + card('누적 ' + SRP + ' 거리', tot >= 1 ? tot.toFixed(1) : Math.round(tot * 1000), tot >= 1 ? 'km' : 'm', tb ? bShort(tb.d) + ' 기준' + (add ? ' +' + add.toLocaleString() + 'm' : '') : '루틴 기록 합계') +
+  var h = '<div class="srg">' + card('누적 ' + SRP + ' 거리', tot >= 1 ? tot.toFixed(1) : Math.round(tot * 1000), tot >= 1 ? 'km' : 'm', first ? first.slice(0, 7).replace('-', '.') + ' 이후 전체' : '기록 없음') +
     card('전체 영법 중', all ? Math.round(sum / all * 100) : '-', all ? '%' : '', all ? '전체 ' + all.toLocaleString() + 'm 중' : '') + card('올해 거리', yr.toLocaleString(), 'm', y + '년') + card('한 날', recs.length, '회', '루틴 기록') +
     card('1회 평균', recs.length ? Math.round(sum / recs.length).toLocaleString() : '-', recs.length ? 'm' : '') + card('가장 많이 한 날', best ? best[1].toLocaleString() : '-', best ? 'm' : '', best ? bShort(best[0].d) : '') + '</div>';
   // 월별 거리 (최근 6개월) · 전체 수영 중 비율
