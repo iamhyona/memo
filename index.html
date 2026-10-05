@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yb';
+var APP_VER = '20261005yc';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3313,7 +3313,7 @@ function trendBars(vals, lbls, color, fmt, cur) {
   });
   return '<svg class="tch" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
 }
-function wTrend(t, p) {
+function wTrend(t, p, nh) {
   var bk = [], i, y = +TODAY.slice(0, 4);
   if (p === 'w') { var ws = monOf(TODAY); for (i = 0; i < 7; i++) bk.push({ f: addD(ws, i), t: addD(ws, i), lb: WM[i], cur: addD(ws, i) === TODAY }); }
   else if (p === 'm') { var mf = TODAY.slice(0, 8) + '01', me = mEnd(y, +TODAY.slice(5, 7)); for (var d = mf; d <= me; d = addD(d, 1)) { var dn = +d.slice(8); bk.push({ f: d, t: d, lb: dn === 1 || dn === 15 || dn === 29 ? dn : '', cur: d === TODAY }); } }
@@ -3334,7 +3334,7 @@ function wTrend(t, p) {
   ].filter(function (c) { return c[1]; });
   var pl = p === 'w' ? '이번 주' : p === 'm' ? '이번 달' : y + '년';
   var lbls = bk.map(function (b) { return b.lb; });
-  return '<div class="tsec"><span class="wct">' + wIco(t) + esc(t) + '</span><small>' + pl + (p === 'y' ? ' · 월별' : ' · 일별') + '</small></div>' + (cards.length ? '<div class="tgrid">' + cards.map(function (c) {
+  return (nh ? '' : '<div class="tsec"><span class="wct">' + wIco(t) + esc(t) + '</span><small>' + pl + (p === 'y' ? ' · 월별' : ' · 일별') + '</small></div>') + (cards.length ? '<div class="tgrid">' + cards.map(function (c) {
     return '<div class="tcard"><small>' + c[0] + '</small><b style="color:' + c[3] + '">' + c[1] + '</b>' + trendBars(c[2], lbls, c[3], c[4], ci) + '</div>';
   }).join('') + '</div>' : '<div class="card empty" style="padding:16px">' + pl + ' 기록이 없어요</div>');
 }
@@ -3345,7 +3345,7 @@ function wkHome() {
   h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], S.wp || 'm'));
   h += wAnalysis(all);
   // 운동별 추세: 종류 선택(단추 + 스와이프)으로 하나씩 — 2026.10.05
-  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0]; h += '<div class="sec">운동별 추세<small>' + ({ w: '이번 주', m: '이번 달', y: '올해' }[S.wp || 'm']) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, S.wp || 'm') + '</div>'; }
+  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0]; h += '<div class="sec">운동별 추세<small>' + ({ w: '이번 주 · 일별', m: '이번 달 · 일별', y: TODAY.slice(0, 4) + '년 · 월별' }[S.wp || 'm']) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, S.wp || 'm', 1) + '</div>'; }
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
