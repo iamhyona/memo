@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yg';
+var APP_VER = '20261005yh';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1590,8 +1590,9 @@ function hbHome() {
   h += sumCard(P, sumU(P), sSeg('data-hsp', sp));
   // 오늘: 체크형은 누르면 ✓, 횟수형은 누르면 +1
   var dn = us.filter(function (u) { return uDone(u, TODAY); }).length;
-  h += '<div class="card"><div class="ct">오늘<small>' + dn + '/' + us.length + ' 완료</small></div><div class="pbar"><i style="width:' + Math.round(dn / us.length * 100) + '%"></i></div><div class="utg">' +
-    us.filter(function (u) { return u.t === 'c'; }).map(function (u) { return uTile(u.x, TODAY); }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">누를 때마다 +1 · − 로 빼기 · 목표를 채우면 ✓</div></div>';
+  // 오늘 타일: DAY처럼 흰 카드 없이 바로 (2026.10.05)
+  h += '<div class="sec">오늘<small>' + dn + '/' + us.length + ' 완료</small></div><div class="utg">' +
+    us.filter(function (u) { return u.t === 'c'; }).map(function (u) { return uTile(u.x, TODAY); }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin:10px 4px 0">누를 때마다 +1 · − 로 빼기 · 목표를 채우면 ✓</div>';
   // 항목별: 많이 한 · 연속 · 남은 목표
   var tl = S.tlt || 'top', lst;
   if (tl === 'top') {
