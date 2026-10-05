@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yv';
+var APP_VER = '20261005yw';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3396,9 +3396,9 @@ function wTrend(t, p, nh) {
     var rl = l.filter(wRcv);
     if (rl.length) {
       var lt = rl[rl.length - 1], av = rl.reduce(function (a, r) { var o = wRcv(r); return a + o.e - o.a; }, 0) / rl.length;
-      h += '<div class="tcard tfull"><small style="display:flex;justify-content:space-between">회복 심박수<span style="font-weight:600;color:var(--mute)">' + bShort(lt.d) + (rl.length > 1 ? ' · ' + rl.length + '회 평균 −' + Math.round(av) : '') + '</span></small>' + rcvBlock(lt, tc) +
+      h += '<div class="tcard tfull"><small style="display:flex;justify-content:space-between">회복 심박수<span style="font-weight:600;color:var(--mute)">' + bShort(lt.d) + (rl.length > 1 ? ' · ' + rl.length + '회 평균 ' + rcvS(av) : '') + '</span></small>' + rcvBlock(lt, tc) +
         '<em class="tcm" style="margin-top:8px">12bpm 넘게 떨어지면 정상 범위로 봐요 · 클수록 회복이 빨라요</em>' +
-        (rl.length > 1 ? '<div class="rch">' + rl.slice(-8).map(function (r) { var o = wRcv(r); return '<span><b>−' + (o.e - o.a) + '</b>' + bShort(r.d).slice(3, 8) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+        (rl.length > 1 ? '<div class="rch">' + rl.slice(-8).map(function (r) { var o = wRcv(r); return '<span><b>' + rcvS(o.e - o.a) + '</b>' + bShort(r.d).slice(3, 8) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     }
     if (l.length && !zl.length && !rl.length) h += '<div class="tcard tfull thint"><small>심박 영역 · 회복 심박수</small><em class="tcm" style="white-space:normal;margin-top:4px">' + pl2 + ' ' + esc(t) + ' 기록에 심박수 화면이 없어요. 애플 피트니스의 \'심박수\' 화면을 보내주시면 채워져요.</em></div>';
   }
@@ -3531,9 +3531,11 @@ function rcvCurve(o, c) {
   p.forEach(function (v, i) { g += '<circle cx="' + x(i) + '" cy="' + y(v).toFixed(1) + '" r="4" fill="#fff" stroke="' + c + '" stroke-width="2.5"/><text x="' + x(i) + '" y="' + (y(v) - 8).toFixed(1) + '" text-anchor="middle" class="rcv1">' + v + '</text><text x="' + x(i) + '" y="' + (H - 2) + '" text-anchor="middle" class="rcv2">' + lb[i] + '</text>'; });
   return '<svg class="rcsv" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
 }
+// 회복 숫자: 떨어지면 −, 오르면 + (기호 하나만) — 2026.10.05
+function rcvS(v) { v = Math.round(v); return v > 0 ? '−' + v : v < 0 ? '+' + (-v) : '0'; }
 function rcvBlock(r, c) {
-  var o = wRcv(r), dv = o.e - o.a, pc = Math.min(dv, 40) / 40 * 100;
-  return '<div class="rcrow"><div class="rcb"><b style="color:' + c + '">−' + dv + '<em>bpm</em></b><span>1분 동안 떨어진 심박</span></div>' + rcvCurve(o, c) + '</div>' +
+  var o = wRcv(r), dv = o.e - o.a, pc = Math.max(0, Math.min(dv, 40)) / 40 * 100;
+  return '<div class="rcrow"><div class="rcb"><b style="color:' + c + '">' + rcvS(dv) + '<em>bpm</em></b><span>1분 동안 ' + (dv < 0 ? '오른' : '떨어진') + ' 심박</span></div>' + rcvCurve(o, c) + '</div>' +
     '<div class="rcg" style="background:linear-gradient(to right,#e5e8eb 0 30%,' + kMix('#ffffff', c, .35) + ' 30% 100%)"><i style="left:' + pc + '%;background:' + c + '"></i></div><div class="rcgl"><span>0</span><span style="left:30%">12</span><span style="right:0">40+</span></div>';
 }
 function rcvTxt(o) { return o.e + '→' + o.a + (o.b ? '→' + o.b : '') + 'bpm'; }
