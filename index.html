@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zl';
+var APP_VER = '20261005zm';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3034,14 +3034,15 @@ function bdHome() {
     return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b>' + (spi === 3 ? '' : '<em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em>') + '</button>';
   }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">' + (fb ? fb + ' 측정이 아직 없어 ' + p[0] + ' 기준 · ' : '') + (spi === 3 ? '평균' : '평균 · ▲▼ ' + p[5] + ' 평균 대비') + '</div></div>';
   // 2) 항목별 그래프
-  var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
-  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
-  if (!keys.length) { bp = 'all'; from = null; keys = bKeys(); }
-  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from), lr = s[s.length - 1];
-  var pts = bp === '1y' ? bAgg(s, k, 'w') : bp === 'all' ? bAgg(s, k, 'm') : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
-  h += '<div class="card"><div class="ct">항목별 그래프<small>' + (bp === '1y' ? '주 평균' : bp === 'all' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) + bSeg('data-bp', BPER, bp) +
+  // 기간 = 위 고정 단추 (일·주·월 측정값 / 반년·한해 주 평균 / 전체 월 평균) — 2026.10.05
+  var bsp = S.bsp || 'w', from = BP.a ? null : BP.f, to = BP.a ? null : BP.t, ag = bsp === 'a' ? 'm' : bsp === 'h' || bsp === 'y' ? 'w' : '';
+  var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from, to).length; }).map(function (x) { return x.k; });
+  if (!keys.length) keys = bKeys();
+  var k = keys.indexOf(S.bk) >= 0 ? S.bk : keys[0], x = bkOf(k), s = bSeries(k, from, to), lr = s.length ? s[s.length - 1] : bLast(k);
+  var pts = ag ? bAgg(s, k, ag) : s.map(function (q) { return { v: q[k], l: bShort(q.d) }; });
+  h += '<div class="card"><div class="ct">항목별 그래프<small>' + BP.lb + ' · ' + (ag === 'w' ? '주 평균' : ag === 'm' ? '월 평균' : '측정값') + '</small></div>' + bChips(keys, k) +
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>' + bShort(lr.d) + ' 측정</small>' : '') + '</div>' +
-    bChart(pts, x) + bSum(s, k, x) + '</div>';
+    (s.length ? bChart(pts, x) + bSum(s, k, x) : '<div class="empty" style="padding:24px 0">이 기간에는 측정이 없어요</div>') + '</div>';
   // 1) 최저 · 최고
   var y = TODAY.slice(0, 4), rg = BP.a ? [null, null, '전체'] : [BP.f, BP.te, BP.lb];   // 기간 = 위 고정 단추 (2026.10.05)
   var cnt = bList().filter(function (r) { return (!rg[0] || r.d >= rg[0]) && (!rg[1] || r.d <= rg[1]); }).length;
