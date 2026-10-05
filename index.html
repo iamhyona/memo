@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yn';
+var APP_VER = '20261005yo';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3695,14 +3695,14 @@ function openSwimReport(s) {
   wList().forEach(function (r) { var o = wStrokes(r), v = o[SRP] || 0; Object.keys(o).forEach(function (k) { all += o[k]; }); if (!v) return; if (!tb || r.d > tb.d) add += v; recs.push([r, v]); if (r.d.slice(0, 4) === y) yr += v; if (!best || v > best[1]) best = [r, v]; });
   var tot = (tb ? tb.val : 0) + add / 1000, sum = recs.reduce(function (a, p) { return a + p[1]; }, 0);
   var card = function (lbl, val, unit, sub) { return '<div class="src"><small style="color:' + dc2 + '">' + lbl + '</small><b>' + val + (unit ? '<em>' + unit + '</em>' : '') + '</b><span>' + (sub || '&nbsp;') + '</span></div>'; };
-  var h = '<div class="src wide"><small style="color:' + dc2 + '">누적 ' + SRP + ' 거리</small><b>' + (tot >= 1 ? tot.toFixed(1) + '<em>km</em>' : Math.round(tot * 1000) + '<em>m</em>') + '</b><span>' + (tb ? bShort(tb.d) + ' 기준 ' + tb.val + 'km' + (add ? ' + 루틴 기록 ' + add.toLocaleString() + 'm' : '') : '루틴 기록 합계') + '</span></div>' +
-    '<div class="srg">' + card('올해 거리', yr.toLocaleString(), 'm', y + '년') + card('한 날', recs.length, '회', '루틴 기록') +
+  // 누적 거리 옆에 전체 영법 중 비율 (2026.10.05)
+  var h = '<div class="srg">' + card('누적 ' + SRP + ' 거리', tot >= 1 ? tot.toFixed(1) : Math.round(tot * 1000), tot >= 1 ? 'km' : 'm', tb ? bShort(tb.d) + ' 기준' + (add ? ' +' + add.toLocaleString() + 'm' : '') : '루틴 기록 합계') +
+    card('전체 영법 중', all ? Math.round(sum / all * 100) : '-', all ? '%' : '', all ? '전체 ' + all.toLocaleString() + 'm 중' : '') + card('올해 거리', yr.toLocaleString(), 'm', y + '년') + card('한 날', recs.length, '회', '루틴 기록') +
     card('1회 평균', recs.length ? Math.round(sum / recs.length).toLocaleString() : '-', recs.length ? 'm' : '') + card('가장 많이 한 날', best ? best[1].toLocaleString() : '-', best ? 'm' : '', best ? bShort(best[0].d) : '') + '</div>';
   // 월별 거리 (최근 6개월) · 전체 수영 중 비율
   var ms = [], i; for (i = 5; i >= 0; i--) ms.push(wPer('m', -i));
   var mv = ms.map(function (R) { var v = 0; recs.forEach(function (p) { if (inR(p[0].d, R.f, R.t)) v += p[1]; }); return v; });
   h += '<div class="fl" style="margin-top:18px">월별 ' + SRP + ' 거리 · m</div><div class="wtc" style="--wc:' + dc2 + ';--wl:' + kMix('#ffffff', dc2, .3) + '">' + bars7(mv, ms.map(function (R) { return R.lb; }), 5, function (v) { return v.toLocaleString(); }) + '</div>';
-  if (all) h += '<p class="wsub" style="margin:10px 0 0">전체 영법 거리 중 <b style="color:' + dc2 + '">' + Math.round(sum / all * 100) + '%</b>가 ' + SRP + '이에요</p>';
   // 다른 앱 최고 기록 (수영 기록 탭에 있을 때만)
   var lp = swPB('최장 연속', SRP), pc = swPB('대표 페이스', SRP), sk = swPB('대표 스트로크', SRP), sf = swPB('대표 SWOLF', SRP), pb = [];
   if (lp) pb.push(card('최장 연속 거리', lp.val.toLocaleString(), 'm', bShort(lp.d))); if (pc) pb.push(card('대표 페이스', fmtSec(pc.val), '/25m', bShort(pc.d)));
