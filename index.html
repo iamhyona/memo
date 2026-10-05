@@ -202,6 +202,7 @@ main { max-width:560px; margin:0 auto; padding:14px 16px calc(110px + env(safe-a
 .bars .trk { height:8px; background:var(--chip); border-radius:4px; overflow:hidden; }
 .bars .fil { height:100%; border-radius:4px; }
 .bars .sm { font-size:11px; color:var(--mute); margin-top:5px; }
+/* 항목 목록 한 줄로 (이름 · 막대 · 값) — 2026.10.05 */ .bars li { display:grid; grid-template-columns:minmax(0,7.2em) 1fr auto; align-items:center; column-gap:10px; padding:6px 0; } .bars .row1 { display:contents; } .bars .row1 .n { grid-column:1; grid-row:1; font-size:14px; } .bars .trk { grid-column:2; grid-row:1; height:6px; } .bars .row1 .v { grid-column:3; grid-row:1; min-width:5.4em; text-align:right; font-size:12px; } .bars div.sm { display:none; } .bars .row1 .n .hico { display:block; }
 .mbar { display:flex; align-items:flex-end; gap:6px; height:130px; margin-top:6px; }
 .mbar div { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0; }
 .mbar em { font-style:normal; font-size:10px; color:var(--mute); margin-bottom:3px; font-weight:600; }
@@ -838,7 +839,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zq';
+var APP_VER = '20261005zr';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
