@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yd';
+var APP_VER = '20261005ye';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3340,6 +3340,7 @@ function wTrend(t, p, nh) {
        : ['평균 속도', spOf(cur) ? (Math.round(spOf(cur) * 10) / 10) + '<small>km/h</small>' : '', spB, '#2cc5c9', function (v) { return (Math.round(v * 10) / 10) + ''; }, spOf(cur), spOf(prv), function (v) { return (Math.round(v * 10) / 10) + 'km/h'; }, 0, pv.length ? '최고 ' + pc(Math.min.apply(null, pv) / 60) + '/km' : ''],
     ['평균 심박', hc ? Math.round(hc) + '<small>bpm</small>' : '', hrB, '#ef4444', function (v) { return Math.round(v) + ''; }, hc, hp, function (v) { return Math.round(v) + 'bpm'; }, 0, mxh ? '최대 ' + mxh + 'bpm' : '']
   ].filter(function (c) { return c[1]; });
+  var tc = deep(wTypeCol(t)); cards.forEach(function (c) { c[3] = tc; });   // 그래프 색 = 운동 포인트 컬러
   var cmp = function (c) {
     if (!c[6]) return '<em class="tcm">' + Pv.nm + ' 기록 없음</em>';
     var dv = c[5] - c[6]; if (Math.abs(dv) < 1e-9) return '<em class="tcm">' + Pv.nm + '과 같음</em>';
