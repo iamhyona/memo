@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zb';
+var APP_VER = '20261005zc';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3309,8 +3309,12 @@ function wIco(t) {
 function wTypes(l) {
   var m = {};
   l.forEach(function (r) { var t = r.type || '기타'; m[t] = m[t] || { n: t, c: 0, dur: 0 }; m[t].c++; m[t].dur += r.dur || 0; });
-  return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.dur - a.dur || b.c - a.c; });
+  return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.c - a.c || wCnt(b.n) - wCnt(a.n) || b.dur - a.dur; });
 }
+// 자주 하는 운동 순서: 전체 기록 횟수 (2026.10.05)
+var WCN = { n: -1, m: {} };
+function wCnt(t) { var L = S.D.workouts || []; if (WCN.n !== L.length) { WCN = { n: L.length, m: {} }; L.forEach(function (r) { var k = r.type || '기타'; WCN.m[k] = (WCN.m[k] || 0) + 1; }); } return WCN.m[t] || 0; }
+function wSortT(a) { return a.map(function (t, i) { return [t, i]; }).sort(function (x, y) { return wCnt(y[0]) - wCnt(x[0]) || x[1] - y[1]; }).map(function (x) { return x[0]; }); }
 function wTypeList(l) {
   var ts = wTypes(l);
   return ts.length ? hlist(ts.map(function (o) { return { n: o.n, v: Math.max(o.dur, o.c * .01), t: o.c + '회 · <b>' + fmtMin(o.dur) + '</b>', c: deep(wTypeCol(o.n)) }; })) : '<div class="empty" style="padding:14px 0">기록이 없어요</div>';
@@ -3706,6 +3710,7 @@ function wMonCells(from, to) {
   for (d = from; d <= to; d = addD(d, 1)) {
     var m = {}, ks = [];
     wIn(d, d).forEach(function (r) { var t = r.type || '기타'; if (!m[t]) { m[t] = { dist: 0, dur: 0 }; ks.push(t); } m[t].dist += r.dist || 0; m[t].dur += r.dur || 0; });
+    ks = wSortT(ks);
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + ks.slice(0, 3).map(function (t) {
       var o = m[t], v = o.dist ? (o.dist >= 10 ? Math.round(o.dist) : o.dist.toFixed(1)) + '<small>k</small>' : Math.round(o.dur) + '<small>분</small>';
       return '<span class="bv wv" style="color:' + deep(wTypeCol(t)) + '">' + v + '</span>';
@@ -3855,7 +3860,7 @@ var WB = null;
 $('#wbG').innerHTML = WK.map(function (x) { return '<label class="bf"><span>' + x.n + '</span><input inputmode="decimal" autocomplete="off" data-w="' + x.k + '"><em>' + x.u + '</em></label>'; }).join('');
 function drawWTypes() {
   var ts = mOpt('WORKOUT', '운동 종류', WTYPES); wList().forEach(function (r) { if (r.type && ts.indexOf(r.type) < 0) ts.unshift(r.type); });
-  ts = ts.slice(0, 16);
+  ts = wSortT(ts).slice(0, 16);
   var cur = $('#wbTy').value.trim();
   $('#wbC').innerHTML = ts.map(function (t) { return '<button data-t="' + esc(t) + '" class="' + (t === cur ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('');
   $$('#wbC button').forEach(function (b) { b.onclick = function () { $('#wbTy').value = b.dataset.t; drawWTypes(); }; });
