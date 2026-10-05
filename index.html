@@ -508,7 +508,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .wsub { font-size:13.5px; color:var(--sub); margin:0 2px 10px; } .wsub b.wup { color:#F04452; } .wsub b.wdn { color:#3182F6; }
 .wcmp { margin-top:14px; } .wcmp td { font-size:13.5px; } .wcmp td small.wd { display:block; font-size:10.5px; color:var(--faint); font-weight:500; }
 .wst { display:flex; height:44px; border-radius:10px; overflow:hidden; gap:2px; } .wst i { display:block; min-width:4px; }
-.srp { padding-top:0 !important; overflow:hidden; } .srh2 { margin:0 -20px 16px; padding:16px 20px 18px; color:#fff; } .srh2 h3 { color:#fff; margin:14px 0 0; font-size:20px; }
+.srp { padding-top:0 !important; overflow-y:auto; } .srp .bsh { top:0; margin:0 -20px; } .srp .bsh i { background:rgba(255,255,255,.7); } .srp .bsx { background:rgba(255,255,255,.25); color:#fff; } .srh2 { margin:0 -20px 12px; padding:0 16px 14px; color:#fff; } .srh2 h3 { color:#fff; margin:14px 0 0; font-size:20px; } .srp .srtab button { font-size:13px; padding:7px 0; } .srp .src { padding:10px 12px; border-radius:12px; } .srp .src b { font-size:19px; margin:2px 0 0; } .srp .src small { font-size:11.5px; } .srp .src span { font-size:11px; } .srp .src.wide { margin-bottom:6px; } .srp .srg { gap:6px; } .srp .fl { margin-top:14px !important; margin-bottom:4px; font-size:12.5px; } .srp .mbar { height:90px; } .srp .wsub { font-size:12.5px; } .srp .brow li { padding:9px 0; font-size:13px; }
 .srtab { display:flex; background:rgba(0,0,0,.14); border-radius:12px; padding:4px; gap:4px; } .srtab button { flex:1; border:0; background:none; color:#fff; font-weight:700; font-size:14px; padding:8px 0; border-radius:9px; } .srtab button.on { background:#fff; }
 .src { background:#fff; border:1px solid #eef0f3; border-radius:14px; padding:12px 14px; } .src small { display:block; font-size:12px; font-weight:700; } .src b { display:block; font-size:22px; font-weight:800; margin:4px 0 2px; letter-spacing:-0.02em; } .src b em { font-style:normal; font-size:12px; font-weight:600; color:var(--sub); margin-left:2px; } .src span { font-size:11.5px; color:var(--faint); }
 .src.wide { margin-bottom:8px; } .srg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yi';
+var APP_VER = '20261005yj';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3444,7 +3444,7 @@ function wkWeek() {
 }
 // WORKOUT MONTH
 var STROKES = ['자유형', '평영', '배영', '접영', '혼영', '킥판', '드릴'];
-var SCOL = { 자유형: '#15C47E', 평영: '#6EA2F5', 배영: '#FFB331', 접영: '#3182F6', 혼영: '#8C6CF5', 킥판: '#B0B8C1', 드릴: '#D1D6DB', 기타: '#D1D6DB' };
+var SCOL = { 자유형: '#15C47E', 평영: '#F47EB4', 배영: '#FFB331', 접영: '#3182F6', 혼영: '#8C6CF5', 킥판: '#B0B8C1', 드릴: '#D1D6DB', 기타: '#D1D6DB' };
 function isSwim(t) { return /수영/.test(t || ''); }
 // 심박 영역 · 회복 심박 (메모 속 '영역 27:47/10:21/4:45/3:00/1:40 · 회복 130→108→104') — 2026.10.05
 var ZC = ['#7cb8f7', '#5fd6cc', '#b5dc4f', '#ffad4d', '#ff7aa8'];
@@ -3629,15 +3629,19 @@ function wkMonth() {
 
 /* 영법 리포트 (다른 앱 기록 + 루틴 기록) */
 var SRP = null;
-(function () { var d = document.createElement('div'); d.className = 'bs srp'; d.id = 'srb'; d.innerHTML = '<div class="srh2" id="srH"></div><div id="srBd"></div>'; document.body.appendChild(d); })();
+(function () {
+  var d = document.createElement('div'); d.className = 'bs srp'; d.id = 'srb';
+  d.innerHTML = '<div class="bsh"><i></i><button type="button" class="bsx" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="srh2" id="srH"></div><div id="srBd"></div>';
+  document.body.appendChild(d); d.querySelector('.bsx').onclick = closeBs; bsSwipe(d);   // 닫기 버튼 · 아래로 쓸어 닫기
+})();
 function swPB(kind, s) { var r = null; (S.D.swim || []).forEach(function (x) { if (x.kind === kind && x.stroke === s && (!r || x.d > r.d)) r = x; }); return r; }
 function fmtSec(v) { if (v == null) return '-'; var mn = Math.floor(v / 60), s = v - mn * 60; return (mn ? mn + '분 ' : '') + Math.floor(s) + '초' + pad(Math.round((s % 1) * 100) % 100); }
 function openSwimReport(s) {
   // 요약 캡쳐 한 장으로 되는 항목 위주 (2026.10.05) · 다른 앱 최고 기록은 있을 때만
   SRP = s || SRP || '자유형';
   var c = SCOL[SRP], dc2 = deep(c), y = TODAY.slice(0, 4);
-  $('#srH').style.background = c;
-  $('#srH').innerHTML = '<div class="srtab">' + ['접영', '배영', '평영', '자유형'].map(function (x) { return '<button data-srs="' + x + '" class="' + (x === SRP ? 'on' : '') + '" style="' + (x === SRP ? 'color:' + dc2 : '') + '">' + x + '</button>'; }).join('') + '</div><h3>' + SRP + ' 리포트</h3>';
+  $('#srH').style.background = c; $('#srb .bsh').style.background = c;
+  $('#srH').innerHTML = '<div class="srtab">' + ['자유형', '평영', '배영', '접영', '킥판'].map(function (x) { return '<button data-srs="' + x + '" class="' + (x === SRP ? 'on' : '') + '" style="' + (x === SRP ? 'color:' + dc2 : '') + '">' + x + '</button>'; }).join('') + '</div>';
   var tb = swPB('누적 거리', SRP), add = 0, recs = [], all = 0, yr = 0, best = null;
   wList().forEach(function (r) { var o = wStrokes(r), v = o[SRP] || 0; Object.keys(o).forEach(function (k) { all += o[k]; }); if (!v) return; if (!tb || r.d > tb.d) add += v; recs.push([r, v]); if (r.d.slice(0, 4) === y) yr += v; if (!best || v > best[1]) best = [r, v]; });
   var tot = (tb ? tb.val : 0) + add / 1000, sum = recs.reduce(function (a, p) { return a + p[1]; }, 0);
