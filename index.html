@@ -534,7 +534,7 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .wtab td { font-size:13px; } .wtab td[colspan] { text-align:center; }
 .brow .n:has(.wnm) { flex-direction:column; align-items:flex-start; gap:2px; min-width:0; } .wnm { display:flex; align-items:center; gap:7px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; } .brow .n:has(.wnm) .dt { margin-left:16px; }
 .wdot { width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; align-self:center; }
-.brow .n.wn2 { flex-direction:row; align-items:center; gap:10px; } .wn2 .wtx { display:flex; flex-direction:column; gap:2px; min-width:0; } .wib { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; } .wib .hico { width:18px; height:18px; }
+.wn2 .dt { white-space:nowrap; margin-left:0 !important; } .wrows .d { width:auto; min-width:60px; } .brow .n.wn2 { flex-direction:row; align-items:center; gap:10px; } .wn2 .wtx { display:flex; flex-direction:column; gap:2px; min-width:0; } .wib { width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; } .wib .hico { width:18px; height:18px; }
 .wct { display:flex; align-items:center; gap:8px; min-width:0; } .wct small { font-size:13px; color:var(--mute); font-weight:500; }
 .mk2 { font-size:11px; font-weight:700; color:var(--sub); background:var(--chip); border-radius:6px; padding:2px 6px; flex:none; align-self:center; }
 .mf { font-style:normal; font-size:11px; font-weight:700; border-radius:999px; padding:2px 7px; color:#fff; white-space:nowrap; } .mf.h { background:#e5484d; } .mf.l { background:#3182f6; }
@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yu';
+var APP_VER = '20261005yv';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1355,7 +1355,7 @@ function trHome() {
   if (!hs.length) { $('#main').innerHTML = h; return bindHome(); }
   // 요약: 주 · 월 · 연 단추 (2026.10.05)
   var sp = S.tsp || 'w', yx = R.y, days = 0, d;
-  var PP = { w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: [R.m + '월', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: [yx + '년', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'] }[sp];
+  var PP = { w: ['이번 주', R.ws, R.we, R.pws, R.pwe, '지난 주'], m: [R.m + '월', R.mf, R.mt, R.pmf, R.pmt, '지난 달'], y: [yx + '년', yx + '-01-01', yx + '-12-31', (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], a: ['전체', sPer('a').f, TODAY, '0001-01-01', '0001-01-01', ''] }[sp];
   var tc = total(PP[1], PP[2]), tp = total(PP[3], PP[4]);
   for (d = PP[1]; d <= PP[2] && d <= TODAY; d = addD(d, 1)) if (S.ck[d] && Object.keys(S.ck[d]).length) days++;
   var dn = hs.filter(function (x) { return weekCnt(x, R.ws) >= x.target; }).length;
@@ -2558,7 +2558,7 @@ function ctHome() {
       '<div class="kgt">' + hIco(x, 'hico sm') + '<span>' + esc(x.name) + '</span></div><b>' + c + '<small>회</small></b><em>' + sub + '</em>' +
       (p === 'd' && c ? '<button class="kgm" data-kgm="' + x.id + '" aria-label="한 번 빼기">' + MINUS + '</button>' : '') + '</div>';
   }).join('');
-  h += '<div class="card"><div class="ct">' + PP[0] + ' 요약<small>' + (p === 'd' ? bShort(TODAY) : bYmd(PP[1]) + ' ~ ' + bYmd(lastDay(PP[1], PP[2]))) + ' · 총 ' + tot + '회</small></div>' +
+  h += '<div class="card"><div class="ct">요약<small>' + (p === 'd' ? bShort(TODAY) : bYmd(PP[1]) + ' ~ ' + bYmd(lastDay(PP[1], PP[2]))) + ' · 총 ' + tot + '회</small></div>' +
     bSeg('data-ksp', [['d', '오늘'], ['w', '주'], ['m', '월'], ['y', '연']], p) + '<div class="kgrid">' + cells + '</div>' +
     '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (p === 'd' ? '카드를 누르면 +1 · − 로 빼기 · 많을수록 진하게' : (kfb ? kfb + ' 기록이 아직 없어 ' + PP[0] + ' 기준 · ' : '') + '하루 평균 · 많을수록 진하게 · ▲▼ ' + PP[5] + ' 대비') + '</div></div>';
   // 이번 주 날마다 총 횟수
@@ -2884,8 +2884,21 @@ function bAgg(s, k, by) {
 // ───── 공통 요약 카드 (2026.10.05) ─────
 // 모든 메뉴: HOME = 날짜 바로 아래, WEEK·MONTH·YEAR = 기간 이동 바로 아래 첫 카드
 // 형식: '{기간} 요약' + 기간 · 회색 칸 4개(항목 (단위) / 숫자 / ▲▼ 지난 기간 대비)
+// 전체: 메뉴별 첫 기록 날짜 ~ 오늘 (2026.10.05)
+function aFirst() {
+  var md = S.mode, ds = [];
+  if (md === 'workout') ds = (S.D.workouts || []).map(function (r) { return r.d; });
+  else if (md === 'body') ds = bList().map(function (r) { return r.d; });
+  else if (md === 'diary') ds = (S.D.diary || []).map(function (r) { return r.d; });
+  else if (md === 'medical') ds = (S.D.visits || []).map(function (r) { return r.d; });
+  else if (md === 'food' || md === 'me') ds = (S.D.photos || []).map(function (r) { return r.d; });
+  else { ds = Object.keys(S.ck || {}); if (S.D.counts) ds = ds.concat(Object.keys(S.D.counts)); }
+  ds = ds.filter(function (d) { return /^\d{4}-\d\d-\d\d/.test(d || ''); }).sort();
+  return ds.length && ds[0] < TODAY ? ds[0].slice(0, 10) : TODAY;
+}
 function sPer(k) {
   var y, m, f, t, pf, pt, lb, pn;
+  if (k === 'a') { f = aFirst(); return { f: f, t: TODAY, pf: '0001-01-01', pt: '0001-01-01', lb: '전체', pn: '', a: 1, te: TODAY }; }
   if (k === 'w' || k === 'vw') {
     f = k === 'w' ? monOf(TODAY) : monOf(S.day); t = addD(f, 6); pf = addD(f, -7); pt = addD(f, -1); pn = '지난 주';
     lb = f === monOf(TODAY) ? '이번 주' : f === addD(monOf(TODAY), -7) ? '지난 주' : bYmd(f).slice(3) + ' 주';
@@ -2907,11 +2920,12 @@ function sD(v, pv, dp) {
   return '<span class="' + (d > 0 ? 'dn' : 'up') + '">' + (d > 0 ? '▲ ' : '▼ ') + (dp ? Math.abs(d).toFixed(dp) : Math.abs(d).toLocaleString()) + '</span>';
 }
 function sumCard(P, tiles, seg, note) {
-  return '<div class="card sumc"><div class="ct">' + P.lb + ' 요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>' + (seg || '') +
-    '<div class="bc4"' + (seg ? ' style="margin-top:12px"' : '') + '>' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b><em>' + (o[2] || '<span class="mute">-</span>') + '</em></div>'; }).join('') + '</div>' +
-    '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div></div>';
+  return '<div class="card sumc"><div class="ct">' + (seg ? '' : P.lb + ' ') + '요약<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>' + (seg || '') +
+    '<div class="bc4"' + (seg ? ' style="margin-top:12px"' : '') + '>' + tiles.map(function (o) { return '<div class="bcd"><small>' + o[0] + '</small><b>' + o[1] + '</b>' + (P.a ? '' : '<em>' + (o[2] || '<span class="mute">-</span>') + '</em>') + '</div>'; }).join('') + '</div>' +
+    (P.a ? (note ? '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + note + '</div>' : '') : '<div class="legend" style="justify-content:flex-start;margin-top:10px">' + (note ? note + ' · ' : '') + '▲▼ ' + P.pn + ' 대비</div>') + '</div>';
 }
-function sSeg(attr, cur) { return bSeg(attr, [['w', '주'], ['m', '월'], ['y', '연']], cur); }
+var SSEG = [['w', '주'], ['m', '월'], ['y', '연'], ['a', '전체']];
+function sSeg(attr, cur) { return bSeg(attr, SSEG, cur); }
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
 function sumW(P) {
@@ -2960,10 +2974,10 @@ function bdHome() {
   if (!L.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 인바디 결과 사진을 올리면<br>수치를 읽어서 기록해요</div>'; return; }
   // 0) 요약: 이번 주 · 이번 달 · 올해 (지난 기간과 비교)
   var wsx = monOf(TODAY), yx = +TODAY.slice(0, 4), mx = +TODAY.slice(5, 7), pmY = mx === 1 ? yx - 1 : yx, pmM = mx === 1 ? 12 : mx - 1;
-  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년']];
+  var SP = [['이번 주', wsx, addD(wsx, 6), addD(wsx, -7), addD(wsx, -1), '지난 주'], ['이번 달', TODAY.slice(0, 8) + '01', TODAY, pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), '지난 달'], ['올해', yx + '-01-01', TODAY, (yx - 1) + '-01-01', (yx - 1) + '-12-31', '작년'], ['전체', (bList()[0] || {}).d || TODAY, TODAY, null, null, '']];
   var avgOf = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
   // 요약 카드 하나: 주 · 월 · 연 단추로 전환 (지난 기간 평균 대비) — 2026.10.04
-  var spi = { w: 0, m: 1, y: 2 }[S.bsp || 'w'] || 0, p = SP[spi];
+  var spi = { w: 0, m: 1, y: 2, a: 3 }[S.bsp || 'w'] || 0, p = SP[spi];
   var cntIn = function (f2, t2) { return bList().filter(function (r) { return r.d >= f2 && r.d <= t2; }).length; };
   var n2 = cntIn(p[1], p[2]), fb = '';
   // 이번 주·달에 아직 측정이 없으면 지난 기간을 보여줌 (월요일·1일에 빈 화면 방지)
@@ -2973,10 +2987,10 @@ function bdHome() {
     p = spi === 0 ? ['지난 주', addD(wsx, -7), addD(wsx, -1), addD(wsx, -14), addD(wsx, -8), '2주 전'] : ['지난 달', pmY + '-' + pad(pmM) + '-01', mEnd(pmY, pmM), ppY + '-' + pad(ppM) + '-01', mEnd(ppY, ppM), '전달'];
     n2 = cntIn(p[1], p[2]);
   }
-  h += '<div class="card"><div class="ct">' + p[0] + ' 요약<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회</small></div>' + bSeg('data-bsp', [['w', '주'], ['m', '월'], ['y', '연']], S.bsp || 'w') + '<div class="bc4" style="margin-top:12px">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
-    var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = avgOf(kk, p[3], p[4]);
-    return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b><em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em></button>';
-  }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">' + (fb ? fb + ' 측정이 아직 없어 ' + p[0] + ' 기준 · ' : '') + '평균 · ▲▼ ' + p[5] + ' 평균 대비</div></div>';
+  h += '<div class="card"><div class="ct">요약<small>' + bYmd(p[1]) + ' ~ ' + bYmd(p[2]) + ' · 측정 ' + n2 + '회</small></div>' + bSeg('data-bsp', SSEG, S.bsp || 'w') + '<div class="bc4" style="margin-top:12px">' + ['w', 'smm', 'pbf', 'vfl'].map(function (kk) {
+    var xx = bkOf(kk), a1 = avgOf(kk, p[1], p[2]), a0 = spi === 3 ? null : avgOf(kk, p[3], p[4]);
+    return '<button class="bcd' + (S.bk === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(xx) + '</small><b>' + (a1 == null ? '-' : bfmt(xx, a1)) + '</b>' + (spi === 3 ? '' : '<em>' + (a1 != null && a0 != null ? bDelta(xx, a1, a0) : '<span class="mute">' + p[5] + ' -</span>') + '</em>') + '</button>';
+  }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">' + (fb ? fb + ' 측정이 아직 없어 ' + p[0] + ' 기준 · ' : '') + (spi === 3 ? '평균' : '평균 · ▲▼ ' + p[5] + ' 평균 대비') + '</div></div>';
   // 2) 항목별 그래프
   var bp = S.bp || '3m', from = bp === '1m' ? addD(TODAY, -30) : bp === '3m' ? addD(TODAY, -91) : bp === '1y' ? addD(TODAY, -365) : null;
   var keys = BK.filter(function (x) { return !x.seg && bSeries(x.k, from).length; }).map(function (x) { return x.k; });
@@ -3321,6 +3335,7 @@ function wTrend(t, p, nh) {
   var bk = [], i, y = +TODAY.slice(0, 4);
   if (p === 'w') { var ws = monOf(TODAY); for (i = 0; i < 7; i++) bk.push({ f: addD(ws, i), t: addD(ws, i), lb: WM[i], cur: addD(ws, i) === TODAY }); }
   else if (p === 'm') { var mf = TODAY.slice(0, 8) + '01', me = mEnd(y, +TODAY.slice(5, 7)); for (var d = mf; d <= me; d = addD(d, 1)) { var dn = +d.slice(8); bk.push({ f: d, t: d, lb: dn === 1 || dn === 15 || dn === 29 ? dn : '', cur: d === TODAY }); } }
+  else if (p === 'a') { var y0 = +wPer('a', 0).f.slice(0, 4), nY = y - y0 + 1, stp = Math.ceil(nY / 6); for (i = y0; i <= y; i++) bk.push({ f: i + '-01-01', t: i + '-12-31', lb: (i - y0) % stp === 0 || i === y ? "'" + String(i).slice(2) : '', cur: i === y }); }
   else { for (i = 1; i <= 12; i++) bk.push({ f: y + '-' + pad(i) + '-01', t: mEnd(y, i), m: i, lb: i % 3 === 1 ? i + '월' : '', cur: i === +TODAY.slice(5, 7) }); }
   var sw = isSwim(t), C = wPer(p, 0), Pv = wPer(p, -1), cur = wTot(t, C), prv = wTot(t, Pv), l = wOf(t, C.f, C.t), pl = wOf(t, Pv.f, Pv.t), ci = bk.findIndex(function (b) { return b.cur; });
   var B = bk.map(function (b) { if (p === 'y') return wMon(t, y, b.m); var L = wOf(t, b.f, b.t); return { cnt: L.length, dur: wSum(L, 'dur'), kcal: wSum(L, 'akcal'), dist: wSum(L, 'dist'), L: L }; });
@@ -3345,6 +3360,7 @@ function wTrend(t, p, nh) {
   ].filter(function (c) { return c[1]; });
   var tc = deep(wTypeCol(t)); cards.forEach(function (c) { c[3] = tc; });   // 그래프 색 = 운동 포인트 컬러
   var cmp = function (c) {
+    if (p === 'a') return '';
     if (!c[6]) return '<em class="tcm">' + Pv.nm + ' 기록 없음</em>';
     var dv = c[5] - c[6]; if (Math.abs(dv) < 1e-9) return '<em class="tcm">' + Pv.nm + '과 같음</em>';
     var good = c[8] ? dv < 0 : dv > 0;
@@ -3393,9 +3409,9 @@ function wkHome() {
   var R = rng(), all = wList();
   var h = '<div class="hm"><small>WORKOUT</small><b>' + mdw(TODAY) + '</b></div>';
   if (!all.length) { $('#main').innerHTML = h + '<div class="card empty">오른쪽 아래 + 버튼으로 애플 피트니스 운동 화면을 올리면<br>시간 · 칼로리 · 심박을 읽어서 기록해요</div>'; return; }
-  h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), bSeg('data-wp', [['w', '주'], ['m', '월'], ['y', '연']], S.wp || 'm'));
+  h += sumCard(sPer(S.wp || 'm'), sumW(sPer(S.wp || 'm')), bSeg('data-wp', SSEG, S.wp || 'm'));
   // 운동별 추세: 종류 선택(단추 + 스와이프)으로 하나씩 — 2026.10.05
-  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0], tcol = deep(wTypeCol(tsel)); h += '<div class="sec">운동별 분석<small>' + ({ w: '이번 주 · 일별', m: '이번 달 · 일별', y: TODAY.slice(0, 4) + '년 · 월별' }[S.wp || 'm']) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, S.wp || 'm', 1) + '</div>'; }
+  var tys = wTypes(all).map(function (o) { return o.n; }); if (tys.length) { var tsel = tys.indexOf(S.wtr) >= 0 ? S.wtr : tys[0], tcol = deep(wTypeCol(tsel)); h += '<div class="sec">운동별 분석<small>' + ({ w: '이번 주 · 일별', m: '이번 달 · 일별', y: TODAY.slice(0, 4) + '년 · 월별', a: '전체 · 연별' }[S.wp || 'm']) + '</small></div>' + (tys.length > 1 ? '<div class="chips bkc mlc wtch" data-ck="wtr">' + tys.map(function (t) { return '<button data-cat="' + esc(t) + '" class="' + (t === tsel ? 'on' : '') + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '') + '<div id="wtrBox">' + wTrend(tsel, S.wp || 'm', 1) + '</div>'; }
   h += '<div class="card"><div class="ct">최근 운동</div><ul class="brow wrows">' + all.slice(-6).reverse().map(function (r) { return wRow(r, true); }).join('') + '</ul></div>';
   // 연속 운동한 날
   var run = 0, d = TODAY; if (!wIn(d, d).length) d = addD(d, -1); while (wIn(d, d).length) { run++; d = addD(d, -1); }
@@ -3572,6 +3588,7 @@ function wPaceNum(l, sw) { var v = l.filter(function (r) { return r.dur && r.dis
 function fmtPace(sec, sw) { if (!isFinite(sec)) return '-'; return Math.floor(sec / 60) + "'" + pad(Math.round(sec % 60) % 60) + '"<small>/' + (sw ? '100m' : 'km') + '</small>'; }
 // 기간 (주·월·연): off = 0 이번, -1 지난 …
 function wPer(p, off) {
+  if (p === 'a') { var wl = wList(); return off === 0 ? { p: p, f: wl.length ? wl[0].d : TODAY, t: TODAY, nm: '전체' } : { p: p, f: '0001-01-01', t: '0001-01-01', nm: '' }; }
   if (p === 'w') { var ws = addD(monOf(TODAY), 7 * off), we = addD(ws, 6); return { p: p, f: ws, t: we, n: 7, lb: bYmd(ws).slice(3), nm: off === 0 ? '이번 주' : off === -1 ? '지난 주' : bYmd(ws) + '주' }; }
   if (p === 'y') { var y = +TODAY.slice(0, 4) + off, f = y + '-01-01', t = y + '-12-31'; return { p: p, y: y, f: f, t: t, n: dDiff(f, t) + 1, lb: y + '', nm: off === 0 ? '올해' : off === -1 ? '작년' : y + '년' }; }
   var yy = +TODAY.slice(0, 4), mm = +TODAY.slice(5, 7) + off; while (mm < 1) { mm += 12; yy--; }
