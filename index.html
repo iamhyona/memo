@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yz';
+var APP_VER = '20261005za';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1399,7 +1399,7 @@ function dyHome() {
   var L = S.D.diary, x = diaryOf(TODAY), sp = (S.ssp || {}).diary || 'w', P = sPer(sp), m = L.filter(function (e) { return inR(e.d, P.f, P.t); });
   var h = '<div class="hm"><small>DIARY</small><b>' + mdw(TODAY) + '</b></div>';
   // 요약 (모든 메뉴 같은 자리·형식) — 2026.10.05
-  h += sumCard(P, sumD(P), sSeg('data-ssp', sp), '연속 작성 ' + dRun() + '일');
+  h += sumCard(P, sumD(P), sSeg('data-ssp', sp));
   // 일기 분석 (전체 기록) — 카드별로 나눔 (2026.10.05)
   if (L.length) {
     var NL = L.length, len = function (e) { return (e.text || '').replace(/\s/g, '').length; };
@@ -1552,10 +1552,12 @@ function uRun(u) { return u.t === 'h' ? streak(u.id) : krun(u.x); }
 function uHas(d) { return (S.ck[d] && Object.keys(S.ck[d]).length) || (S.kc[d] && Object.keys(S.kc[d]).some(function (k) { return S.kc[d][k]; })); }
 function uTap(u) { return u.t === 'h' ? 'tapd" data-h="' + u.id : 'kedit" data-e="' + u.id; }
 function sumU(P) {
-  var a = uTotal(P.f, P.t), b = uTotal(P.pf, P.pt), d1 = sDays(P.f, P.t, uHas), d0 = sDays(P.pf, P.pt, uHas);
-  var best = function (f, t) { return uItems().reduce(function (m, u) { return Math.max(m, uStat(u, f, t).best || 0); }, 0); };
-  return [['달성률 (%)', pct(a.rate), b.g ? sD(pct(a.rate), pct(b.rate)) : ''], ['기록 (회)', a.cnt.toLocaleString(), sD(a.cnt, b.cnt)], ['기록한 날 (일)', d1, sD(d1, d0)], ['최장 연속 (일)', best(P.f, P.t), sD(best(P.f, P.t), best(P.pf, P.pt))]];
+  var a = uTotal(P.f, P.t), b = uTotal(P.pf, P.pt), r1 = sRate(P.f, P.t, uHas), r0 = sRate(P.pf, P.pt, uHas);
+  return [['기록률 (%)', P.f > TODAY ? '-' : r1.rate, sD(r1.rate, r0.rate)], ['연속 기록 (일)', sRun(uHas), ''], ['안 한 날 (일)', r1.miss, sD(r1.miss, r0.miss)], ['기록 (회)', a.cnt.toLocaleString(), sD(a.cnt, b.cnt)]];
 }
+// 꾸준함 공통 (2026.10.05): 기간 안 지난 날 중 한 날 비율 · 안 한 날 · 오늘(없으면 어제)부터 연속
+function sRate(f, t, has) { var n = 0, k = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) { n++; if (has(d)) k++; } return { n: n, k: k, miss: n - k, rate: n ? Math.round(k / n * 100) : 0 }; }
+function sRun(has) { var c = 0, d = TODAY; if (!has(d)) d = addD(d, -1); while (has(d)) { c++; d = addD(d, -1); } return c; }
 // 항목 × 기간 달성률 표
 function uMatrix(title, sub, cols) {
   var us = uItems(); if (!us.length) return '';
@@ -2930,8 +2932,10 @@ function sSeg(attr, cur, list) { return '<div class="aseg">' + (list || SSEG).ma
 function sDays(f, t, has) { var n = 0; for (var d = f; d <= t && d <= TODAY; d = addD(d, 1)) if (has(d)) n++; return n; }
 // 메뉴별 칸 4개
 function sumW(P) {
-  var a = wIn(P.f, P.t), b = wIn(P.pf, P.pt), h1 = wSum(a, 'dur') / 60, h0 = wSum(b, 'dur') / 60, k1 = wSum(a, 'akcal'), k0 = wSum(b, 'akcal');
-  return [['운동 (회)', a.length, sD(a.length, b.length)], ['시간 (h)', (Math.round(h1 * 10) / 10).toFixed(1), sD(h1, h0, 1)], ['운동한 날 (일)', wDays(a), sD(wDays(a), wDays(b))], ['활동 (kcal)', Math.round(k1).toLocaleString(), sD(Math.round(k1), Math.round(k0))]];
+  var a = wIn(P.f, P.t), b = wIn(P.pf, P.pt), h1 = wSum(a, 'dur') / 60, h0 = wSum(b, 'dur') / 60, has = function (d) { return wHasD[d]; };
+  var wHasD = {}; wList().forEach(function (r) { wHasD[r.d] = 1; });
+  var r1 = sRate(P.f, P.t, has), r0 = sRate(P.pf, P.pt, has);
+  return [['운동한 날 (%)', P.f > TODAY ? '-' : r1.rate, sD(r1.rate, r0.rate)], ['연속 운동 (일)', sRun(has), ''], ['운동 (회)', a.length, sD(a.length, b.length)], ['시간 (h)', (Math.round(h1 * 10) / 10).toFixed(1), sD(h1, h0, 1)]];
 }
 function sumK(P) {
   var a = ktotal(P.f, P.t), b = ktotal(P.pf, P.pt), has = function (d) { return S.D.counters.some(function (x) { return kv(d, x.id); }); };
@@ -2952,11 +2956,8 @@ function sumF(P) {
 }
 function sumD(P) {
   var L = S.D.diary, a = L.filter(function (e) { return inR(e.d, P.f, P.t); }), b = L.filter(function (e) { return inR(e.d, P.pf, P.pt); });
-  var ch = function (l) { return l.reduce(function (s2, e) { return s2 + (e.text || '').length; }, 0); };
-  var pass = function (f, t) { return t < f ? 0 : dDiff(f, t < TODAY ? t : TODAY) + 1; }, rt = function (l, f, t) { var n = pass(f, t); return n > 0 ? Math.round(l.length / n * 100) : 0; };
-  var mc = {}; a.forEach(function (e) { if (e.mood) mc[e.mood] = (mc[e.mood] || 0) + 1; });
-  var top = Object.keys(mc).sort(function (x, y) { return mc[y] - mc[x]; })[0];
-  return [['작성 (일)', a.length, sD(a.length, b.length)], ['작성률 (%)', P.f > TODAY ? '-' : rt(a, P.f, P.t), sD(rt(a, P.f, P.t), rt(b, P.pf, P.pt))], ['글자 수 (자)', ch(a).toLocaleString(), sD(ch(a), ch(b))], ['많았던 기분', top ? '<span class="stx" style="color:' + moodC(top) + '">' + top + '</span>' : '-', top ? '<span class="mute">' + mc[top] + '일</span>' : '']];
+  var has = function (d) { return !!diaryOf(d); }, r1 = sRate(P.f, P.t, has), r0 = sRate(P.pf, P.pt, has);
+  return [['작성률 (%)', P.f > TODAY ? '-' : r1.rate, sD(r1.rate, r0.rate)], ['연속 작성 (일)', dRun(), ''], ['안 쓴 날 (일)', r1.miss, sD(r1.miss, r0.miss)], ['작성 (개)', a.length, sD(a.length, b.length)]];
 }
 function sumB(P) {
   var avg = function (k2, f2, t2) { var ss = bSeries(k2, f2, t2); return ss.length ? ss.reduce(function (p, r) { return p + r[k2]; }, 0) / ss.length : null; };
