@@ -837,7 +837,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005yw';
+var APP_VER = '20261005yx';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3358,7 +3358,7 @@ function wTrend(t, p, nh) {
        : ['평균 속도', spOf(cur) ? (Math.round(spOf(cur) * 10) / 10) + '<small>km/h</small>' : '', spB, '#2cc5c9', function (v) { return (Math.round(v * 10) / 10) + ''; }, spOf(cur), spOf(prv), function (v) { return (Math.round(v * 10) / 10) + 'km/h'; }, 0, pv.length ? '최고 ' + pc(Math.min.apply(null, pv) / 60) + '/km' : ''],
     ['평균 심박', hc ? Math.round(hc) + '<small>bpm</small>' : '', hrB, '#ef4444', function (v) { return Math.round(v) + ''; }, hc, hp, function (v) { return Math.round(v) + 'bpm'; }, 0, mxh ? '최대 ' + mxh + 'bpm' : '']
   ].filter(function (c) { return c[1]; });
-  var tc = deep(wTypeCol(t)); cards.forEach(function (c) { c[3] = tc; });   // 그래프 색 = 운동 포인트 컬러
+  var tc = deep(wTypeCol(t));   // 그래프 색 = 항목별 색 (2026.10.05)
   var cmp = function (c) {
     if (p === 'a') return '';
     if (!c[6]) return '<em class="tcm">' + Pv.nm + ' 기록 없음</em>';
@@ -3396,9 +3396,9 @@ function wTrend(t, p, nh) {
     var rl = l.filter(wRcv);
     if (rl.length) {
       var lt = rl[rl.length - 1], av = rl.reduce(function (a, r) { var o = wRcv(r); return a + o.e - o.a; }, 0) / rl.length;
-      h += '<div class="tcard tfull"><small style="display:flex;justify-content:space-between">회복 심박수<span style="font-weight:600;color:var(--mute)">' + bShort(lt.d) + (rl.length > 1 ? ' · ' + rl.length + '회 평균 ' + rcvS(av) : '') + '</span></small>' + rcvBlock(lt, tc) +
+      h += '<div class="tcard tfull"><small style="display:flex;justify-content:space-between">회복 심박수<span style="font-weight:600;color:var(--mute)">' + bShort(lt.d) + (rl.length > 1 ? ' · ' + rl.length + '회 평균 <b style="color:' + rcvC(av) + '">' + rcvS(av) + '</b>' : '') + '</span></small>' + rcvBlock(lt, tc) +
         '<em class="tcm" style="margin-top:8px">12bpm 넘게 떨어지면 정상 범위로 봐요 · 클수록 회복이 빨라요</em>' +
-        (rl.length > 1 ? '<div class="rch">' + rl.slice(-8).map(function (r) { var o = wRcv(r); return '<span><b>' + rcvS(o.e - o.a) + '</b>' + bShort(r.d).slice(3, 8) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+        (rl.length > 1 ? '<div class="rch">' + rl.slice(-8).map(function (r) { var o = wRcv(r); return '<span><b style="color:' + rcvC(o.e - o.a) + '">' + rcvS(o.e - o.a) + '</b>' + bShort(r.d).slice(3, 8) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     }
     if (l.length && !zl.length && !rl.length) h += '<div class="tcard tfull thint"><small>심박 영역 · 회복 심박수</small><em class="tcm" style="white-space:normal;margin-top:4px">' + pl2 + ' ' + esc(t) + ' 기록에 심박수 화면이 없어요. 애플 피트니스의 \'심박수\' 화면을 보내주시면 채워져요.</em></div>';
   }
@@ -3533,10 +3533,12 @@ function rcvCurve(o, c) {
 }
 // 회복 숫자: 떨어지면 −, 오르면 + (기호 하나만) — 2026.10.05
 function rcvS(v) { v = Math.round(v); return v > 0 ? '−' + v : v < 0 ? '+' + (-v) : '0'; }
+var RC_BASE = '#3182F6', RC_OK = '#12B76A', RC_BAD = '#F04452';
+function rcvC(v) { return v > 12 ? RC_OK : RC_BAD; }   // 12bpm 넘게 떨어지면 정상
 function rcvBlock(r, c) {
-  var o = wRcv(r), dv = o.e - o.a, pc = Math.max(0, Math.min(dv, 40)) / 40 * 100;
-  return '<div class="rcrow"><div class="rcb"><b style="color:' + c + '">' + rcvS(dv) + '<em>bpm</em></b><span>1분 동안 ' + (dv < 0 ? '오른' : '떨어진') + ' 심박</span></div>' + rcvCurve(o, c) + '</div>' +
-    '<div class="rcg" style="background:linear-gradient(to right,#e5e8eb 0 30%,' + kMix('#ffffff', c, .35) + ' 30% 100%)"><i style="left:' + pc + '%;background:' + c + '"></i></div><div class="rcgl"><span>0</span><span style="left:30%">12</span><span style="right:0">40+</span></div>';
+  c = RC_BASE; var o = wRcv(r), dv = o.e - o.a, pc = Math.max(0, Math.min(dv, 40)) / 40 * 100, sc = rcvC(dv);
+  return '<div class="rcrow"><div class="rcb"><b style="color:' + sc + '">' + rcvS(dv) + '<em>bpm</em></b><span>1분 동안 ' + (dv < 0 ? '오른' : '떨어진') + ' 심박</span></div>' + rcvCurve(o, c) + '</div>' +
+    '<div class="rcg" style="background:linear-gradient(to right,' + kMix('#ffffff', RC_BAD, .3) + ' 0 30%,' + kMix('#ffffff', RC_OK, .3) + ' 30% 100%)"><i style="left:' + pc + '%;background:' + sc + '"></i></div><div class="rcgl"><span>0</span><span style="left:30%">12</span><span style="right:0">40+</span></div>';
 }
 function rcvTxt(o) { return o.e + '→' + o.a + (o.b ? '→' + o.b : '') + 'bpm'; }
 function wStrokes(r) { var o = {}, m, re = /(혼영|킥판|평영|자유형|배영|접영|드릴|기타)\s?\(?\s?([\d,]+)\s?m/g; while ((m = re.exec(r.memo || ''))) o[m[1]] = (o[m[1]] || 0) + +m[2].replace(/,/g, ''); return o; }
