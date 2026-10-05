@@ -642,7 +642,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
       <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
-  <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="workout">WORKOUT</button><button data-m="habit">HABIT</button><button data-m="food">FOOD</button><button data-m="feed">ME</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
+  <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="workout">WORKOUT</button><button data-m="habit">HABIT</button><button data-m="food">FOOD</button><button data-m="feed">LIFE</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
   <div class="mode vseg" id="nav"><button data-v="home">HOME</button><button data-v="daily">DAY</button><button data-v="week">WEEK</button><button data-v="month">MONTH</button><button data-v="year">YEAR</button></div>
 </header>
 <main id="main"><div class="ld">불러오는 중…</div></main>
@@ -840,7 +840,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zt';
+var APP_VER = '20261005zu';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1425,7 +1425,7 @@ function fCntCard() {
 function fdHome() {
   // 기간 = 날짜 옆 고정 단추 (일·주·월·반년·한해·전체) · 개수 카드 없앰 — 2026.10.05
   var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'a', P = sPer(sp), m = sp === 'a' ? ps : ps.filter(function (p) { return inR(p.d, P.f, P.t); });
-  var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'ME') + '</small><b>' + mdw(TODAY) + '</b></div><div class="sct" style="display:none">' + sSeg('data-ssp', sp) + '</div>';
+  var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'LIFE') + '</small><b>' + mdw(TODAY) + '</b></div><div class="sct" style="display:none">' + sSeg('data-ssp', sp) + '</div>';
   var rp = sortedPhotos(m); S.pl = rp;
   h += photoBlock(rp, 3, P.lb + ' 게시물');
   $('#main').innerHTML = h; bindHome(); bindSum();
@@ -1525,7 +1525,7 @@ function renderAll() {
     })) + (on2.length < us.length ? '<div class="legend" style="justify-content:flex-start;margin-top:6px">기록 없는 항목 ' + (us.length - on2.length) + '개</div>' : '') : empty('이 기간 기록이 없어요'));
   }
   // FOOD · ME: 최근 사진
-  [['food', 'FOOD', true], ['feed', 'ME', false]].forEach(function (o) {
+  [['food', 'FOOD', true], ['feed', 'LIFE', false]].forEach(function (o) {
     var L2 = ps.filter(function (p) { return isFood(p) === o[2]; }), inP = L2.filter(function (p) { return inR(p.d, P.f, P.t); }), lp = sortedPhotos(L2).slice(0, 4);
     CD[o[0]] = box(o[0], o[1], inP.length + '장 · 게시물 ' + posts(inP).length + '개', lp.length ? '<div class="thumbs athumb">' + lp.map(function (p) { return '<img loading="lazy" src="' + esc(purl(p)) + '" alt="">'; }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:6px">최근 올린 사진 · ' + bShort(lp[0].d) + '</div>' : empty('아직 올린 사진이 없어요'));
   });
@@ -2266,13 +2266,14 @@ sure($('#hbD'), function () {
 
 /* 사진 올리기 */
 var UP = null;
+function nowMemo() { var n = new Date(); return n.getFullYear() + '.' + pad(n.getMonth() + 1) + '.' + pad(n.getDate()) + ' ' + pad(n.getHours()) + ':' + pad(n.getMinutes()); }
 function openUpload(id) {
   var p = id ? S.D.photos.filter(function (x) { return x.id === id; })[0] : null;
   UP = { id: id, files: [], cat: p ? p.cat : (S.pcat !== '전체' && upCats().indexOf(S.pcat) >= 0 ? S.pcat : (upCats()[0] || '')), adding: false };
   $('#phT').textContent = p ? '사진 정보 수정' : '사진 올리기';
   $('#phS').textContent = p ? '저장' : '올리기';
   $('#phDrop').classList.toggle('hide', !!p);
-  $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : ''; $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
+  $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : (S.mode === 'feed' ? nowMemo() : '');   // LIFE: 메모 기본값 = 작성 일시 (2026.10.05) $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
   $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = '';
   $('#phX').classList.toggle('hide', !p); unsure($('#phX'));
   drawCats(); openBs('#ph');
