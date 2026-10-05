@@ -840,7 +840,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zv';
+var APP_VER = '20261005zw';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2275,7 +2275,7 @@ function openUpload(id) {
   $('#phS').textContent = p ? '저장' : '올리기';
   $('#phDrop').classList.toggle('hide', !!p);
   $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : nowMemo();   // FOOD·LIFE: 메모 기본값 = 작성 일시 (2026.10.05) $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
-  $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = '';
+  $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = ''; if ($('#phAi')) $('#phAi').textContent = ''; UP.aiT = 0;
   $('#phX').classList.toggle('hide', !p); unsure($('#phX'));
   drawCats(); openBs('#ph');
 }
@@ -2300,7 +2300,21 @@ $('#phIn').onchange = function () {
   $('#phL').textContent = UP.files.length ? UP.files.length + '장 선택됨 · 눌러서 다시 선택' : '사진 선택 (여러 장 가능)';
   $('#phP').innerHTML = UP.files.map(function (f) { return '<img src="' + URL.createObjectURL(f) + '" alt="">'; }).join('');
   if (UP.files.length) { $('#phGeo').textContent = '사진 위치 확인 중…'; findPlace(UP.files); }
+  if (UP.files.length && S.mode === 'food' && !UP.id) foodAI(UP.files[0]);
 };
+// FOOD: 사진을 보고 음식 이름을 메모에 덧붙임 (Gemini) — 2026.10.05
+function foodAI(f) {
+  var st = $('#phAi'); if (!st) { st = document.createElement('div'); st.id = 'phAi'; st.className = 'geo'; $('#phM').insertAdjacentElement('afterend', st); }
+  st.textContent = '사진 속 음식 알아보는 중…';
+  var tk = UP.aiT = Date.now();
+  shrink(f, 1024).then(function (u) { return call('appFoodAI', S.pin, u.split(',')[1], 'image/jpeg'); }).then(function (t) {
+    if (UP.aiT !== tk) return;
+    t = String(t || '').trim();
+    if (!t) { st.textContent = '음식을 찾지 못했어요 · 직접 적어도 돼요'; return; }
+    var m = $('#phM'), v = m.value.trim(); if (v.indexOf(t) < 0) m.value = (v ? v + ' · ' : '') + t;
+    st.textContent = '사진으로 음식을 알아봤어요 · 고쳐 써도 돼요';
+  }).catch(function (e) { if (UP.aiT !== tk) return; st.textContent = /GEMINI_KEY/.test(String(e && e.message || e)) ? 'AI 키가 아직 없어요 · 스크립트 속성에 GEMINI_KEY를 넣으면 돼요' : '음식을 알아보지 못했어요 · 직접 적어도 돼요'; });
+}
 // 원본 파일 → base64 (너무 크면 줄인 사진으로)
 function fileB64(f) {
   var ext = ((f.name || '').match(/\.(\w+)$/) || [])[1] || ({ 'image/heic': 'heic', 'image/png': 'png', 'image/webp': 'webp' }[f.type] || 'jpg');
