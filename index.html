@@ -838,7 +838,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zm';
+var APP_VER = '20261005zn';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1419,12 +1419,11 @@ function fCntCard() {
     '<div class="aseg">' + [['d', '일'], ['w', '주'], ['m', '월'], ['y', '연']].map(function (o) { return '<button data-ssp="' + o[0] + '" class="' + (o[0] === sp ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>';
 }
 function fdHome() {
-  var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'd', P = sp === 'd' ? { f: TODAY, t: TODAY, lb: '오늘' } : sPer(sp), m = ps.filter(function (p) { return inR(p.d, P.f, P.t); });
-  var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'ME') + '</small><b>' + mdw(TODAY) + '</b></div>';
-  h += fCntCard();
-  // 전체 게시물 (인스타처럼 3열)
-  var rp = sortedPhotos(ps); S.pl = rp;
-  h += photoBlock(rp, 3, '전체 게시물');
+  // 기간 = 날짜 옆 고정 단추 (일·주·월·반년·한해·전체) · 개수 카드 없앰 — 2026.10.05
+  var ps = S.D.photos, sp = (S.ssp || {})[S.mode] || 'a', P = sPer(sp), m = sp === 'a' ? ps : ps.filter(function (p) { return inR(p.d, P.f, P.t); });
+  var h = '<div class="hm"><small>' + (S.mode === 'food' ? 'FOOD' : 'ME') + '</small><b>' + mdw(TODAY) + '</b></div><div class="sct" style="display:none">' + sSeg('data-ssp', sp) + '</div>';
+  var rp = sortedPhotos(m); S.pl = rp;
+  h += photoBlock(rp, 3, P.lb + ' 게시물');
   $('#main').innerHTML = h; bindHome(); bindSum();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
@@ -1829,7 +1828,7 @@ function feedGrid(l, label) {
 }
 function fdDaily() {
   var l = sortedPhotos(photosOf(S.day)); S.pl = l;
-  var h = dayNav() + fCntCard() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; });
+  var h = dayNav() + dstrip(function (d) { return { w: photosOf(d).length ? 1 : 0 }; });
   h += l.length ? posts(l).map(function (g) {
     var p = g[0], multi = g.length > 1;
     return '<div class="f1"><div class="car' + (multi ? ' multi' : '') + '"><div class="cs">' + g.map(function (x) {
@@ -1845,20 +1844,20 @@ function fdDaily() {
 function fdWeek() {
   var ws = monOf(S.day), all = S.D.photos.filter(function (p) { return p.d >= ws && p.d <= addD(ws, 6); });
   var l = sortedPhotos(all); S.pl = l;
-  $('#main').innerHTML = weekNav() + fCntCard() + photoBlock(l, 2, '이번 주 사진');
+  $('#main').innerHTML = weekNav() + photoBlock(l, 2, '이번 주 사진');
   bindWeek(); bindFeed(); bindSum();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdMonth() {
   var y = S.y, m = S.m, ym = y + '-' + pad(m);
   var all = S.D.photos.filter(function (p) { return p.d.slice(0, 7) === ym; }), l = sortedPhotos(all); S.pl = l;
-  $('#main').innerHTML = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + fCntCard() + photoBlock(l, 3, m + '월 사진');
+  $('#main').innerHTML = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + photoBlock(l, 3, m + '월 사진');
   bindMonth(); bindFeed(); bindSum();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
 function fdYear() {
   var y = S.yy, l = sortedPhotos(S.D.photos.filter(function (p) { return p.d.slice(0, 4) === String(y); })); S.pl = l;
-  $('#main').innerHTML = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + fCntCard() + photoBlock(l, 5, y + '년 사진');
+  $('#main').innerHTML = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + photoBlock(l, 5, y + '년 사진');
   bindYear(); bindFeed(); bindSum();
   if ($('#fUp')) $('#fUp').onclick = function () { openUpload(null); };
 }
