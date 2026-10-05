@@ -840,7 +840,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005zu';
+var APP_VER = '20261005zv';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1039,9 +1039,10 @@ function renderCore() {
   }
   VIEWS[S.mode][S.view]();
 }
-var FOOD_CATS = ['아침', '점심', '저녁', '간식', '야식', '카페', '음식'];
+var FOOD_CATS = ['아침', '아점', '점심', '점저', '저녁', '야식', '간식', '음료', '카페', '음식'];
+var FOOD_UP = ['아침', '아점', '점심', '점저', '저녁', '야식', '간식', '음료'];   // FOOD 올리기 카테고리 (2026.10.05)
 function isFood(p) { return FOOD_CATS.indexOf(p.cat) >= 0 || mOpt('FOOD', '식사 구분', []).indexOf(p.cat) >= 0; }
-function upCats() { return S.mode === 'food' ? mOpt('FOOD', '식사 구분', FOOD_CATS) : S.D.cats.filter(function (c) { return FOOD_CATS.indexOf(c) < 0; }); }
+function upCats() { return S.mode === 'food' ? FOOD_UP.slice() : S.D.cats.filter(function (c) { return FOOD_CATS.indexOf(c) < 0; }); }
 function syncView(v) {
   if (v === 'month') { S.y = +S.day.slice(0, 4); S.m = +S.day.slice(5, 7); S.sel = null; }
   if (v === 'year') S.yy = +S.day.slice(0, 4);
@@ -2273,7 +2274,7 @@ function openUpload(id) {
   $('#phT').textContent = p ? '사진 정보 수정' : '사진 올리기';
   $('#phS').textContent = p ? '저장' : '올리기';
   $('#phDrop').classList.toggle('hide', !!p);
-  $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : (S.mode === 'feed' ? nowMemo() : '');   // LIFE: 메모 기본값 = 작성 일시 (2026.10.05) $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
+  $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : nowMemo();   // FOOD·LIFE: 메모 기본값 = 작성 일시 (2026.10.05) $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
   $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = '';
   $('#phX').classList.toggle('hide', !p); unsure($('#phX'));
   drawCats(); openBs('#ph');
