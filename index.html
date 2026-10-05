@@ -833,7 +833,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005y2';
+var APP_VER = '20261005y3';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -1220,7 +1220,7 @@ function renderYear() {
     }).join('') + '</div>';
   h += '</div>';
   // Yearly Report (날짜별 칸)
-  h += '<div class="sec">Yearly Report<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
+  h += '<div class="sec">연간 기록<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
   hsY.forEach(function (x) {
     var s3 = hstat(x, from, to);
     h += '<div class="yh tapd" data-h="' + x.id + '"><span class="n">' + hIco(x, 'hico sm') + esc(x.name) + '</span><small>' + s3.cnt + '회 · 최장 ' + s3.best + '일</small></div>' + yearGrid(x, y);
@@ -1684,7 +1684,7 @@ function hbYear() {
     h += '</div></div>';
     var mc = []; for (m = 1; m <= 12; m++) mc.push({ lb: m, f: y + '-' + pad(m) + '-01', t: mEnd(y, m), cur: y + '-' + pad(m) === TODAY.slice(0, 7) });
     h += uMatrix('항목별 월 달성률', y + '년 · %', mc);
-    h += '<div class="sec">Yearly Report<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
+    h += '<div class="sec">연간 기록<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
     us.forEach(function (u) {
       var q = uStat(u, from, to);
       h += '<div class="yh ' + uTap(u) + '"><span class="n">' + hIco(u.x, 'hico sm') + esc(u.x.name) + '</span><small>' + q.cnt + '회 · 최장 ' + q.best + '일</small></div>' + (u.t === 'h' ? yearGrid(u.x, y) : kyearGrid(u.x, y));
@@ -1879,7 +1879,7 @@ function dyYear() {
   for (var m = 1; m <= 12; m++) { cs[m] = list.filter(function (x) { return +x.d.slice(5, 7) === m; }).length; mx = Math.max(mx, cs[m]); }
   for (m = 1; m <= 12; m++) h += '<div class="' + ((y + '-' + pad(m)) === TODAY.slice(0, 7) ? 'cur' : '') + '"><em>' + (cs[m] || '') + '</em><i style="height:' + Math.max(2, cs[m] / mx * 100) + '%"></i><span>' + m + '</span></div>';
   h += '</div></div>';
-  h += '<div class="sec">Yearly Mood<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
+  h += '<div class="sec">연간 기분<small>' + y + '년 1월 1일 ~ 12월 31일</small></div>';
   var g = '', lead = (P(from).getDay() + 6) % 7;
   for (var i = 0; i < lead; i++) g += '<i class="o"></i>';
   for (d = from; d <= to; d = addD(d, 1)) { var x = diaryOf(d); g += '<i' + (x ? ' style="background:' + (x.mood ? moodC(x.mood) : 'var(--sub)') + '"' : d > TODAY ? ' class="f"' : '') + '></i>'; }
@@ -2649,7 +2649,7 @@ function ctYear() {
     h += '<div class="' + (f.slice(0, 7) === TODAY.slice(0, 7) ? 'cur' : '') + '"><em>' + (r && r.days ? pct(r.rate) : '') + '</em><i style="height:' + (r && r.days ? Math.max(2, r.rate * 100) : 2) + '%"></i><span>' + m + '</span></div>';
   }
   h += '</div></div>';
-  h += '<div class="sec">Yearly Report<small>진한 칸: 목표 달성 · 연한 칸: 기록만</small></div>';
+  h += '<div class="sec">연간 기록<small>진한 칸: 목표 달성 · 연한 칸: 기록만</small></div>';
   if (!ks.length) h += '<div class="card empty">횟수 항목을 추가하면 1년 기록이 쌓여요</div>';
   ks.forEach(function (x) {
     var s = kstat(x, from, to);
