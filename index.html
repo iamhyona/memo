@@ -500,6 +500,8 @@ header .mtabs button { flex:none; padding:12px 13px 10px; margin-bottom:0; }
 .bch { width:100%; height:auto; display:block; } .bch text { font-size:10px; fill:#b0b8c1; } .bch text.vl { fill:#4e5968; font-weight:700; font-size:10.5px; }
 .bj { font-style:normal; font-size:11px; font-weight:700; border-radius:999px; padding:2px 7px; color:#fff; background:#2fb67c; white-space:nowrap; }
 .bj.lo { background:#f0506e; } .bj.hi { background:#e8a33d; }
+.brow li.bx { flex-wrap:wrap; cursor:pointer; } .brow li.bx .bxb { flex-basis:100%; display:flex; align-items:center; gap:10px; margin-top:7px; } .brow li.bx .bxb .lbar { flex:1; margin:0; } .brow li.bx .bxb small { font-size:11px; color:var(--mute); white-space:nowrap; min-width:84px; text-align:right; }
+.bf.pre input { color:var(--mute); font-weight:600; }
 .brow { list-style:none; margin:0; padding:0; }
 .brow li { display:flex; align-items:center; gap:8px; padding:11px 2px; border-top:1px solid #f2f4f6; }
 .brow li:first-child { border-top:0; }
@@ -690,6 +692,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
   <label class="pdrop" id="bbDrop"><span>인바디 결과 사진 선택 (여러 장 가능)<br><small>사진 속 수치를 읽어서 칸을 채워요 · 사진은 저장하지 않아요</small></span><div class="pp" id="bbP"></div><input type="file" id="bbIn" accept="image/*" multiple class="hide"></label>
   <p class="bst" id="bbSt"></p>
   <div class="frow" style="margin-top:14px"><div class="f"><label>날짜</label><input id="bbD" type="date"></div><div class="f"><label>측정 시간</label><input id="bbTm" type="time"></div></div>
+  <div class="frow"><div class="f"><label>측정 기기</label><input id="bbDv" list="bbDvL" autocomplete="off" placeholder="예: 270 (병원·헬스장은 기기명 수정)"><datalist id="bbDvL"></datalist></div></div>
   <div class="fl">기본 항목</div><div class="bgrid" id="bbG1"></div>
   <button class="bmore" id="bbMore">추가 항목 펼치기</button>
   <div class="bgrid hide" id="bbG2"></div>
@@ -849,7 +852,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261006fc';
+var APP_VER = '20261007a';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3029,14 +3032,79 @@ function bDeltaU(x, v, pv) {
   return '<span class="' + cls + '"><i class="ar">' + (d > 0 ? '▲' : '▼') + '</i>' + Math.abs(d).toFixed(x.dp == null ? 1 : x.dp) + u + '</span>';
 }
 // 판정 (여성 기준 · 표준이 알려진 항목만): BMI 18.5~25 · 체지방률 18~28% · 내장지방 10 미만 · 체중은 표준체중(키²×21)의 85~115%
-function bJudge(k, r) {
-  if (k === 'bmi' && r.bmi) return r.bmi < 18.5 ? 'lo' : r.bmi < 25 ? 'ok' : 'hi';
-  if (k === 'pbf' && r.pbf) return r.pbf < 18 ? 'lo' : r.pbf <= 28 ? 'ok' : 'hi';
-  if (k === 'vfl' && r.vfl) return r.vfl < 10 ? 'ok' : 'hi';
-  if (k === 'w' && r.w && r.bmi) { var p = r.w / (21 * r.w / r.bmi); return p < .85 ? 'lo' : p <= 1.15 ? 'ok' : 'hi'; }
-  return '';
+// 표준 범위 (여성 · 인바디 결과지 방식으로 추정: 키 = √(체중/BMI), 표준체중 = 키² × 21) — 2026.10.07
+function bStd(k, r) {
+  var sw = r.w && r.bmi ? 21 * r.w / r.bmi : null, pm = function (f, a, b) { return sw ? [sw * f * (a || .9), sw * f * (b || 1.1)] : null; };
+  switch (k) {
+    case 'w': return pm(1, .85, 1.15);
+    case 'smm': return pm(.411);
+    case 'bfm': return r.w ? [r.w * .18, r.w * .28] : null;
+    case 'pbf': return [18, 28];
+    case 'bmi': return [18.5, 25];
+    case 'score': return [80, 100];
+    case 'vfl': return [1, 9];
+    case 'whr': return [.75, .85];
+    case 'tbw': return pm(.6);
+    case 'prot': return pm(.16);
+    case 'mine': return pm(.0555);
+    case 'icw': return pm(.372);
+    case 'ecw': return pm(.228);
+    case 'ecwr': return [.36, .39];
+    case 'bmc': return pm(.046);
+    case 'bcm': return pm(.532);
+    case 'pa': return [4.5, null];
+  }
+  return null;
 }
-function bjHtml(k, r) { var j = bJudge(k, r); return j ? '<i class="bj ' + j + '">' + JT[j] + '</i>' : ''; }
+function bJudge(k, r) {
+  var g = bStd(k, r), v = r[k];
+  if (!g || v == null) return '';
+  return g[0] != null && v < g[0] ? 'lo' : g[1] != null && v > g[1] ? 'hi' : 'ok';
+}
+function bStdTxt(k, r) {
+  var g = bStd(k, r), x = bkOf(k), f = function (v) { return bfmt(x, v); };
+  if (!g) return '';
+  return g[1] == null ? f(g[0]) + ' 이상' : f(g[0]) + '~' + f(g[1]);
+}
+// 표준 범위 막대 (검사 항목 막대와 같은 모양)
+function bStdBar(k, r) { var t = bStdTxt(k, r); return t ? labBar({ item: '', val: r[k], ref: t.replace(' 이상', '').replace(/^(.*)$/, function (m) { return /~/.test(m) ? m : '>=' + m; }) }) : ''; }
+function bjHtml(k, r) { var j = bJudge(k, r), x = bkOf(k); return j ? '<i class="bj ' + (j === 'hi' && x.g === 1 ? 'ok' : j) + '">' + JT[j] + '</i>' : ''; }
+// 항목 설명: [무엇인지, 높을 때, 낮을 때]
+var BDESC = {
+  w: ['몸 전체의 무게예요. 근육·지방·수분·뼈를 모두 합친 값이라 체성분과 함께 봐야 해요.', '표준보다 무거워요. 지방 때문인지 근육 때문인지 체지방률·골격근량과 함께 확인하세요.', '표준보다 가벼워요. 근육량과 영양 상태를 함께 확인하세요.'],
+  smm: ['팔·다리·몸통을 움직이는 근육의 양이에요. 기초대사량, 관절 보호, 혈당 관리에 중요해요.', '근육이 충분한 상태예요.', '근육이 부족해요. 근력 운동과 단백질 섭취로 늘릴 수 있어요.'],
+  bfm: ['몸에 있는 지방의 무게예요.', '지방이 많으면 대사질환 위험이 커질 수 있어요.', '지방이 너무 적으면 호르몬·생리 주기에 영향을 줄 수 있어요.'],
+  pbf: ['체중 중 지방이 차지하는 비율이에요. 비만을 판단하는 가장 기본 지표예요 (여성 표준 18~28%).', '체지방이 많은 상태예요. 유산소 운동과 식단 관리가 도움이 돼요.', '너무 낮으면 호르몬 균형과 면역에 영향을 줄 수 있어요.'],
+  bmi: ['체중(kg)을 키(m)의 제곱으로 나눈 값이에요. 근육과 지방을 구분하지 못해 체지방률과 함께 봐요.', '25 이상은 비만 범위예요. 근육이 많아도 높게 나올 수 있어요.', '18.5 미만은 저체중이에요.'],
+  score: ['체성분 균형을 100점 기준으로 나타낸 점수예요. 근육이 많고 지방이 적을수록 높아요 (80점 이상 양호).', '근육이 많은 편이에요. 근육형이면 100점을 넘기도 해요.', '근육을 늘리고 체지방을 줄이면 올라가요.'],
+  vfl: ['배 안쪽 장기 주변에 쌓인 지방의 정도예요. 10 미만이 표준이에요.', '대사증후군·지방간·심혈관 질환 위험과 관련이 깊어요. 유산소 운동이 가장 효과적이에요.', ''],
+  bmr: ['가만히 있어도 생명 유지에 쓰는 하루 에너지예요. 근육(제지방)이 많을수록 높아요. 따로 표준 범위는 없고 근육량에 따라 정해져요.', '근육량이 많은 편이에요.', '근육이 줄면 함께 줄어요. 근력 운동으로 올릴 수 있어요.'],
+  whr: ['허리와 엉덩이 둘레의 비율로 본 복부비만 지표예요 (여성 표준 0.75~0.85).', '0.85를 넘으면 복부비만으로 봐요. 내장지방과 함께 확인하세요.', ''],
+  tbw: ['몸속 수분의 총량이에요. 대부분 근육에 들어 있어 근육량과 함께 움직여요.', '부종이 있으면 늘 수 있어요. 세포외수분비를 함께 확인하세요.', '근육 부족이나 탈수일 때 낮아요.'],
+  prot: ['근육과 세포를 이루는 단백질의 양이에요. 영양 상태를 보여줘요.', '근육이 많은 편이에요.', '근육·영양 부족 신호예요. 단백질 섭취와 근력 운동이 도움이 돼요.'],
+  mine: ['뼈와 체액 속 미네랄의 양이에요.', '', '낮으면 골밀도 저하와 관련 있을 수 있어요.'],
+  pa: ['세포막이 건강하고 세포가 단단한 정도를 보여주는 값이에요. 높을수록 세포 건강과 근육의 질이 좋아요.', '세포 상태가 좋아요.', '영양 상태 저하·염증·근육 감소와 관련 있어요.'],
+  icw: ['세포 안에 있는 수분이에요. 근육량에 비례해요.', '', '근육이 부족할 때 낮아요.'],
+  ecw: ['혈액이나 조직 사이처럼 세포 밖에 있는 수분이에요.', '부종·염증·신장 기능 저하가 있을 때 늘 수 있어요.', ''],
+  ecwr: ['전체 체수분 중 세포 밖 수분의 비율이에요 (표준 0.36~0.39). 몸이 붓는 정도를 보여줘요.', '0.39를 넘으면 부종 경향이에요. 신장 질환·염증·근육 감소 때 올라갈 수 있어 신장 상태를 볼 때 중요해요.', ''],
+  bmc: ['뼈에 든 미네랄의 양이에요. 골밀도 검사는 아니지만 추세를 볼 수 있어요.', '', '낮으면 골다공증 위험과 관련 있을 수 있어요. 정확한 건 골밀도 검사로 확인해요.'],
+  bcm: ['세포내수분과 단백질을 합친, 실제로 대사 활동을 하는 세포의 양이에요.', '', '근육·영양 부족 신호예요.']
+};
+// 인바디 항목 설명 (검사 항목 설명과 같은 화면)
+function openBk(k, id) {
+  var r = (S.D.body || []).filter(function (q) { return q.id === id; })[0], x = bkOf(k); if (!r) return;
+  var j = bJudge(k, r), ds = BDESC[k] || ['', '', ''], st = bStdTxt(k, r), s = bSeries(k);
+  var h = '<div class="lbh"><small>인바디 · ' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small><h3>' + x.n + '</h3></div>' +
+    '<div class="lbv"><b class="' + (j === 'lo' && x.g !== -1 ? 'ml' : j === 'hi' && x.g !== 1 ? 'mh' : '') + '">' + bfmt(x, r[k]) + '</b><span>' + (x.u || '') + '</span>' + bjHtml(k, r) + '</div>' +
+    '<div class="lbr">' + (st ? '표준 범위 ' + st + (x.u && x.k !== 'bmi' ? ' ' + x.u : '') : '표준 범위 없음') + '</div>' + (st ? '<div style="margin:10px 0 4px">' + bStdBar(k, r) + '</div>' : '');
+  h += '<div class="lbd"><div class="sub2">어떤 항목이에요?</div><p>' + ds[0] + '</p>';
+  if (ds[1]) h += '<div class="sub2">' + (j === 'hi' ? '<span class="dn">● </span>' : '') + '높을 때</div><p>' + ds[1] + '</p>';
+  if (ds[2]) h += '<div class="sub2">' + (j === 'lo' ? '<span class="up">● </span>' : '') + '낮을 때</div><p>' + ds[2] + '</p>';
+  h += '</div>';
+  if (s.length > 1) h += '<div class="sub2">지난 측정</div>' + bChart(s.slice(-14).map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x);
+  h += '<p class="mnote">표준 범위는 인바디 결과지 방식(여성 · 키로 계산한 표준체중 기준)으로 추정한 값이에요. 기기·결과지의 표준 범위와 조금 다를 수 있어요.</p>';
+  $('#lbB').innerHTML = h; openBs('#lb');
+}
 
 // 꺾은선 그래프: pts = [{v, l}] (오래된 → 최근)
 function bChart(pts, x) {
@@ -3089,6 +3157,7 @@ function bindBody() {
   $$('[data-bd]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); goDaily(b.dataset.bd); }; });
   $$('[data-be]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); openBody(b.dataset.be); }; });
   if ($('#bAdd')) $('#bAdd').onclick = function () { openBody(null, S.day); };
+  $$('[data-bx]').forEach(function (b) { b.onclick = function () { openBk(b.dataset.bx, b.dataset.bxr); }; });
 }
 // 기록 표 (날짜 · 체중 · 골격근량 · 체지방률)
 // 표에 쓰는 5개 항목 (체중·골격근량·체지방량·체지방률·내장지방)
@@ -3273,7 +3342,9 @@ function bRecCard(r) {
     if (!rows.length) return '';
     return (title ? '<div class="sub2">' + title + '</div>' : '') + '<ul class="brow">' + rows.map(function (x) {
       var pv = bPrevVal(r, x.k);
-      return '<li><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(x, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(x, r[x.k], pv) : '') + '</span></li>';
+      var st = bStdTxt(x.k, r);
+      return '<li class="bx" data-bx="' + x.k + '" data-bxr="' + r.id + '"><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(x, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(x, r[x.k], pv) : '') + '</span>' +
+        (st ? '<div class="bxb">' + bStdBar(x.k, r) + '<small>표준 ' + st + '</small></div>' : '') + '</li>';
     }).join('') + '</ul>';
   };
   var sg = [['오른팔', 'ra'], ['왼팔', 'la'], ['몸통', 'tr'], ['오른다리', 'rl'], ['왼다리', 'll']].filter(function (q) { return r['m' + q[1]] != null || r['f' + q[1]] != null; });
@@ -3365,7 +3436,7 @@ function bdAll() {
 }
 
 /* 인바디 기록 추가·수정: 사진 → 글자 읽기(OCR) → 칸 채우기 → 확인 후 저장 */
-var BLBL = { w: ['체중'], smm: ['골격근량'], bfm: ['체지방량'], pbf: ['체지방률', '체지방율'], bmi: ['BMI', '신체질량지수'], score: ['인바디점수'], vfl: ['내장지방레벨'],
+var BLBL = { w: ['체중'], smm: ['골격근량'], bfm: ['체지방량'], pbf: ['체지방률', '체지방율'], bmi: ['BMI', '신체질량지수'], score: ['인바디점수', 'InBody점수', 'InBodyScore', '체성분점수'], vfl: ['내장지방레벨'],
   bmr: ['기초대사량'], whr: ['복부지방률', '복부지방율', '허리엉덩이둘레비율'], tbw: ['체수분'], prot: ['단백질'], mine: ['무기질'], pa: ['전신위상각', '위상각'],
   icw: ['세포내수분'], ecw: ['세포외수분'], ecwr: ['세포외수분비'], bmc: ['골무기질량'], bcm: ['체세포량'] };
 var BRNG = { w: [20, 200], smm: [5, 80], bfm: [1, 100], pbf: [3, 70], bmi: [10, 60], score: [30, 110], vfl: [1, 30], bmr: [600, 3000], whr: [0.5, 1.3], tbw: [10, 80],
@@ -3386,6 +3457,8 @@ function bParse(txt) {
     });
   });
   hits.sort(function (a, b) { return a.s - b.s; });
+  // 인바디점수: '75/100점' 형태로만 찍히는 결과지도 있음
+  var sc = t.match(/(\d{2,3})\s?\/\s?100\s?점?/); if (sc && +sc[1] >= 30 && +sc[1] <= 110) out.score = +sc[1];
   hits.forEach(function (h, i) {
     if (out[h.k] != null) return;
     var end = i + 1 < hits.length ? hits[i + 1].s : t.length, seg = t.slice(h.e, Math.min(end, h.e + 80)), nr = /([+\-−]\s?)?(\d{1,4}(?:\s?[.,]\s?\d{1,3})?)/g, q;
@@ -3405,17 +3478,24 @@ function openBody(id, d) {
   var r = id ? (S.D.body || []).filter(function (x) { return x.id === id; })[0] : null;
   BB = { id: r ? r.id : null, busy: 0 };
   $('#bbT').textContent = r ? '인바디 기록 수정' : '인바디 기록';
-  $('#bbD').value = r ? r.d : (d || (S.view === 'daily' ? S.day : TODAY)); $('#bbTm').value = r ? r.t || '' : '';
+  var nw = new Date();
+  $('#bbD').value = r ? r.d : (d || (S.view === 'daily' ? S.day : TODAY)); $('#bbTm').value = r ? r.t || '' : pad(nw.getHours()) + ':' + pad(nw.getMinutes());   // 새 기록: 누른 시각
+  var bl = bList(), last = r ? null : bl.filter(function (q) { return q.d <= $('#bbD').value; }).pop() || bl[bl.length - 1];   // 새 기록: 최근 측정값을 미리 채움
+  var devs = []; bl.slice().reverse().forEach(function (q) { if (q.dev && devs.indexOf(q.dev) < 0) devs.push(q.dev); });
+  $('#bbDvL').innerHTML = devs.map(function (v) { return '<option value="' + esc(v) + '">' + esc(devName(v)) + '</option>'; }).join('');
+  $('#bbDv').value = r ? r.dev || '' : (last && last.dev) || devs[0] || '';
   $('#bbM').value = r ? r.memo || '' : '';
-  $$('#bb [data-k]').forEach(function (inp) { var v = r ? r[inp.dataset.k] : null; inp.value = v == null ? '' : v; });
-  $$('#bb .bf').forEach(function (b) { b.classList.remove('ok'); });
-  var ext = r && BK.some(function (x) { return !x.core && r[x.k] != null; });
+  var src = r || last;
+  $$('#bb [data-k]').forEach(function (inp) { var v = src ? src[inp.dataset.k] : null; inp.value = v == null ? '' : v; });
+  $$('#bb .bf').forEach(function (b) { b.classList.remove('ok'); b.classList.toggle('pre', !r && !!last && b.querySelector('input').value !== ''); });
+  var ext = src && BK.some(function (x) { return !x.core && src[x.k] != null; });
   $('#bbG2').classList.toggle('hide', !ext); $('#bbMore').textContent = ext ? '추가 항목 접기' : '추가 항목 펼치기';
-  $('#bbP').innerHTML = ''; $('#bbSt').textContent = ''; $('#bbIn').value = '';
+  $('#bbP').innerHTML = ''; $('#bbSt').textContent = !r && last ? bShort(last.d) + ' 측정값을 불러왔어요 · 사진을 올리면 사진 값으로 바뀌어요' : ''; $('#bbIn').value = '';
   $('#bbDrop').classList.toggle('hide', !!r);
   $('#bbX').classList.toggle('hide', !r); unsure($('#bbX'));
   openBs('#bb');
 }
+$$('#bb input[data-k]').forEach(function (inp) { inp.addEventListener('input', function () { inp.parentNode.classList.remove('pre'); }); });
 $('#bbMore').onclick = function () { var h = !$('#bbG2').classList.toggle('hide'); this.textContent = h ? '추가 항목 접기' : '추가 항목 펼치기'; };
 $('#bbIn').onchange = function () {
   var files = Array.prototype.slice.call(this.files || []); if (!files.length) return;
@@ -3433,8 +3513,10 @@ $('#bbIn').onchange = function () {
   };
   var done = function () {
     BB.busy--; if (!BB.busy) $('#bbS').classList.remove('busy');
-    var c = 0, ext = 0;
+    var c = 0, ext = 0, any = BK.some(function (x) { return got[x.k] != null; });
     BK.forEach(function (x) {
+      var ip = $('#bb input[data-k="' + x.k + '"]');
+      if (any && ip.parentNode.classList.contains('pre')) { ip.value = ''; ip.parentNode.classList.remove('pre'); }   // 불러온 이전 값은 사진 값으로 대치
       if (got[x.k] == null) return;
       var inp = $('#bb input[data-k="' + x.k + '"]'); inp.value = got[x.k]; inp.parentNode.classList.add('ok'); c++; if (!x.core) ext++;
     });
@@ -3448,7 +3530,7 @@ $('#bbIn').onchange = function () {
 $('#bbS').onclick = function () {
   if (BB.busy) return toast('사진을 읽는 중이에요');
   var d = $('#bbD').value, t = ($('#bbTm').value || '').slice(0, 5), rec = { id: BB.id, d: d, t: t, memo: $('#bbM').value.trim() }, c = 0, old = BB.id && (S.D.body || []).filter(function (x) { return x.id === BB.id; })[0];
-  if (old && old.dev) rec.dev = old.dev;
+  rec.dev = $('#bbDv').value.trim() || (old && old.dev) || '';
   if (!d) return toast('날짜를 선택해 주세요');
   $$('#bb input[data-k]').forEach(function (inp) { var v = parseFloat(String(inp.value).replace(',', '.')); if (!isNaN(v)) { rec[inp.dataset.k] = v; c++; } });
   if (!c) return toast('수치를 하나 이상 입력해 주세요');
