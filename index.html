@@ -635,6 +635,13 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .gseg .lbd { position:absolute; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:#fff; border:4px solid; box-shadow:0 1px 3px rgba(0,0,0,.25); box-sizing:border-box; }
 .glb { display:flex; gap:2px; margin-top:4px; } .glb span { text-align:center; font-size:10px; color:var(--faint); font-weight:600; }
 .gtx { margin-top:6px; font-size:12px; white-space:normal; text-align:left; } .gtx b { font-weight:800; } .gtx small { color:var(--mute); font-weight:500; }
+.bym { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.bym button { border:0; background:var(--chip); border-radius:12px; padding:10px 4px; display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; font-family:inherit; }
+.bym button .mn { font-size:12px; color:var(--sub); font-weight:600; }
+.bym button b { font-size:15px; }
+.bym button small { font-size:10.5px; color:var(--mute); }
+.bym button.td { box-shadow:inset 0 0 0 1.5px var(--txt); }
+.bym button.fu { opacity:.45; }
 </style>
 </head>
 <body>
@@ -852,7 +859,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007e';
+var APP_VER = '20261007f';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3443,17 +3450,6 @@ function bTopCard(r, day) {
     '<div class="bsel"><span>' + x.n + '</span>' + (lr ? '<b>' + bfmt(x, lr[k]) + x.u + '</b>' + bjHtml(k, lr) + '<small>최근 ' + s.length + '회</small>' : '') + '</div>' +
     bChart(s.map(function (q) { return { v: q[k], l: bShort(q.d) }; }), x) + '</div>';
 }
-function bdDaily() {
-  var day = S.day, L = bList(), recs = L.filter(function (r) { return r.d === day; });
-  var h = dayNav();
-  if (!recs.length) {
-    var pv = L.filter(function (r) { return r.d < day; }).pop(), nx = L.filter(function (r) { return r.d > day; })[0];
-    h += '<div class="card empty">이 날은 인바디 기록이 없어요<br><button class="lnk" id="bAdd">기록 추가</button>' +
-      '<div class="bjump">' + (pv ? '<a href="#" data-bd="' + pv.d + '">‹ 이전 측정 ' + bShort(pv.d) + '</a>' : '<span></span>') + (nx ? '<a href="#" data-bd="' + nx.d + '">다음 측정 ' + bShort(nx.d) + ' ›</a>' : '') + '</div></div>';
-  } else h += bTopCard(recs[recs.length - 1], day);
-  h += recs.map(bRecCard).join('');
-  $('#main').innerHTML = h; bindDay(); bindBody();
-}
 // BODY 주·월·연: 기간 평균을 DAY 카드처럼 (판정 · 표준 범위 막대 · 지난 기간 평균 대비) — 2026.10.07
 function bAvgRec(f, t) {
   var rs = bList().filter(function (r) { return inR(r.d, f, t); }), o = { n: rs.length, d: f };
@@ -3482,21 +3478,91 @@ function bAvgCard(P) {
     grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) +
     '<div class="legend" style="justify-content:flex-start">기간 평균 · ▲ 증가 · ▼ 감소 (' + P.pn + ' 평균 대비)</div></div>';
 }
+// ───── BODY DAY·WEEK·MONTH·YEAR 공통 구성 (2026.10.07) ─────
+// ① 6칸 카드 (DAY = 그날 측정 · 나머지 = 기간 평균, ▲▼ 지난 측정/지난 기간 대비 · 누르면 아래 그래프 항목)
+// ② 표준 범위 막대  ③ 항목별 추이 (DAY 최근 14회 · WEEK 주 평균 · MONTH 월 평균 · YEAR 연 평균)
+// ④ 달력 (MONTH = 날짜별 · YEAR = 월별 평균)  ⑤ 측정 내역 (단위별)  ⑥ YEAR만 전체 기록 보기
+function bPer(u, d) {
+  if (u === 'w') { var f = monOf(d); return { f: f, t: addD(f, 6) }; }
+  if (u === 'm') return { f: d.slice(0, 7) + '-01', t: mEnd(+d.slice(0, 4), +d.slice(5, 7)) };
+  if (u === 'y') return { f: d.slice(0, 4) + '-01-01', t: d.slice(0, 4) + '-12-31' };
+  return { f: d, t: d };
+}
+function bUnits(u, d, n) { var o = [], p = bPer(u, d); for (var i = 0; i < n; i++) { o.unshift(p); p = bPer(u, addD(p.f, -1)); } return o; }
+function bUnitLbl(u, f) { return u === 'w' ? f.slice(2).replace(/-/g, '.') + ' 주' : u === 'm' ? f.slice(2, 7).replace('-', '.') : u === 'y' ? f.slice(0, 4) + '년' : bYmd(f); }
+function bAvgOf(k, f, t) { var v = bSeries(k, f, t).map(function (r) { return +r[k]; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; }
+function bAx(x) { return x.k === 'vfl' ? Object.assign({}, x, { dp: 1 }) : x; }
+// ① 6칸 카드
+function bCards(r, r0, k, avg) {
+  return '<div class="card"><div class="ct">' + r.title + '</div><div class="bc3" style="margin-bottom:0">' + BMK.map(function (kk) {
+    var xx = avg ? bAx(bkOf(kk)) : bkOf(kk), v = r[kk], pv = r0 ? r0[kk] : (v == null ? null : bPrevVal(r, kk));
+    return '<button class="bcd' + (k === kk ? ' on' : '') + '" data-bk="' + kk + '"><small>' + bLbl(bkOf(kk)) + '</small><b>' + (v == null ? '-' : bfmt(xx, v)) + '</b><em>' + (v != null && pv != null ? bDelta(xx, v, pv) : '&nbsp;') + '</em></button>';
+  }).join('') + '</div><div class="legend" style="justify-content:flex-start;margin-top:10px">' + r.note + '</div></div>';
+}
+// ③ 추이 그래프
+function bTrend(u, d, k) {
+  var x = bkOf(k), pts, sub;
+  if (u === 'd') { pts = bSeries(k, null, d).slice(-14).map(function (q) { return { v: q[k], l: bYmd(q.d) }; }); sub = '최근 ' + pts.length + '회 측정'; }
+  else {
+    var n = u === 'y' ? Math.min(30, +d.slice(0, 4) - +((bList()[0] || { d: d }).d.slice(0, 4)) + 1) : 12;
+    pts = bUnits(u, d, n).map(function (p) { var a = bAvgOf(k, p.f, p.t); return a == null ? null : { v: a, l: bUnitLbl(u, p.f) }; }).filter(Boolean);
+    sub = (u === 'w' ? '최근 12주' : u === 'm' ? '최근 12개월' : '연도별') + ' 평균';
+  }
+  return '<div class="card"><div class="ct">' + x.n + ' 추이<small>' + sub + (x.u ? ' · ' + x.u : '') + '</small></div>' + bChips(bKeys(), k) + bChart(pts, bAx(x)) + '</div>';
+}
+// ⑤ 측정 내역 (단위별 평균 표)
+function bUnitTable(u, d) {
+  var n = u === 'y' ? Math.min(30, +d.slice(0, 4) - +((bList()[0] || { d: d }).d.slice(0, 4)) + 1) : 12;
+  var rows = bUnits(u, d, n).map(function (p) { var r = bAvgRec(p.f, p.t); r.f = p.f; return r; }).filter(function (r) { return r.n; }).reverse();
+  if (!rows.length) return '<div class="empty" style="padding:18px 0">기록이 없어요</div>';
+  return '<table class="btab bper"><tr><th>' + (u === 'w' ? '주' : u === 'm' ? '월' : '연도') + '</th>' + BK5.map(bTh).join('') + '</tr>' + rows.map(function (r) {
+    return '<tr data-bu="' + u + '" data-bf="' + r.f + '"><td>' + bUnitLbl(u, r.f) + '<small class="wd">' + r.n + '회</small></td>' + BK5.map(function (kk) { return '<td>' + (r[kk] == null ? '<span class="mute">-</span>' : bVal(kk, r[kk], bAx(bkOf(kk)))) + '</td>'; }).join('') + '</tr>';
+  }).join('') + '</table><div class="legend" style="justify-content:flex-start">' + (u === 'w' ? '주' : u === 'm' ? '달' : '해') + '마다 측정값의 평균 · 누르면 그 ' + (u === 'w' ? '주' : u === 'm' ? '달' : '해') + '로</div>';
+}
+function bindUnit() {
+  $$('[data-bu]').forEach(function (b) { b.onclick = function () {
+    var u = b.dataset.bu, f = b.dataset.bf;
+    if (u === 'w') { S.day = f; S.view = 'week'; } else if (u === 'm') { S.y = +f.slice(0, 4); S.m = +f.slice(5, 7); S.view = 'month'; } else { S.yy = +f.slice(0, 4); S.view = 'year'; }
+    ls.set('memo:view', S.view); window.scrollTo(0, 0); render();
+  }; });
+}
+// DAY
+function bdDaily() {
+  var day = S.day, L = bList(), recs = L.filter(function (r) { return r.d === day; }), k = BK.some(function (x) { return x.k === S.bk; }) ? S.bk : 'w';
+  var h = dayNav();
+  if (!recs.length) {
+    var pv = L.filter(function (r) { return r.d < day; }).pop(), nx = L.filter(function (r) { return r.d > day; })[0];
+    h += '<div class="card empty">이 날은 인바디 기록이 없어요<br><button class="lnk" id="bAdd">기록 추가</button>' +
+      '<div class="bjump">' + (pv ? '<a href="#" data-bd="' + pv.d + '">‹ 이전 측정 ' + bShort(pv.d) + '</a>' : '<span></span>') + (nx ? '<a href="#" data-bd="' + nx.d + '">다음 측정 ' + bShort(nx.d) + ' ›</a>' : '') + '</div></div>';
+  } else {
+    var r = recs[recs.length - 1];
+    h += bCards(Object.assign({}, r, { title: (r.t ? r.t + ' 측정' : '측정') + (r.dev ? ' <small>' + esc(devName(r.dev)) + '</small>' : ''), note: '▲ 증가 · ▼ 감소 (지난 측정 대비) · 누르면 아래 추이 그래프' }), null, k, false);
+    h += recs.map(bRecCard).join('');
+  }
+  h += bTrend('d', day, k);
+  var rl = L.filter(function (r) { return r.d <= day; }).slice(-14);
+  h += '<div class="card"><div class="ct">일간 측정 내역<small>최근 ' + rl.length + '회</small></div>' + bTable(rl) + '</div>';
+  $('#main').innerHTML = h; bindDay(); bindBody();
+}
+// WEEK · MONTH · YEAR 위쪽 공통: 6칸 카드(기간 평균) + 표준 범위 막대
+function bTopAvg(P, k) {
+  var r = bAvgRec(P.f, P.t), r0 = bAvgRec(P.pf, P.pt);
+  if (!r.n) return bAvgCard(P);
+  return bCards(Object.assign({}, r, { title: P.lb + ' 평균<small>측정 ' + r.n + '회</small>', note: '기간 평균 · ▲▼ ' + P.pn + ' 평균 대비 · 누르면 아래 추이 그래프' }), r0, k, true) + bAvgCard(P);
+}
+function bK() { return BK.some(function (x) { return x.k === S.bk; }) ? S.bk : 'w'; }
 // BODY WEEK
 function bdWeek() {
-  var ws = monOf(S.day), we = addD(ws, 6), recs = bList().filter(function (r) { return inR(r.d, ws, we); });
-  var keys = bKeys(ws, we), k = bCur(keys), x = bkOf(k), s = bSeries(k, ws, we);
-  var h = weekNav() + bAvgCard(sPer('vw')) + bChips(keys, k);
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
-  h += '<div class="card"><div class="ct">이번 주 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
-  $('#main').innerHTML = h; bindWeek(); bindBody();
+  var k = bK(), P = sPer('vw');
+  var h = weekNav() + bTopAvg(P, k) + bTrend('w', P.f, k);
+  h += '<div class="card"><div class="ct">주평균 측정 내역<small>최근 12주</small></div>' + bUnitTable('w', P.f) + '</div>';
+  $('#main').innerHTML = h; bindWeek(); bindBody(); bindUnit();
 }
 // BODY MONTH
 function bdMonth() {
-  var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7);
-  var recs = bList().filter(function (r) { return inR(r.d, from, to); }), keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + bAvgCard(sPer('vm')) + bChips(keys, k);
-  h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
+  var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7), k = bK(), x = bkOf(k), s = bSeries(k, from, to), PP = sPer('vm');
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + bTopAvg(PP, k) + bTrend('m', from, k);
+  h += '<div class="card cal"><div class="ct">' + m + '월 달력<small>' + x.n + (x.u ? ' ' + x.u : '') + '</small></div><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7, i, d;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
   for (d = from; d <= to; d = addD(d, 1)) {
@@ -3504,30 +3570,24 @@ function bdMonth() {
     h += '<button data-d="' + d + '" class="' + (d === TODAY ? 'td' : '') + (d > TODAY ? ' fu' : '') + '"><span class="dnum">' + P(d).getDate() + '</span>' + (dr ? '<span class="bv" style="color:' + bcol(x) + '">' + bfmt(x, dr[k]) + '</span>' : '') + '</button>';
   }
   h += '</div><div class="legend">' + x.n + ' 측정한 날 · 날짜를 누르면 그날 기록</div></div>';
-  h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
-  h += '<div class="card"><div class="ct">' + m + '월 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
-  $('#main').innerHTML = h; bindMonth(); bindBody();
+  h += '<div class="card"><div class="ct">월평균 측정 내역<small>최근 12개월</small></div>' + bUnitTable('m', from) + '</div>';
+  $('#main').innerHTML = h; bindMonth(); bindBody(); bindUnit();
   $$('.cal .grid button[data-d]').forEach(function (b) { b.onclick = function () { if (b.dataset.d > TODAY) return; goDaily(b.dataset.d); }; });
 }
-// BODY YEAR: 월별 평균 + 전체 기록 목록
+// BODY YEAR
 function bdYear() {
   if (S.bAll) return bdAll();
-  var y = S.yy, from = y + '-01-01', to = y + '-12-31', keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + bAvgCard(sPer('vy')) + bChips(keys, k), ms = [], mm, ks = BK5;
-  for (mm = 1; mm <= 12; mm++) {
-    var f = y + '-' + pad(mm) + '-01', e = mEnd(y, mm), rs = bList().filter(function (r) { return inR(r.d, f, e); });
-    var av = function (kk) { var v = rs.filter(function (r) { return r[kk] != null; }).map(function (r) { return r[kk]; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; };
-    ms.push({ m: mm, n: rs.length, a: { k: av(k), w: av('w'), smm: av('smm'), bfm: av('bfm'), pbf: av('pbf'), vfl: av('vfl') } });
+  var y = S.yy, from = y + '-01-01', k = bK(), x = bAx(bkOf(k)), P = sPer('vy');
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + bTopAvg(P, k) + bTrend('y', from, k);
+  h += '<div class="card"><div class="ct">' + y + '년 달력<small>월 평균 · ' + x.n + (x.u ? ' ' + x.u : '') + '</small></div><div class="bym">';
+  for (var mm = 1; mm <= 12; mm++) {
+    var f = y + '-' + pad(mm) + '-01', e = mEnd(y, mm), a = bAvgOf(k, f, e), c = bSeries(k, f, e).length, fu = f.slice(0, 7) > TODAY.slice(0, 7);
+    h += '<button data-bu="m" data-bf="' + f + '" class="' + (f.slice(0, 7) === TODAY.slice(0, 7) ? 'td' : '') + (fu ? ' fu' : '') + '"><span class="mn">' + mm + '월</span>' + (a != null ? '<b style="color:' + bcol(x) + '">' + bfmt(x, a) + '</b><small>' + c + '회</small>' : '<b class="mute">-</b><small>&nbsp;</small>') + '</button>';
   }
-  var pts = ms.filter(function (o) { return o.a.k != null; }).map(function (o) { return { v: o.a.k, l: o.m + '월' }; });
-  h += '<div class="card"><div class="ct">' + y + '년 월별 평균 · ' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(pts, x) + bSum(s, k, x) + '</div>';
-  var rows = ms.filter(function (o) { return o.n; });
-  h += '<div class="card"><div class="ct">' + y + '년 월별 평균<small>측정 ' + rows.reduce(function (a, o) { return a + o.n; }, 0) + '회</small></div>' + (rows.length ? '<table class="btab bper"><tr><th>월</th>' + ks.map(bTh).join('') + '</tr>' +
-    rows.reverse().map(function (o) { return '<tr data-bm="' + o.m + '"><td>' + o.m + '월<small class="wd">' + o.n + '회</small></td>' + ks.map(function (kk) { var xx = bkOf(kk); return '<td>' + (o.a[kk] == null ? '<span class="mute">-</span>' : bVal(kk, o.a[kk], kk === 'vfl' ? { dp: 1 } : xx)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
-    '<div class="legend" style="justify-content:flex-start">그 달 측정값의 평균 · 누르면 그 달로</div>' : '<div class="empty" style="padding:18px 0">기록이 없어요</div>') + '</div>';
+  h += '</div><div class="legend">그 달 측정값의 평균 · 누르면 그 달로</div></div>';
+  h += '<div class="card"><div class="ct">연평균 측정 내역<small>연도별</small></div>' + bUnitTable('y', from) + '</div>';
   h += '<div class="card"><button class="ballo" id="bAllO"><span>전체 기록 보기</span><small>' + bList().length.toLocaleString() + '회 ›</small></button></div>';
-  $('#main').innerHTML = h; bindYear(); bindBody();
-  $$('[data-bm]').forEach(function (b) { b.onclick = function () { S.y = y; S.m = +b.dataset.bm; S.view = 'month'; ls.set('memo:view', 'month'); window.scrollTo(0, 0); render(); }; });
+  $('#main').innerHTML = h; bindYear(); bindBody(); bindUnit();
   $('#bAllO').onclick = function () { S.bAll = 1; S.bAllN = 200; window.scrollTo(0, 0); render(); };
 }
 function bdAll() {
