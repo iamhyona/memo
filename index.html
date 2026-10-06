@@ -849,10 +849,10 @@ function call(fn) {
       throw e;
     });
   }
-  return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
+  return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007b';
+var APP_VER = '20261007c';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -864,15 +864,61 @@ document.addEventListener('visibilitychange', function () {
   checkUpdate();
   var t = F(new Date());
   if (t !== TODAY) { TODAY = t; S.day = TODAY; render(); }
+  obFlush();
   if (S.D && Date.now() - (S.loadedAt || 0) > 60000) load();
 });
 checkUpdate();
+/* ───── 저장 대기함: 서버에 저장된 게 확인될 때까지 기기에 보관하고 자동으로 다시 보냄 ───── */
+// (인터넷이 끊기거나 앱을 바로 닫아도 기록이 사라지지 않도록)
+var OB_K = 'memo:outbox', obBusy = false, obT = 0;
+function obGet() {
+  var a; try { a = JSON.parse(ls.get(OB_K) || '[]'); } catch (e) { a = []; }
+  return a.filter(function (o) { return !o.ok || Date.now() - o.ok < 300000; });   // 저장 확인 후 5분까지는 화면 유지용으로 보관
+}
+function obSet(a) { if (a.length) ls.set(OB_K, JSON.stringify(a)); else ls.del(OB_K); }
+function obCol(o) {
+  if (o.fn === 'appBody' || o.fn === 'appBodyDel') return 'body';
+  if (o.fn === 'appRec' || o.fn === 'appRecDel') return { workout: 'workouts', rx: 'rx' }[o.args[0]];
+}
+function obApply(d) {   // 서버에서 받은 데이터에 아직 반영 안 된 내 기록을 다시 얹음
+  obGet().forEach(function (o) {
+    var c = obCol(o); if (!c) return;
+    var del = /Del$/.test(o.fn), x = /^appRec/.test(o.fn) ? o.args[1] : o.args[0], id = del ? x : x.id;
+    d[c] = (d[c] || []).filter(function (r) { return r.id !== id; }).concat(del ? [] : [x]);
+  });
+}
+function wsave(fn) {
+  var a = obGet(); a.push({ k: uid('q'), fn: fn, args: Array.prototype.slice.call(arguments, 1) }); obSet(a);
+  obFlush();
+}
+function obFlush() {
+  if (obBusy || !S.pin) return;
+  var o = obGet().filter(function (x) { return !x.ok; })[0]; if (!o) return;
+  obBusy = true; clearTimeout(obT);
+  call.apply(null, [o.fn, S.pin].concat(o.args)).then(function () {
+    obBusy = false;
+    obSet(obGet().map(function (x) { if (x.k === o.k) x.ok = Date.now(); return x; }));
+    obFlush();
+  }, function (e) {
+    obBusy = false;
+    var a = obGet(), m = errMsg(e), cur = a.filter(function (x) { return x.k === o.k; })[0];
+    if (/PIN/.test(m)) return;
+    if (cur && e.srv && (cur.n = (cur.n || 0) + 1) >= 3) {   // 서버가 계속 거절하는 기록만 포기하고 알림
+      obSet(a.filter(function (x) { return x.k !== o.k; })); toast('저장 실패: ' + m); load(); return;
+    }
+    obSet(a);
+    toast('서버 저장 대기 ' + a.filter(function (x) { return !x.ok; }).length + '건 · 자동으로 다시 보내요');
+    obT = setTimeout(obFlush, 15000);
+  });
+}
+window.addEventListener('online', function () { obFlush(); });
 function errMsg(e) { return (e && e.message ? e.message : String(e)).replace(/^(Exception|Error):\s*/, ''); }
 function toast(t) { var el = $('#toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(function () { el.style.display = 'none'; }, 2200); }
 function hdDate() { if (!$('#hdt')) return; var d = P(TODAY); $('#hdt').textContent = (d.getMonth() + 1) + '.' + pad(d.getDate()) + ' ' + W[d.getDay()] + '요일'; }
 
 /* ───── 데이터 ───── */
 function setData(d) {
+  obApply(d);
   d.notes = d.notes || {}; d.body = d.body || []; d.workouts = d.workouts || []; d.visits = d.visits || []; d.labs = d.labs || []; d.rx = d.rx || []; d.swim = d.swim || []; d.counters = d.counters || []; d.counts = d.counts || {};
   S.D = d; S.ck = {}; S.kc = {};
   Object.keys(d.counts).forEach(function (k) { S.kc[k] = {}; Object.keys(d.counts[k]).forEach(function (h) { S.kc[k][h] = +d.counts[k][h] || 0; }); });
@@ -896,7 +942,7 @@ function load() {
   return call('appAll', S.pin).then(function (d) {
     var up = S.D ? S.D.photos.filter(function (p) { return !p.fid; }) : [];
     d.photos = d.photos.concat(up);
-    setData(d); S.loadedAt = Date.now(); saveCache(); render(); loadLinks();
+    setData(d); S.loadedAt = Date.now(); saveCache(); render(); loadLinks(); obFlush();
   }).catch(function (e) {
     var m = errMsg(e);
     if (/PIN/.test(m)) { S.pin = ''; ls.del('memo:pin'); ls.del('memo:data'); S.D = null; showPin(); }
@@ -3566,13 +3612,13 @@ $('#bbS').onclick = function () {
   rec.id = rec.id || uid('b');
   S.D.body = L.filter(function (x) { return x.id !== rec.id; }).concat([rec]);
   closeBs(); S.day = d > TODAY ? TODAY : d; render(); saveCache(); toast('저장했어요');
-  call('appBody', S.pin, rec).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appBody', rec);
 };
 sure($('#bbX'), function () {
   var id = BB.id;
   S.D.body = (S.D.body || []).filter(function (x) { return x.id !== id; });
   closeBs(); render(); saveCache(); toast('삭제했어요');
-  call('appBodyDel', S.pin, id).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appBodyDel', id);
 });
 
 
@@ -4236,13 +4282,13 @@ $('#wbS').onclick = function () {
   $$('#wb input[data-w]').forEach(function (inp) { var v = numOf(inp.value); if (!isNaN(v)) { rec[inp.dataset.w] = v; c++; } });
   S.D.workouts = (S.D.workouts || []).filter(function (x) { return x.id !== rec.id; }).concat([rec]);
   closeBs(); S.day = d > TODAY ? TODAY : d; render(); saveCache(); toast('저장했어요');
-  call('appRec', S.pin, 'workout', rec).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appRec', 'workout', rec);
 };
 sure($('#wbX'), function () {
   var id = WB.id;
   S.D.workouts = (S.D.workouts || []).filter(function (x) { return x.id !== id; });
   closeBs(); render(); saveCache(); toast('삭제했어요');
-  call('appRecDel', S.pin, 'workout', id).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appRecDel', 'workout', id);
 });
 
 /* 검사 항목 사전: [표준 이름, 한글 이름, 단위, 앞글자(잘린 이름도 찾게), 무슨 검사, 높으면, 낮으면]  · 앞글자 '=' 는 정확히 같을 때만 */
@@ -4690,13 +4736,13 @@ $('#rxS').onclick = function () {
   if (!rec.d) return toast('시작일을 선택해 주세요');
   S.D.rx = (S.D.rx || []).filter(function (x) { return x.id !== rec.id; }).concat([rec]);
   closeBs(); render(); saveCache(); toast('저장했어요');
-  call('appRec', S.pin, 'rx', rec).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appRec', 'rx', rec);
 };
 sure($('#rxX'), function () {
   var id = RXB.id;
   S.D.rx = (S.D.rx || []).filter(function (x) { return x.id !== id; });
   closeBs(); render(); saveCache(); toast('삭제했어요');
-  call('appRecDel', S.pin, 'rx', id).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appRecDel', 'rx', id);
 });
 
 /* 병원 기록 추가·수정 + 혈액검사 캡처 → 항목 표 */
