@@ -852,7 +852,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007a';
+var APP_VER = '20261007b';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2431,7 +2431,7 @@ function openUpload(id) {
   $('#phS').textContent = p ? '저장' : '올리기';
   $('#phDrop').classList.toggle('hide', !!p);
   $('#phD').value = p ? p.d : (S.view === 'daily' ? S.day : TODAY); $('#phM').value = p ? p.memo || '' : nowMemo();   // FOOD·LIFE: 메모 기본값 = 작성 일시 (2026.10.05) $('#phPl').value = p ? p.place || '' : ''; $('#phGeo').textContent = '';
-  $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = ''; if ($('#phAi')) $('#phAi').textContent = ''; UP.aiT = 0; UP.aiTxt = ''; eatBox();
+  $('#phP').innerHTML = ''; $('#phL').textContent = '사진 선택 (여러 장 가능)'; $('#phIn').value = ''; if ($('#phAi')) $('#phAi').textContent = ''; UP.aiT = 0; UP.aiTxt = ''; UP.aiBusy = null; UP.aiNote = p ? foodSplit(p.memo).user : ''; eatBox();
   $('#phX').classList.toggle('hide', !p); unsure($('#phX'));
   drawCats(); openBs('#ph');
 }
@@ -2466,29 +2466,50 @@ function eatBox() {
     w = document.createElement('div'); w.id = 'phEatW'; w.className = 'frow'; w.style.marginTop = '12px';
     w.innerHTML = '<div class="f"><label>먹은 양</label><div class="eatr"><input id="phEat" placeholder="예: 밥 반 공기, 고기 1/3, 무말랭이 안 먹음"><button id="phEatB" type="button">다시 계산</button></div></div>';
     $('#phM').closest('.frow').insertAdjacentElement('afterend', w);
-    $('#phEatB').onclick = function () { if (!UP.files.length) { var st = $('#phAi'); if (st) st.textContent = '사진을 먼저 골라 주세요'; return; } foodAI(); };
+    $('#phEatB').onclick = function () { foodRecalc(true); };
     $('#phEat').onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); $('#phEatB').click(); } };
+    $('#phEat').onchange = function () { foodRecalc(); };
+    $('#phM').addEventListener('change', function () { foodRecalc(); });
   }
-  w.style.display = S.mode === 'food' && !UP.id ? '' : 'none';
+  w.style.display = S.mode === 'food' ? '' : 'none';
   $('#phEat').value = '';
+}
+// FOOD 메모 나누기: [날짜 시각] · 내가 쓴 글 · [AI 음식 이름 · 약 N kcal (영양)] — 2026.10.07
+function foodSplit(memo) {
+  var s = String(memo || ''), pre = '', nut = '', m = s.match(/^\s*\d{4}[.\-]\d{1,2}[.\-]\d{1,2}\s+\d{1,2}:\d\d\s*·?\s*/);
+  if (m) { pre = m[0].replace(/[\s·]+$/, ''); s = s.slice(m[0].length); }
+  s = s.replace(/약\s*[\d,]+\s*kcal\s*\([^)]*\)/, function (x) { nut = x; return '\u0001'; });
+  var seg = s.split(/\s*·\s*/).map(function (x) { return x.trim(); }), ni = seg.indexOf('\u0001'), user = seg, ai = '';
+  if (ni >= 0) { var st = ni > 0 ? ni - 1 : ni; ai = seg.slice(st, ni + 1).join(' · ').replace('\u0001', nut); user = seg.slice(0, st).concat(seg.slice(ni + 1)); }
+  return { pre: pre, user: user.filter(Boolean).join(' · '), ai: ai };
+}
+// 계산 기준 = '먹은 양' 칸 + 메모에 내가 쓴 글
+function foodNote() { return [$('#phEat') ? $('#phEat').value.trim() : '', foodSplit($('#phM').value).user].filter(Boolean).join(', '); }
+function foodNeed() { var n = foodNote(); return S.mode === 'food' && UP && n !== UP.aiNote && (UP.files.length || (UP.id && n)); }
+// 다시 계산: 새 사진이면 사진 + 글, 이미 올린 사진(수정)이면 글만으로 계산 → 메모의 AI 부분만 바꿔 끼움
+function foodRecalc(force) {
+  if (S.mode !== 'food' || !UP) return Promise.resolve();
+  if (!force && !foodNeed()) return Promise.resolve();
+  if (!UP.files.length && !foodNote()) { var s0 = $('#phAi'); if (s0) s0.textContent = '먹은 음식을 메모나 먹은 양 칸에 적어 주세요'; return Promise.resolve(); }
+  return foodAI();
 }
 function foodAI() {
   var st = $('#phAi'); if (!st) { st = document.createElement('div'); st.id = 'phAi'; st.className = 'geo'; ($('#phEatW') || $('#phM').closest('.frow')).insertAdjacentElement('afterend', st); }
-  var note = ($('#phEat') ? $('#phEat').value : '').trim();
-  st.textContent = note ? '먹은 양 기준으로 다시 계산하는 중…' : '사진 속 음식 알아보는 중…';
-  var tk = UP.aiT = Date.now(), fs = UP.files.slice(0, 4);
-  Promise.all(fs.map(function (f) { return shrink(f, 900); })).then(function (us) {
+  var note = foodNote(), fs = UP.files.slice(0, 4), tk = UP.aiT = Date.now();
+  st.textContent = note ? '적은 내용 기준으로 다시 계산하는 중…' : '사진 속 음식 알아보는 중…';
+  UP.aiBusy = (fs.length ? Promise.all(fs.map(function (f) { return shrink(f, 900); })) : Promise.resolve([])).then(function (us) {
     return call('appFoodAI', S.pin, us.map(function (u) { return u.split(',')[1]; }), 'image/jpeg', note);
   }).then(function (t) {
     if (UP.aiT !== tk) return;
     t = String(t || '').trim();
-    var m = $('#phM'), v = m.value;
-    if (UP.aiTxt) v = v.replace(' · ' + UP.aiTxt, '').replace(UP.aiTxt, '');   // 전에 넣은 AI 결과는 바꿔 끼움
-    v = v.trim();
-    if (!t) { m.value = v; UP.aiTxt = ''; st.textContent = '음식을 찾지 못했어요 · 직접 적어도 돼요'; return; }
-    m.value = (v ? v + ' · ' : '') + t; UP.aiTxt = t;
-    st.textContent = (note ? '먹은 양 기준으로 계산했어요' : '사진 ' + fs.length + '장으로 계산했어요 · 먹은 양을 적고 다시 계산할 수 있어요') + ' (참고용)';
-  }).catch(function (e) { if (UP.aiT !== tk) return; st.textContent = /GEMINI_KEY/.test(String(e && e.message || e)) ? 'AI 키가 아직 없어요 · 스크립트 속성에 GEMINI_KEY를 넣으면 돼요' : '음식을 알아보지 못했어요 · 다시 계산을 눌러 보세요'; });
+    var sp = foodSplit($('#phM').value);
+    UP.aiNote = note;
+    if (!t) { st.textContent = '음식을 찾지 못했어요 · 직접 적어도 돼요'; return; }
+    $('#phM').value = [sp.pre, sp.user, t].filter(Boolean).join(' · ');
+    st.textContent = (note ? '적은 내용(먹은 것) 기준으로 계산했어요' : '사진 ' + fs.length + '장으로 계산했어요 · 먹은 것을 메모에 적으면 그만큼만 다시 계산해요') + ' (참고용)';
+  }).catch(function (e) { if (UP.aiT !== tk) return; st.textContent = /GEMINI_KEY/.test(String(e && e.message || e)) ? 'AI 키가 아직 없어요 · 스크립트 속성에 GEMINI_KEY를 넣으면 돼요' : '음식을 알아보지 못했어요 · 다시 계산을 눌러 보세요'; })
+    .then(function () { if (UP.aiT === tk) UP.aiBusy = null; });
+  return UP.aiBusy;
 }
 // 원본 파일 → base64 (너무 크면 줄인 사진으로)
 function fileB64(f) {
@@ -2515,6 +2536,12 @@ function shrink(file, max) {
   });
 }
 $('#phS').onclick = function () {
+  // FOOD: 메모(먹은 것)가 바뀌었으면 칼로리를 다시 계산한 뒤 저장 (2026.10.07)
+  if (UP && (UP.aiBusy || foodNeed())) {
+    var sb = $('#phS'); if (sb.classList.contains('busy')) return;
+    sb.classList.add('busy');
+    return (UP.aiBusy || foodRecalc()).then(function () { sb.classList.remove('busy'); if (foodNeed()) UP.aiNote = foodNote(); $('#phS').onclick(); });
+  }
   var d = $('#phD').value, memo = $('#phM').value.trim(), place = $('#phPl').value.trim();
   if ($('#phNew')) $('#phNew').blur();
   if (!d) return toast('날짜를 선택해 주세요');
