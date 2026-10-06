@@ -648,7 +648,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
   <div class="hd">
     <button class="brand" id="brand">ROUTINE</button>
     <div class="hr">
-      <button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="ib" id="lnBtn" aria-label="시트 열기" title="이 메뉴의 시트·폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg></button><button class="ib" id="srBtn" aria-label="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></button><button class="ib" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
   <nav id="mode" class="mtabs"><button data-m="body">BODY</button><button data-m="workout">WORKOUT</button><button data-m="habit">HABIT</button><button data-m="food">FOOD</button><button data-m="feed">LIFE</button><button data-m="diary">DIARY</button><button data-m="medical">MEDICAL</button></nav>
@@ -849,7 +849,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) throw new Error(o.error || '오류가 났어요'); return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261005fb';
+var APP_VER = '20261006fc';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -893,7 +893,7 @@ function load() {
   return call('appAll', S.pin).then(function (d) {
     var up = S.D ? S.D.photos.filter(function (p) { return !p.fid; }) : [];
     d.photos = d.photos.concat(up);
-    setData(d); S.loadedAt = Date.now(); saveCache(); render();
+    setData(d); S.loadedAt = Date.now(); saveCache(); render(); loadLinks();
   }).catch(function (e) {
     var m = errMsg(e);
     if (/PIN/.test(m)) { S.pin = ''; ls.del('memo:pin'); ls.del('memo:data'); S.D = null; showPin(); }
@@ -1027,6 +1027,20 @@ function datePick() {
   // 휴대폰은 휠을 돌리는 중에도 값이 바뀌므로 '완료'로 닫을 때(blur) 적용
   var touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
   inp.addEventListener(touch && v !== 'year' ? 'blur' : 'change', go);
+}
+// 메뉴별 시트·폴더 바로가기: 지금 보고 있는 메뉴의 구글 시트(LIFE는 사진 폴더, 전체 요약은 저장 폴더) — 2026.10.06
+var LINK_OF = { body: '인바디 기록', workout: '운동 기록', habit: '습관 트래커', food: '식사 기록', feed: '_photo', diary: '일기', medical: '병원 기록' };
+function loadLinks() {
+  if (!S.links) { try { S.links = JSON.parse(ls.get('memo:links') || 'null'); } catch (e) {} }
+  if (!S.pin) return;
+  call('appLinks', S.pin).then(function (o) { S.links = o; try { ls.set('memo:links', JSON.stringify(o)); } catch (e) {} }).catch(function () {});
+}
+function linkUrl() {
+  var L = S.links || {}; if (S.view === 'all') return L._root;
+  var k = LINK_OF[S.mode], u = k ? L[k] : '';
+  if (k === '일기') { var y = (S.day || TODAY).slice(0, 4); u = L['일기 ' + y] || L[Object.keys(L).filter(function (x) { return /^일기 \d{4}$/.test(x); }).sort().pop()]; }
+  if (!u && S.mode === 'food') u = L._photo;
+  return u || L._root;
 }
 function renderCore() {
   if (!S.D) return;
@@ -2229,6 +2243,11 @@ function drawSearch() {
   $('#srC').onclick = function () { SR.q = ''; $('#srQ').value = ''; drawSearch(); $('#srQ').focus(); };
   $$('#srS button').forEach(function (b) { b.onclick = function () { SR.scope = b.dataset.s; drawSearch(); }; });
   $('#srBtn').onclick = openSearch;
+  $('#lnBtn').onclick = function () {
+    var u = linkUrl();
+    if (!u) { toast('주소를 불러오는 중이에요 · 잠시 후 다시 눌러 주세요'); loadLinks(); return; }
+    window.open(u, '_blank');
+  };
 })();
 
 /* ───── 바텀시트 ───── */
