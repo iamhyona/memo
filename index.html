@@ -852,7 +852,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007d';
+var APP_VER = '20261007e';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -3171,10 +3171,10 @@ var BDESC = {
 };
 // 인바디 항목 설명 (검사 항목 설명과 같은 화면)
 function openBk(k, id) {
-  var r = (S.D.body || []).filter(function (q) { return q.id === id; })[0], x = bkOf(k); if (!r) return;
+  var r = (S.D.body || []).filter(function (q) { return q.id === id; })[0] || (S.bAvgR || {})[id], x = bkOf(k); if (!r) return;
   var j = bJudge(k, r), ds = BDESC[k] || ['', '', ''], st = bStdTxt(k, r), s = bSeries(k);
-  var h = '<div class="lbh"><small>인바디 · ' + bShort(r.d) + (r.t ? ' ' + r.t : '') + '</small><h3>' + x.n + '</h3></div>' +
-    '<div class="lbv"><b class="' + (j === 'lo' && x.g !== -1 ? 'ml' : j === 'hi' && x.g !== 1 ? 'mh' : '') + '">' + bfmt(x, r[k]) + '</b><span>' + (x.u || '') + '</span>' + bjHtml(k, r) + '</div>' +
+  var h = '<div class="lbh"><small>인바디 · ' + (r.lbl || bShort(r.d) + (r.t ? ' ' + r.t : '')) + '</small><h3>' + x.n + '</h3></div>' +
+    '<div class="lbv"><b class="' + (j === 'lo' && x.g !== -1 ? 'ml' : j === 'hi' && x.g !== 1 ? 'mh' : '') + '">' + bfmt(r.lbl && k === 'vfl' ? Object.assign({}, x, { dp: 1 }) : x, r[k]) + '</b><span>' + (x.u || '') + '</span>' + bjHtml(k, r) + '</div>' +
     '<div class="lbr">' + (st ? '표준 범위 ' + st + (x.u && x.k !== 'bmi' ? ' ' + x.u : '') : '표준 범위 없음') + '</div>' + (st ? '<div style="margin:10px 0 4px">' + bStdBar(k, r) + '</div>' : '');
   h += '<div class="lbd"><div class="sub2">어떤 항목이에요?</div><p>' + ds[0] + '</p>';
   if (ds[1]) h += '<div class="sub2">' + (j === 'hi' ? '<span class="dn">● </span>' : '') + '높을 때</div><p>' + ds[1] + '</p>';
@@ -3454,11 +3454,39 @@ function bdDaily() {
   h += recs.map(bRecCard).join('');
   $('#main').innerHTML = h; bindDay(); bindBody();
 }
+// BODY 주·월·연: 기간 평균을 DAY 카드처럼 (판정 · 표준 범위 막대 · 지난 기간 평균 대비) — 2026.10.07
+function bAvgRec(f, t) {
+  var rs = bList().filter(function (r) { return inR(r.d, f, t); }), o = { n: rs.length, d: f };
+  BK.forEach(function (x) {
+    if (x.seg) return;
+    var v = rs.filter(function (r) { return r[x.k] != null && r[x.k] !== '' && !isNaN(r[x.k]); }).map(function (r) { return +r[x.k]; });
+    if (v.length) o[x.k] = v.reduce(function (a, b) { return a + b; }, 0) / v.length;
+  });
+  return o;
+}
+function bAvgCard(P) {
+  var r = bAvgRec(P.f, P.t), r0 = bAvgRec(P.pf, P.pt), id = 'avg' + P.f + P.t;
+  if (!r.n) return '<div class="card"><div class="ct">' + P.lb + ' 평균<small>' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div><div class="empty" style="padding:18px 0">이 기간에는 측정이 없어요</div></div>';
+  r.id = id; r.lbl = P.lb + ' 평균 · 측정 ' + r.n + '회'; S.bAvgR = S.bAvgR || {}; S.bAvgR[id] = r;
+  var ax = function (x) { return x.k === 'vfl' ? Object.assign({}, x, { dp: 1 }) : x; };
+  var grp = function (title, xs) {
+    var rows = xs.filter(function (x) { return r[x.k] != null; });
+    if (!rows.length) return '';
+    return (title ? '<div class="sub2">' + title + '</div>' : '') + '<ul class="brow">' + rows.map(function (x) {
+      var xa = ax(x), pv = r0[x.k], st = bStdTxt(x.k, r);
+      return '<li class="bx" data-bx="' + x.k + '" data-bxr="' + id + '"><span class="n">' + x.n + '</span><span class="v"><b>' + bfmt(xa, r[x.k]) + '</b><small>' + x.u + '</small></span><span class="d">' + bjHtml(x.k, r) + (pv != null ? bDelta(xa, r[x.k], pv) : '') + '</span>' +
+        (st ? '<div class="bxb">' + bStdBar(x.k, r) + '<small>표준 ' + st + '</small></div>' : '') + '</li>';
+    }).join('') + '</ul>';
+  };
+  return '<div class="card"><div class="ct">' + P.lb + ' 평균<small>측정 ' + r.n + '회 · ' + bYmd(P.f) + ' ~ ' + bYmd(P.t) + '</small></div>' +
+    grp('', BK.filter(function (x) { return x.core; })) + grp('추가 항목', BK.filter(function (x) { return !x.core && !x.seg; })) +
+    '<div class="legend" style="justify-content:flex-start">기간 평균 · ▲ 증가 · ▼ 감소 (' + P.pn + ' 평균 대비)</div></div>';
+}
 // BODY WEEK
 function bdWeek() {
   var ws = monOf(S.day), we = addD(ws, 6), recs = bList().filter(function (r) { return inR(r.d, ws, we); });
   var keys = bKeys(ws, we), k = bCur(keys), x = bkOf(k), s = bSeries(k, ws, we);
-  var h = weekNav() + sumCard(sPer('vw'), sumB(sPer('vw')), '', '평균') + bChips(keys, k);
+  var h = weekNav() + bAvgCard(sPer('vw')) + bChips(keys, k);
   h += '<div class="card"><div class="ct">' + x.n + '<small>' + (x.u || '') + '</small></div>' + bChart(s.map(function (r) { return { v: r[k], l: bShort(r.d) }; }), x) + bSum(s, k, x) + '</div>';
   h += '<div class="card"><div class="ct">이번 주 측정<small>' + recs.length + '회</small></div>' + bTable(recs) + '</div>';
   $('#main').innerHTML = h; bindWeek(); bindBody();
@@ -3467,7 +3495,7 @@ function bdWeek() {
 function bdMonth() {
   var y = S.y, m = S.m, from = y + '-' + pad(m) + '-01', to = mEnd(y, m), ym = from.slice(0, 7);
   var recs = bList().filter(function (r) { return inR(r.d, from, to); }), keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + sumCard(sPer('vm'), sumB(sPer('vm')), '', '평균') + bChips(keys, k);
+  var h = navMonth(y + '년 ' + m + '월', true, ym < TODAY.slice(0, 7)) + bAvgCard(sPer('vm')) + bChips(keys, k);
   h += '<div class="card cal"><div class="wd">' + WM.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div><div class="grid">';
   var lead = (P(from).getDay() + 6) % 7, i, d;
   for (i = 0; i < lead; i++) h += '<button class="out"></button>';
@@ -3485,7 +3513,7 @@ function bdMonth() {
 function bdYear() {
   if (S.bAll) return bdAll();
   var y = S.yy, from = y + '-01-01', to = y + '-12-31', keys = bKeys(from, to), k = bCur(keys), x = bkOf(k), s = bSeries(k, from, to);
-  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + sumCard(sPer('vy'), sumB(sPer('vy')), '', '평균') + bChips(keys, k), ms = [], mm, ks = BK5;
+  var h = navMonth(y + '년', true, y < +TODAY.slice(0, 4)) + bAvgCard(sPer('vy')) + bChips(keys, k), ms = [], mm, ks = BK5;
   for (mm = 1; mm <= 12; mm++) {
     var f = y + '-' + pad(mm) + '-01', e = mEnd(y, mm), rs = bList().filter(function (r) { return inR(r.d, f, e); });
     var av = function (kk) { var v = rs.filter(function (r) { return r[kk] != null; }).map(function (r) { return r[kk]; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; };
