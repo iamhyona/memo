@@ -852,7 +852,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007c';
+var APP_VER = '20261007d';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -882,6 +882,10 @@ function obCol(o) {
 }
 function obApply(d) {   // 서버에서 받은 데이터에 아직 반영 안 된 내 기록을 다시 얹음
   obGet().forEach(function (o) {
+    if (o.fn === 'appPhotoEdit') { (d.photos || []).forEach(function (p) { if (p.id === o.args[0].id) { var x = o.args[0]; p.d = x.d; p.cat = x.cat; p.memo = x.memo; p.place = x.place; } }); return; }
+    if (o.fn === 'appPhotoDel') { d.photos = (d.photos || []).filter(function (p) { return p.id !== o.args[0]; }); return; }
+    if (o.fn === 'appNote') { d.notes = d.notes || {}; if (o.args[1]) d.notes[o.args[0]] = o.args[1]; else delete d.notes[o.args[0]]; return; }
+    if (o.fn === 'appDiary') { var y = o.args[0]; d.diary = (d.diary || []).filter(function (x) { return x.d !== y.d && x.d !== y.old; }); if (y.text || y.mood) d.diary.push({ d: y.d, mood: y.mood, text: y.text, ts: '' }); return; }
     var c = obCol(o); if (!c) return;
     var del = /Del$/.test(o.fn), x = /^appRec/.test(o.fn) ? o.args[1] : o.args[0], id = del ? x : x.id;
     d[c] = (d[c] || []).filter(function (r) { return r.id !== id; }).concat(del ? [] : [x]);
@@ -2588,6 +2592,8 @@ $('#phS').onclick = function () {
     sb.classList.add('busy');
     return (UP.aiBusy || foodRecalc()).then(function () { sb.classList.remove('busy'); if (foodNeed()) UP.aiNote = foodNote(); $('#phS').onclick(); });
   }
+  var eat = $('#phEat') && S.mode === 'food' ? $('#phEat').value.trim() : '';
+  if (eat) { var sp0 = foodSplit($('#phM').value); $('#phM').value = [sp0.pre, [eat, sp0.user].filter(Boolean).join(', '), sp0.ai].filter(Boolean).join(' · '); $('#phEat').value = ''; if (UP) UP.aiNote = foodNote(); }   // '먹은 양' 칸에 쓴 글도 메모에 보관
   var d = $('#phD').value, memo = $('#phM').value.trim(), place = $('#phPl').value.trim();
   if ($('#phNew')) $('#phNew').blur();
   if (!d) return toast('날짜를 선택해 주세요');
@@ -2595,7 +2601,7 @@ $('#phS').onclick = function () {
     var p = S.D.photos.filter(function (x) { return x.id === UP.id; })[0];
     p.d = d; p.cat = UP.cat; p.memo = memo; p.place = place;
     closeBs(); render(); saveCache(); toast('저장했어요');
-    return call('appPhotoEdit', S.pin, { id: p.id, d: d, cat: p.cat, memo: memo, place: place }).catch(function (e) { toast(errMsg(e)); load(); });
+    return wsave('appPhotoEdit', { id: p.id, d: d, cat: p.cat, memo: memo, place: place });
   }
   if (!UP.files.length) return toast('사진을 선택해 주세요');
   var files = UP.files, cat = UP.cat, btn = $('#phS'); btn.classList.add('busy');
@@ -2627,7 +2633,7 @@ sure($('#phX'), function () { delPhoto(UP.id); });
 function delPhoto(id) {
   S.D.photos = S.D.photos.filter(function (x) { return x.id !== id; });
   closeBs(); render(); saveCache(); toast('삭제했어요');
-  call('appPhotoDel', S.pin, id).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appPhotoDel', id);
 }
 
 /* 사진 보기 (좌우로 넘기기) */
@@ -2689,13 +2695,13 @@ $('#dyS').onclick = function () {
   S.D.diary = S.D.diary.filter(function (x) { return x.d !== d && x.d !== DY.old; });
   S.D.diary.push({ d: d, mood: DY.mood, text: text, ts: '' });
   closeBs(); render(); saveCache(); toast('저장했어요');
-  call('appDiary', S.pin, o).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appDiary', o);
 };
 sure($('#dyDel'), function () {
   var d = DY.old;
   S.D.diary = S.D.diary.filter(function (x) { return x.d !== d; });
   closeBs(); render(); saveCache(); toast('삭제했어요');
-  call('appDiary', S.pin, { d: d, mood: '', text: '', old: d }).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appDiary', { d: d, mood: '', text: '', old: d });
 });
 
 /* 월간 메모 */
@@ -2711,7 +2717,7 @@ function openNote(ym) {
 function saveNote(text) {
   if (text) S.D.notes[NT] = text; else delete S.D.notes[NT];
   closeBs(); render(); saveCache(); toast(text ? '저장했어요' : '지웠어요');
-  call('appNote', S.pin, NT, text).catch(function (e) { toast(errMsg(e)); load(); });
+  wsave('appNote', NT, text);
 }
 $('#ntS').onclick = function () { saveNote($('#ntX').value.replace(/\s+$/, '')); };
 sure($('#ntDel'), function () { saveNote(''); });
