@@ -644,6 +644,7 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .bym button.fu { opacity:.45; }
 .uok { display:none !important; }
 .mtab tr.on td { background:#f5f8ff; }
+.mtab { table-layout:fixed; width:100%; } .mtab th:nth-child(1) { width:36%; } .mtab th:nth-child(2) { width:28%; } .mtab th:nth-child(3) { width:36%; }   /* 참고치 칸 = 막대 가운데(초록 띠) 위 */
 .mtab th:nth-child(2), .mtab td:nth-child(2) { text-align:center; } .mtab td:nth-child(2) small { color:var(--faint); } .mtab tr.lbr td { text-align:left !important; }
 .crn { font-size:11px; color:var(--mute); margin:10px 0 4px; } .alw .crn { display:none; } .alw .crn + .gfr { display:none; }
 .mlc { flex-wrap:wrap; overflow:visible; margin:0 0 12px; padding:0; } .mlc button { background:var(--chip); } .mlc button.on { background:var(--txt); color:#fff; }   /* 검사 분류 단추: 다 보이게 (2026.10.07) */   /* 습관 타일 오른쪽 위 ✓ 없앰 — 횟수로 충분 (2026.10.07) */
@@ -864,7 +865,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007j';
+var APP_VER = '20261007k';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -4623,8 +4624,10 @@ function labBar0(l) {
   }
   if (isNaN(v) || !g) return '';
   var a, b, p;   // 띠 위치(%) · 값 위치(%)
-  if (g.lo != null && g.hi != null && g.hi > g.lo) { a = 30; b = 70; p = 30 + (v - g.lo) / (g.hi - g.lo) * 40; }
-  else if (g.hi != null && g.hi > 0) { a = 3; b = 65; p = 3 + v / g.hi * 62; }
+  // 참고치 밖은 비율(로그)로 눌러 담아 끝에 붙지 않게: 상한의 3배 = 막대 끝 (2026.10.07)
+  var out = function (r) { return Math.log(r) / Math.log(3); };
+  if (g.lo != null && g.hi != null && g.hi > g.lo) { a = 30; b = 70; p = v > g.hi ? 70 + 28 * out(v / g.hi) : v < g.lo && v > 0 && g.lo > 0 ? 30 - 28 * out(g.lo / v) : 30 + (v - g.lo) / (g.hi - g.lo) * 40; }
+  else if (g.hi != null && g.hi > 0) { a = 3; b = 65; p = v > g.hi ? 65 + 33 * out(v / g.hi) : 3 + v / g.hi * 62; }
   else if (g.lo != null && g.lo > 0) { a = 35; b = 97; p = v >= g.lo ? 35 + (v - g.lo) / g.lo * 62 : 35 * v / g.lo; }
   else return '';
   p = Math.max(2, Math.min(98, p));
