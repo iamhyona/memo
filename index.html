@@ -643,7 +643,8 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .bym button.td { box-shadow:inset 0 0 0 1.5px var(--txt); }
 .bym button.fu { opacity:.45; }
 .uok { display:none !important; }
-.mlist .bxb .lqt, .mlist .bxb .gtx { display:none; } .mlist .bxb .gfr { flex:1; margin:0; }   /* 습관 타일 오른쪽 위 ✓ 없앰 — 횟수로 충분 (2026.10.07) */
+.mtab tr.on td { background:#f5f8ff; }
+.mlc { flex-wrap:wrap; overflow:visible; margin:0 0 12px; padding:0; } .mlc button { background:var(--chip); } .mlc button.on { background:var(--txt); color:#fff; }   /* 검사 분류 단추: 다 보이게 (2026.10.07) */   /* 습관 타일 오른쪽 위 ✓ 없앰 — 횟수로 충분 (2026.10.07) */
 </style>
 </head>
 <body>
@@ -861,7 +862,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007h';
+var APP_VER = '20261007i';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -4534,7 +4535,7 @@ function labCatBox(ls) {
   var sh = ls.filter(function (l) { return cur === 'all' || (cur === 'bad' ? labFlag(l) : labCat(l.item) === cur); });
   return '<div class="chips bkc mlc" style="margin-top:14px">' + cats.map(function (c) { return '<button data-mlc="' + c[0] + '" class="' + (c[0] === cur ? 'on' : '') + '">' + c[1] + ' ' + cnt[c[0]] + '</button>'; }).join('') + '</div>' +
     '<div id="mlcBox">' + (sh.length ? labTable(sh) : '<p class="mnote">' + (cur === 'bad' ? '모든 항목이 참고치 안이에요' : '이 분류의 검사가 없어요') + '</p>') + '</div>' +
-    '<div class="legend" style="justify-content:flex-start;margin-top:8px">좌우로 밀어 분류 넘기기 · 항목을 누르면 설명</div>';
+    '<div class="legend" style="justify-content:flex-start;margin-top:8px">항목을 누르면 설명</div>';
 }
 // 분류 단추 공통 (항목 탭 · 요약 탭) — key: S에 저장할 이름, list: [{n: 항목명, bad: true/false}]
 function catPick(key, list, def) {
@@ -4549,7 +4550,7 @@ function bindCat(key, boxId) {
   var go = function (c) { var y0 = window.scrollY; S[key] = c; render(); window.scrollTo(0, y0); };
   var bs = $$('[data-ck="' + key + '"] [data-cat]');
   bs.forEach(function (b) { b.onclick = function () { go(b.dataset.cat); }; });
-  var on = $('[data-ck="' + key + '"] button.on'); if (on) { var p = on.parentNode; p.scrollLeft = on.offsetLeft - p.offsetWidth / 2 + on.offsetWidth / 2; }
+  return;   // 단추로만 바꿈 (자동 스크롤·밀어서 넘기기 없앰 — 2026.10.07)
   var box = $('#' + boxId); if (!box) return;
   var x0 = null, y0 = null;
   box.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
@@ -4563,6 +4564,7 @@ function bindCat(key, boxId) {
 function bindLabCat() {
   var go = function (c) { var y0 = window.scrollY; S.mlc = c; render(); window.scrollTo(0, y0); };
   $$('[data-mlc]').forEach(function (b) { b.onclick = function () { go(b.dataset.mlc); }; });
+  return;   // 단추로만 바꿈 (2026.10.07)
   var box = $('#mlcBox'); if (!box) return;
   var x0 = null, y0 = null;
   box.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
@@ -4610,12 +4612,12 @@ function labBar(l) {
   var bad = p < a || p > b, fl = bad ? (p < a ? '<i class="lbf" style="left:' + p + '%;width:' + (a - p) + '%"></i>' : '<i class="lbf" style="left:' + b + '%;width:' + (p - b) + '%"></i>') : '';
   return '<div class="lbar' + (bad ? (p < a ? ' bad lo' : ' bad') : '') + '"><i class="lbb" style="left:' + a + '%;width:' + (b - a) + '%"></i>' + fl + '<b class="lbd" style="left:' + p + '%"></b></div>';
 }
-function labTable(ls) {
+function labTable(ls, sel) {
   return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.slice().sort(labSort).map(function (l) {
     var f = labFlag(l), x = labInfo(l.item, l.val, l.ref), u = l.unit || (x ? x[2] : '');
-    var bar = labBar(l), hb = bar ? ' class="hb"' : '';
-    return '<tr data-lid="' + esc(l.id) + '"' + hb + '><td>' + labName(l) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>' +
-      (bar ? '<tr class="lbr" data-lid="' + esc(l.id) + '"><td colspan="3">' + bar + '</td></tr>' : '');
+    var bar = labBar(l), cl = (bar ? 'hb' : '') + (sel != null && l.item === sel ? ' on' : ''), hb = cl ? ' class="' + cl.trim() + '"' : '', at = sel != null ? 'data-lt2="' + esc(l.item) + '"' : 'data-lid="' + esc(l.id) + '"';
+    return '<tr ' + at + hb + '><td>' + labName(l) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>' +
+      (bar ? '<tr class="lbr' + (sel != null && l.item === sel ? ' on' : '') + '" ' + at + '><td colspan="3">' + bar + '</td></tr>' : '');
   }).join('') + '</table>';
 }
 // 루푸스신염 기준 중요도 순서 (신장 기능 → 루푸스 활성도 → 단백뇨·혈뇨 → 빈혈·혈구 → 염증 → 전해질 → 대사·간 → 기타 혈구 → 소변 일반)
@@ -4710,13 +4712,10 @@ function mdWeek() {
     '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
     bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
     '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
-      var f = labFlag(l); return '<tr data-lid="' + esc(l.id) + '"><td>' + bYmd(l.d) + '<small class="wi">' + W[P(l.d).getDay()] + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>';
+      var f = labFlag(l), bar = labBar(l); return '<tr data-lid="' + esc(l.id) + '"' + (bar ? ' class="hb"' : '') + '><td>' + bYmd(l.d) + '<small class="wi">' + W[P(l.d).getDay()] + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>' + (bar ? '<tr class="lbr" data-lid="' + esc(l.id) + '"><td colspan="3">' + bar + '</td></tr>' : '');
     }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
   var cp2 = catPick('mlc2', its.map(function (n) { var q = labSeries(n); return { n: n, bad: !!labFlag(q[q.length - 1]) }; }), 'all');
-  h += '<div class="card"><div class="ct">검사 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div>' + cp2.chips + '<div id="mitBox"><ul class="brow mlst">' + cp2.list.map(function (o) { return o.n; }).map(function (n) {
-    var ss = labSeries(n), l = ss[ss.length - 1], f = labFlag(l), u = l.unit || (labInfo(n) ? labInfo(n)[2] : '');
-    return '<li class="tap' + (n === it ? ' on' : '') + '" data-lt2="' + esc(n) + '"><span class="n">' + labName(l) + '</span><span class="mv"><span class="v"><b class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + '</b><small>' + esc(u) + '</small></span><span class="d2">' + flagHtml(f) + '<span class="mute">' + ss.length + '회</span></span></span></li>';
-  }).join('') + '</ul></div><div class="legend" style="justify-content:flex-start;margin-top:8px">좌우로 밀어 분류 넘기기</div></div>';
+  h += '<div class="card"><div class="ct">검사 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div>' + cp2.chips + '<div id="mitBox">' + labTable(cp2.list.map(function (o) { var q = labSeries(o.n); return q[q.length - 1]; }), it) + '</div></div>';
   var vsA = vList(), ysA = {}; vsA.forEach(function (v) { (ysA[v.d.slice(0, 4)] = ysA[v.d.slice(0, 4)] || []).push(v); });
   h += '<div class="sec">검사일 · 병원 기록</div>';
   Object.keys(ysA).sort().reverse().forEach(function (y) { h += vListCard(y + '년', ysA[y]); });
@@ -4764,13 +4763,7 @@ function mdYear() {
   var nb = all.filter(function (o) { return o.b; }).length, mf = S.mdf === 'bad' ? 'bad' : 'all';
   all.forEach(function (o) { o.bad = !!o.b; }); var cp = catPick('mdf', all, 'all'), shown = cp.list;
   if (all.length) h += '<div class="card"><div class="ct">검사 항목<small>' + y + '년 · ' + all.length + '개 · 참고치 밖 ' + nb + '개</small></div>' +
-    cp.chips + '<div id="mdfBox">' + (shown.length ? '<ul class="brow mlist">' + shown.map(function (o) {
-      var l = o.last, f = labFlag(l), ko = labKo(o.n);
-      var lb = labBar(l);   // 요약 검사 항목에도 참고치 막대 (2026.10.07)
-      return '<li class="tap' + (lb ? ' bx' : '') + '" data-lid="' + esc(l.id) + '"><span class="n"><span class="mlt">' + esc(ko || o.n) + '</span>' + (ko ? '<small class="men">' + esc(o.n) + '</small>' : '') +
-        '<small class="dt">' + (l.ref ? '참고치 ' + esc(l.ref) + (l.unit ? ' ' + esc(l.unit) : '') : '참고치 없음') + ' · 검사 ' + o.t + '회' + (o.b ? ' 중 <b>' + o.b + '회 벗어남</b>' : '') + '</small></span>' +
-        '<span class="v"><b class="' + (f === 'H' || f === 'A' ? 'mh' : f === 'L' ? 'ml' : '') + '">' + (f === 'H' ? '▲' : f === 'L' ? '▼' : '') + esc(l.val == null ? '-' : l.val) + '</b>' + (l.unit ? '<small>' + esc(l.unit) + '</small>' : '') + '<small class="dt" style="display:block;text-align:right">' + bYmd(l.d) + '</small></span>' + (lb ? '<div class="bxb">' + lb + '</div>' : '') + '</li>';
-    }).join('') + '</ul>' : '<div class="empty">이 분류의 검사가 없어요</div>') + '</div><div class="legend" style="justify-content:flex-start;margin-top:8px">좌우로 밀어 분류 넘기기 · 항목을 누르면 설명</div></div>';
+    cp.chips + '<div id="mdfBox">' + (shown.length ? labTable(shown.map(function (o) { return o.last; })) : '<div class="empty">이 분류의 검사가 없어요</div>') + '</div><div class="legend" style="justify-content:flex-start;margin-top:8px">항목을 누르면 설명</div></div>';
   h += vListCard(y + '년 방문', vs);
   $('#main').innerHTML = h; bindYear(); bindMd();
   bindCat('mdf', 'mdfBox');
