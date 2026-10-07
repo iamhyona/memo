@@ -644,6 +644,8 @@ small.wi { font-size:.82em; color:#b0b8c1; font-weight:500; margin-left:3px; let
 .bym button.fu { opacity:.45; }
 .uok { display:none !important; }
 .mtab tr.on td { background:#f5f8ff; }
+.mtab th:nth-child(2), .mtab td:nth-child(2) { text-align:center; } .mtab td:nth-child(2) small { color:var(--faint); } .mtab tr.lbr td { text-align:left !important; }
+.crn { font-size:11px; color:var(--mute); margin:10px 0 4px; } .alw .crn { display:none; } .alw .crn + .gfr { display:none; }
 .mlc { flex-wrap:wrap; overflow:visible; margin:0 0 12px; padding:0; } .mlc button { background:var(--chip); } .mlc button.on { background:var(--txt); color:#fff; }   /* 검사 분류 단추: 다 보이게 (2026.10.07) */   /* 습관 타일 오른쪽 위 ✓ 없앰 — 횟수로 충분 (2026.10.07) */
 </style>
 </head>
@@ -862,7 +864,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261007i';
+var APP_VER = '20261007j';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -933,6 +935,7 @@ function hdDate() { if (!$('#hdt')) return; var d = P(TODAY); $('#hdt').textCont
 /* ───── 데이터 ───── */
 function setData(d) {
   obApply(d);
+  (d.labs || []).forEach(labDefRef);
   d.notes = d.notes || {}; d.body = d.body || []; d.workouts = d.workouts || []; d.visits = d.visits || []; d.labs = d.labs || []; d.rx = d.rx || []; d.swim = d.swim || []; d.counters = d.counters || []; d.counts = d.counts || {};
   S.D = d; S.ck = {}; S.kc = {};
   Object.keys(d.counts).forEach(function (k) { S.kc[k] = {}; Object.keys(d.counts[k]).forEach(function (h) { S.kc[k][h] = +d.counts[k][h] || 0; }); });
@@ -4594,7 +4597,23 @@ function gfrBar(v) {
     '<div class="glb">' + GFR_ST.map(function (g) { return '<span style="flex:' + (g[1] - g[0]) + (g === st ? ';color:' + g[4] + ';font-weight:800' : '') + '">' + g[2] + '</span>'; }).join('') + '</div>' +
     '<div class="gtx"><b style="color:' + st[4] + '">' + st[2] + ' · ' + st[3] + '</b> <small>(' + (st[2] === 'G1' ? '90 이상' : st[2] === 'G5' ? '15 미만' : st[0] + '~' + (st[1] - 1)) + ') · 정상 90 이상</small></div></div>';
 }
+// 결과지에 참고치가 없거나 '소견란 참조'인 항목: 일반 참고치를 넣어 막대·판정 표시 (표에는 '일반' 표시) — 2026.10.07
+var LAB_DEFREF = { 'Creatinine (Urine)': '20~300', 'ANC': '1.5~8.0', '25-OH Vitamin D': '30~100', 'Bacteria (Urine)': 'Negative', 'Color (Urine)': 'Yellow' };
+function labDefRef(l) {
+  var r = LAB_DEFREF[l.item];
+  if (!r || (l.ref && !/참조|소견/.test(l.ref) && !l.refDef)) return;
+  l.ref = r; l.refDef = 1;
+  if (l.item === 'Color (Urine)' && l.val && !/yellow|straw|amber|pale|노랑|황색/i.test(l.val)) l.flag = 'A';
+}
+// 크레아티닌: 참고치 막대 + 같은 날 eGFR로 신장 기능 단계(G1~G5) 구간 표시 (2026.10.07)
 function labBar(l) {
+  var b = labBar0(l);
+  if (!/^creatinine$/i.test(String(l.item || '').trim())) return b;
+  var gs = (S.D.labs || []).filter(function (q) { return q.d === l.d && /^egfr/i.test(q.item) && !isNaN(labNum(q.val)); });
+  var g = gs.filter(function (q) { return /^egfr$/i.test(q.item); })[0] || gs[0];
+  return g ? b + '<div class="crn">같은 날 ' + esc(g.item) + ' ' + esc(String(g.val)) + ' 기준 신장 기능 단계</div>' + gfrBar(labNum(g.val)) : b;
+}
+function labBar0(l) {
   var v = labNum(l.val), g = labRange(l.ref);
   if (/^egfr/i.test(l.item) && !isNaN(v)) return gfrBar(v);
   // 음성/양성 같은 글자 결과: 막대 하나 전체 색 (정상 초록 · 이상 빨강)
@@ -4613,10 +4632,10 @@ function labBar(l) {
   return '<div class="lbar' + (bad ? (p < a ? ' bad lo' : ' bad') : '') + '"><i class="lbb" style="left:' + a + '%;width:' + (b - a) + '%"></i>' + fl + '<b class="lbd" style="left:' + p + '%"></b></div>';
 }
 function labTable(ls, sel) {
-  return '<table class="btab mtab"><tr><th>항목</th><th>결과</th><th>참고치</th></tr>' + ls.slice().sort(labSort).map(function (l) {
+  return '<table class="btab mtab"><tr><th>항목</th><th>참고치</th><th>결과</th></tr>' + ls.slice().sort(labSort).map(function (l) {
     var f = labFlag(l), x = labInfo(l.item, l.val, l.ref), u = l.unit || (x ? x[2] : '');
     var bar = labBar(l), cl = (bar ? 'hb' : '') + (sel != null && l.item === sel ? ' on' : ''), hb = cl ? ' class="' + cl.trim() + '"' : '', at = sel != null ? 'data-lt2="' + esc(l.item) + '"' : 'data-lid="' + esc(l.id) + '"';
-    return '<tr ' + at + hb + '><td>' + labName(l) + '</td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>' +
+    return '<tr ' + at + hb + '><td>' + labName(l) + '</td><td><small>' + esc(l.ref || '') + (l.refDef ? ' (일반)' : '') + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val == null ? '-' : l.val) + (isNaN(labNum(l.val)) ? '' : ' <small>' + esc(u) + '</small>') + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : f === 'A' ? ' !' : '') + '</td></tr>' +
       (bar ? '<tr class="lbr' + (sel != null && l.item === sel ? ' on' : '') + '" ' + at + '><td colspan="3">' + bar + '</td></tr>' : '');
   }).join('') + '</table>';
 }
@@ -4711,8 +4730,8 @@ function mdWeek() {
   var h = '<div class="card" id="ltc"><div class="ct"><span class="dpw lsel">' + esc(info ? info[1] : it) + '<select id="ltS" class="dpk" aria-label="검사 항목 선택">' + its.map(function (n) { var k = labKo(n); return '<option value="' + esc(n) + '"' + (n === it ? ' selected' : '') + '>' + esc(k ? k + ' · ' + n : n) + '</option>'; }).join('') + '</select></span><small>' + (ix + 1) + ' / ' + its.length + ' · ' + esc(it) + '</small></div>' +
     '<div class="bsel"><span>최근</span><b>' + esc(last.val) + ' ' + esc(x.u) + '</b>' + flagHtml(labFlag(last)) + '<small>참고치 ' + esc(last.ref || '-') + '</small></div>' +
     bChart(s.map(function (l) { return { v: labNum(l.val), l: bShort(l.d) }; }), x) +
-    '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>결과</th><th>참고치</th></tr>' + s.slice().reverse().map(function (l) {
-      var f = labFlag(l), bar = labBar(l); return '<tr data-lid="' + esc(l.id) + '"' + (bar ? ' class="hb"' : '') + '><td>' + bYmd(l.d) + '<small class="wi">' + W[P(l.d).getDay()] + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td><td><small>' + esc(l.ref || '') + '</small></td></tr>' + (bar ? '<tr class="lbr" data-lid="' + esc(l.id) + '"><td colspan="3">' + bar + '</td></tr>' : '');
+    '<div class="sub2">검사 ' + s.length + '회</div><table class="btab mtab"><tr><th>날짜</th><th>참고치</th><th>결과</th></tr>' + s.slice().reverse().map(function (l) {
+      var f = labFlag(l), bar = labBar(l); return '<tr data-lid="' + esc(l.id) + '"' + (bar ? ' class="hb"' : '') + '><td>' + bYmd(l.d) + '<small class="wi">' + W[P(l.d).getDay()] + '</small></td><td><small>' + esc(l.ref || '') + (l.refDef ? ' (일반)' : '') + '</small></td><td class="' + (f === 'L' ? 'ml' : f ? 'mh' : '') + '">' + esc(l.val) + (f === 'H' ? ' ▲' : f === 'L' ? ' ▼' : '') + '</td></tr>' + (bar ? '<tr class="lbr" data-lid="' + esc(l.id) + '"><td colspan="3">' + bar + '</td></tr>' : '');
     }).join('') + '</table>' + (info ? '<button class="bmore" data-lid="' + esc(last.id) + '">' + esc(info[1]) + ' 설명 보기 ›</button>' : '') + '</div>';
   var cp2 = catPick('mlc2', its.map(function (n) { var q = labSeries(n); return { n: n, bad: !!labFlag(q[q.length - 1]) }; }), 'all');
   h += '<div class="card"><div class="ct">검사 항목<small>' + its.length + '개 · 누르면 위 그래프로</small></div>' + cp2.chips + '<div id="mitBox">' + labTable(cp2.list.map(function (o) { var q = labSeries(o.n); return q[q.length - 1]; }), it) + '</div></div>';
@@ -4883,7 +4902,7 @@ function drawKinds() {
 }
 function drawLabs() {
   $('#vbL').innerHTML = VB.labs.length ? '<div class="lrow lh"><span>항목</span><span>결과</span><span>단위</span><span>참고치</span><span></span></div>' + VB.labs.map(function (l, i) {
-    return '<div class="lrow' + (l.ok ? ' ok' : '') + '" data-i="' + i + '"><input data-f="item" value="' + esc(l.item) + '" placeholder="항목"><input data-f="val" value="' + esc(l.val == null ? '' : l.val) + '" placeholder="결과"><input data-f="unit" value="' + esc(l.unit || '') + '" placeholder="단위"><input data-f="ref" value="' + esc(l.ref || '') + '" placeholder="예: 12~16"><button class="lx" aria-label="빼기">×</button></div>';
+    return '<div class="lrow' + (l.ok ? ' ok' : '') + '" data-i="' + i + '"><input data-f="item" value="' + esc(l.item) + '" placeholder="항목"><input data-f="val" value="' + esc(l.val == null ? '' : l.val) + '" placeholder="결과"><input data-f="unit" value="' + esc(l.unit || '') + '" placeholder="단위"><input data-f="ref" value="' + esc(l.ref || '') + (l.refDef ? ' (일반)' : '') + '" placeholder="예: 12~16"><button class="lx" aria-label="빼기">×</button></div>';
   }).join('') : '';
   $$('#vbL .lrow[data-i]').forEach(function (r) {
     var i = +r.dataset.i;
