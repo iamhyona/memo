@@ -916,7 +916,7 @@ function call(fn) {
   return run(tries).then(function (o) { if (!o.ok) { var e = new Error(o.error || '오류가 났어요'); e.srv = true; throw e; } return o.data; });
 }
 // 새 버전이 올라오면 자동으로 새로 불러오기
-var APP_VER = '20261027a';
+var APP_VER = '20261027b';
 function checkUpdate() {
   fetch('index.html?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
     var m = t.match(/var APP_VER = '(\w+)'/);
@@ -2453,17 +2453,18 @@ function mmUi(st) {
   if (MM.rec) { var sec = Math.floor((Date.now() - MM.t0) / 1000); mic.classList.add('rec'); mic.innerHTML = '<i></i><span>끝내기 ' + Math.floor(sec / 60) + ':' + pad(sec % 60) + '</span>'; }
   else { mic.classList.remove('rec'); mic.innerHTML = MIC + '<span>말하기</span>'; }
   mic.classList.toggle('busy', MM.busy); go.classList.toggle('busy', MM.busy);
-  go.disabled = !MM.busy && !$('#mmX').value.trim();
+  go.disabled = !!MM.rec || (!MM.busy && !$('#mmX').value.trim());
   if (st != null) MM.st = st;
-  if (MM.rec) s.textContent = '듣고 있어요 · 말을 마치면 끝내기를 눌러요 (최대 5분)';
-  else if (MM.fail) { s.innerHTML = esc(MM.st || '보내지 못했어요') + '<button id="mmRetry">다시 보내기</button>'; $('#mmRetry').onclick = function () { mmVoiceSend(MM.fail); }; }
+  $('#mmX').readOnly = !!(MM.rec || MM.busy);
+  if (MM.rec) s.textContent = '듣고 있어요 · 글자는 몇 초씩 늦게 따라와요 · 다 말하면 끝내기 (최대 5분)';
+  else if (MM.fail) { s.innerHTML = esc(MM.st || '받아쓰지 못했어요') + '<button id="mmRetry">다시 받아쓰기</button>'; $('#mmRetry').onclick = function () { MM.fail(); }; }
   else s.textContent = MM.st || '';
 }
 // 글 보내기 → 저장 대기함 (인터넷이 끊겨도 기기에 남아 있다가 자동으로 다시 보냄)
 function mmSend() {
   var x = $('#mmX'), t = x.value.trim(); if (!t || MM.busy) return;
-  wsave('appMemo', { id: uid('m'), text: t, src: /\n.*:\s|오전|오후|\[\d{1,2}:\d\d\]/.test(t) && t.length > 80 ? '붙여넣기' : '글' });
-  mmDraft(''); x.value = ''; MM.st = '정리하는 중이에요 · 끝나면 아래 목록에 들어가요';
+  wsave('appMemo', { id: uid('m'), text: t, src: MM.fromVoice ? '음성' : /\n.*:\s|오전|오후|\[\d{1,2}:\d\d\]/.test(t) && t.length > 80 ? '붙여넣기' : '글' });
+  mmDraft(''); x.value = ''; MM.fromVoice = false; MM.st = '정리하는 중이에요 · 끝나면 아래 목록에 들어가요';
   render();
 }
 // 서버가 정리를 마치면 (저장 대기함 → obFlush)
@@ -2472,60 +2473,110 @@ function mmDone(r) {
   if (r && r.items && r.items.length) toast(r.items.length + '건 정리했어요');
   load();
 }
-/* 녹음 */
+/* 녹음 (2026.10.27 수정): 말하는 동안 8초쯤씩(말이 멈춘 틈에서) 잘라 받아쓰기 → 입력창에 몇 초 늦게 따라 나옴
+   끝내면 받아쓴 글만 입력창에 남김 · 저장은 확인 후 '정리하기'를 눌러야 함 */
 function mmStart() {
   if (!navigator.mediaDevices || !window.MediaRecorder) return mmUi('이 브라우저는 녹음을 지원하지 않아요');
   MM.fail = null;
   navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
     var mt = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].filter(function (m) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m); })[0];
-    var rec = new MediaRecorder(stream, mt ? { mimeType: mt } : undefined);
-    MM.chunks = []; MM.rec = rec; MM.t0 = Date.now();
+    var rec = new MediaRecorder(stream, mt ? { mimeType: mt } : undefined), x = $('#mmX');
+    MM.chunks = []; MM.rec = rec; MM.t0 = Date.now(); MM.mt = mt || 'audio/mp4'; MM.st = '';
+    MM.live = { base: x ? x.value.replace(/\s+$/, '') : '', parts: [], cut: 0, fail: false, dec: false, nodec: false, q: Promise.resolve(), lt: Date.now() };
     rec.ondataavailable = function (e) { if (e.data && e.data.size) MM.chunks.push(e.data); };
     rec.onstop = function () {
       stream.getTracks().forEach(function (k) { k.stop(); });
       clearInterval(MM.tm); MM.rec = null;
-      var blob = new Blob(MM.chunks, { type: rec.mimeType || mt || 'audio/mp4' });
+      var blob = new Blob(MM.chunks, { type: rec.mimeType || MM.mt });
       if (Date.now() - MM.t0 < 800 || !blob.size) { mmUi('너무 짧아요 · 다시 눌러서 말해 주세요'); return; }
-      MM.busy = true; mmUi('음성을 정리하는 중이에요…');
-      mmWav(blob).catch(function () { return mmB64(blob).then(function (b) { return { b64: b, mime: (blob.type || 'audio/mp4').split(';')[0] }; }); }).then(function (a) {
-        mmVoiceSend({ id: uid('m'), audio: a.b64, mime: a.mime, text: ($('#mmX') ? $('#mmX').value.trim() : '') });
+      MM.blob = blob; MM.busy = true; mmUi('마지막 부분 받아쓰는 중…');
+      var L = MM.live, wait = function () { var q = L.q; return q.then(function () { return L.q === q ? null : wait(); }); };
+      (L.nodec ? Promise.resolve() : mmLiveTick(true)).then(wait).then(function () {
+        if (L.nodec || L.fail) return mmWhole(blob);   // 중간에 실패했으면 전체 녹음을 한 번에 받아쓰기
+        mmLiveEnd();
       });
     };
     rec.start(1000);
-    MM.tm = setInterval(function () { if (Date.now() - MM.t0 > 300000) mmStop(); else mmUi(); }, 500);
+    MM.tm = setInterval(function () {
+      if (Date.now() - MM.t0 > 300000) return mmStop();
+      if (Date.now() - MM.live.lt > 8000 && !MM.live.nodec) { MM.live.lt = Date.now(); mmLiveTick(false); }
+      mmUi();
+    }, 500);
     mmUi('');
   }).catch(function () { mmUi('마이크 권한을 허용해 주세요 (설정 → Safari → 마이크)'); });
 }
 function mmStop() { if (MM.rec && MM.rec.state !== 'inactive') MM.rec.stop(); }
-function mmVoiceSend(o) {
-  MM.busy = true; MM.fail = null; mmUi('음성을 정리하는 중이에요… (10~30초)');
-  call('appMemo', S.pin, o).then(function (r) {
-    MM.busy = false; MM.fail = null;
-    if (o.text && $('#mmX') && $('#mmX').value.trim() === o.text) { $('#mmX').value = ''; mmDraft(''); }
-    mmDone(r);
+function mmLiveText() { return MM.live.parts.filter(function (p) { return p && p !== '…'; }).join(' '); }
+function mmLiveShow() {
+  var L = MM.live, t = mmLiveText(), pend = L.parts.some(function (p) { return p === '…'; }) || !!MM.rec;
+  var v = [L.base, t + (pend ? ' …' : '')].filter(function (s) { return s.trim(); }).join(L.base ? '\n' : '');
+  var x = $('#mmX'); if (x) { x.value = v; mmGrow(); x.scrollTop = x.scrollHeight; }
+  mmDraft([L.base, t].filter(function (s) { return s.trim(); }).join('\n'));   // 받아쓴 글은 바로 기기에 보관
+}
+// 지금까지 녹음 → 16kHz → 앞에서 자른 곳부터 말이 멈춘 틈까지 잘라서 받아쓰기 (순서대로 한 개씩)
+function mmLiveTick(fin) {
+  var L = MM.live; if (L.dec) return L.decP.then(function () { return fin ? mmLiveTick(true) : null; });
+  L.dec = true;
+  return (L.decP = mmPcm(new Blob(MM.chunks, { type: MM.mt })).then(function (d) {
+    L.dec = false;
+    var end = d.length, cut = fin ? end : mmCut(d, Math.max(L.cut + 16000, end - 40000), end - 4000);
+    if (cut - L.cut < (fin ? 4800 : 32000)) return;   // 너무 짧으면 다음에
+    var seg = d.slice(L.cut, cut), i = L.parts.length; L.cut = cut;
+    if (mmLoud(seg) < 0.006) return;   // 말소리 없는 구간은 보내지 않음 (AI가 지어내지 않게)
+    L.parts.push('…'); mmLiveShow();
+    L.q = L.q.then(function () {
+      return call('appTranscribe', S.pin, mmWavB64(seg), 'audio/wav', mmLiveText().slice(-200));
+    }).then(function (t) { L.parts[i] = String(t || '').trim(); mmLiveShow(); }, function () { L.parts[i] = ''; L.fail = true; mmLiveShow(); });
+  }, function () { L.dec = false; L.nodec = true; }));   // 이 기기에서 녹음 중 해독이 안 되면 끝날 때 한 번에
+}
+// 가장 큰 0.1초 구간의 소리 크기 (RMS)
+function mmLoud(d) { var m = 0; for (var s = 0; s + 1600 <= d.length; s += 800) { var e = 0; for (var k = s; k < s + 1600; k += 4) e += d[k] * d[k]; if (e > m) m = e; } return Math.sqrt(m / 400); }
+// [a, b] 사이에서 가장 조용한 0.1초 위치
+function mmCut(d, a, b) {
+  if (b <= a) return b;
+  var best = b, bv = Infinity;
+  for (var s = a; s + 1600 <= b; s += 800) { var e = 0; for (var k = s; k < s + 1600; k += 4) e += d[k] * d[k]; if (e < bv) { bv = e; best = s + 800; } }
+  return best;
+}
+function mmLiveEnd() {
+  MM.busy = false; MM.fromVoice = true; mmLiveShow();
+  var t = mmLiveText();
+  mmUi(t ? '받아쓰기 끝 · 읽어 보고 고친 뒤 정리하기를 눌러요' : '들린 말이 없어요 · 다시 말해 주세요');
+}
+// 전체 녹음 한 번에 받아쓰기 (중간 실패 · 해독 불가 · 다시 시도)
+function mmWhole(blob) {
+  MM.busy = true; MM.fail = null; mmUi('전체 녹음을 받아쓰는 중… (10~30초)');
+  return mmPcm(blob).then(function (d) { return { b64: mmWavB64(d), mime: 'audio/wav' }; }, function () {
+    return mmB64(blob).then(function (b) { return { b64: b, mime: (blob.type || 'audio/mp4').split(';')[0] }; });
+  }).then(function (a) { return call('appTranscribe', S.pin, a.b64, a.mime, ''); }).then(function (t) {
+    MM.live.parts = [String(t || '').trim()]; mmLiveEnd();
   }, function (e) {
-    MM.busy = false; MM.fail = o;   // 녹음은 기기에 그대로 → 다시 보내기
-    mmUi('보내지 못했어요 · ' + errMsg(e));
+    MM.busy = false; MM.fail = function () { mmWhole(blob); };   // 녹음은 기기에 그대로 → 다시 받아쓰기
+    mmUi('받아쓰지 못했어요 · ' + errMsg(e));
   });
 }
 function mmB64(blob) { return new Promise(function (ok, no) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1]); }; fr.onerror = no; fr.readAsDataURL(blob); }); }
-// 녹음 → 16kHz 모노 WAV (Gemini가 확실히 읽는 형식, 1분 ≈ 2MB)
-function mmWav(blob) {
+// 녹음 → 16kHz 모노 샘플
+function mmPcm(blob) {
   return blob.arrayBuffer().then(function (buf) {
     var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
     return new Promise(function (ok, no) { ac.decodeAudioData(buf, ok, no); }).then(function (ab) {
       try { ac.close(); } catch (e) {}
-      var rate = 16000, n = Math.ceil(ab.duration * rate), oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, n, rate);
+      var rate = 16000, n = Math.max(1, Math.ceil(ab.duration * rate)), oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, n, rate);
       var src = oc.createBufferSource(); src.buffer = ab; src.connect(oc.destination); src.start(0);
       return oc.startRendering();
-    });
-  }).then(function (rb) {
-    var d = rb.getChannelData(0), n = d.length, v = new DataView(new ArrayBuffer(44 + n * 2)), w = function (o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-    for (var i = 0; i < n; i++) { var s = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
-    return mmB64(new Blob([v], { type: 'audio/wav' })).then(function (b) { return { b64: b, mime: 'audio/wav' }; });
-  });
+    }, function (e) { try { ac.close(); } catch (x) {} throw e; });
+  }).then(function (rb) { return rb.getChannelData(0); });
+}
+// 샘플 → WAV base64 (Gemini가 확실히 읽는 형식, 1분 ≈ 2MB)
+function mmWavB64(d) {
+  var n = d.length, v = new DataView(new ArrayBuffer(44 + n * 2)), w = function (o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (var i = 0; i < n; i++) { var s = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+  var u = new Uint8Array(v.buffer), out = '';
+  for (var j = 0; j < u.length; j += 32768) out += String.fromCharCode.apply(null, u.subarray(j, j + 32768));
+  return btoa(out);
 }
 /* 할 일 완료 · 수정 */
 function mmSave(t) {
